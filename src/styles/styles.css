@@ -1,0 +1,47 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #1e1e1e;
+    color: #ffffff;
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  #terminal {
+    width: min(720px, 92vw);
+    border: 1px solid #777;
+    padding: 24px;
+  }
+  
+  #terminal-output div {
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+  
+  #terminal-output .error {
+    color: #ff5555;
+    margin-top: 8px;
+  }
+  
+  #terminal-form {
+    display: flex;
+    margin-top: 12px;
+  }
+  
+  #terminal-form span {
+    margin-right: 8px;
+  }
+  
+  #terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font: inherit;
+    caret-color: #ffffff;
+  }
+  
