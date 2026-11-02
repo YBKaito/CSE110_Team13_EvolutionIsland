@@ -14,7 +14,7 @@ export const MENU_ERROR =
   "Please type a number from 1 to 4, then press Enter.";
 
 export const CARD_ERROR =
-  "Press Enter to continue, or type B to go back to the menu.";
+  "Press Enter to continue or type B to go back to the menu.";
 
 export const HOW_TO_PLAY_CARDS: HowToPlayCard[] = [
   {
