@@ -40,6 +40,7 @@ export interface SpeciesData {
 
 // Shared data contracts for the simulation (US3), events (US4),
 // and the game coordinator.
+
 // ---------- Birds ----------
 
 export type TraitName = "beak" | "body" | "feathers" | "color";
@@ -235,6 +236,7 @@ export interface EventLogEntry {
   stage: StageName;
   message: string;
 }
+
 /**
  * Data types shared by the evolution choice screen and simulation.
  */
@@ -247,7 +249,7 @@ export type TraitCounts = Record<TraitKey, Record<string, number>>;
 /** Which option the player currently favors for future offspring. */
 export type PreferredTraits = Record<TraitKey, string>;
 
-/** 
+/**
  * Environment indices are integers from 0 to 100. They start at 0 and cap at 100.
  */
 export interface EnvironmentStateMock {
@@ -262,6 +264,7 @@ export interface EnvironmentStateMock {
   competition: number;
   habitatBackground: RGB;
 }
+
 export type NumericEnvironmentKey = Exclude<keyof EnvironmentStateMock, 'habitatBackground'>;
 
 /**
