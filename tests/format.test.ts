@@ -23,19 +23,19 @@ describe('invalidChoiceMessage', () => {
 });
 
 describe('labels', () => {
-  it('describes amounts relative to the normal level of 100', () => {
-    expect(amountLabel(40)).toBe('Scarce');
-    expect(amountLabel(70)).toBe('Low');
-    expect(amountLabel(100)).toBe('Normal');
-    expect(amountLabel(130)).toBe('High');
+  it('describes amounts relative to the normal level of 50', () => {
+    expect(amountLabel(20)).toBe('Scarce');
+    expect(amountLabel(35)).toBe('Low');
+    expect(amountLabel(50)).toBe('Normal');
+    expect(amountLabel(65)).toBe('High');
   });
 
   it('describes temperature and predators', () => {
-    expect(temperatureLabel(60)).toBe('Very cold');
-    expect(temperatureLabel(100)).toBe('Normal');
-    expect(temperatureLabel(140)).toBe('Hot');
-    expect(predatorLabel(100)).toBe('Moderate');
-    expect(predatorLabel(130)).toBe('High');
+    expect(temperatureLabel(30)).toBe('Very cold');
+    expect(temperatureLabel(50)).toBe('Normal');
+    expect(temperatureLabel(70)).toBe('Hot');
+    expect(predatorLabel(50)).toBe('Moderate');
+    expect(predatorLabel(65)).toBe('High');
   });
 
   it('shows a sign on changes', () => {

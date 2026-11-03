@@ -1,6 +1,7 @@
 // The five MVP environmental events (design report §5), defined as data.
 // Adding an event means adding an entry here; the event manager and simulation don't change.
-// Effects are in environment index points (per generation for 'perGen', once for 'once').
+// Effects use the design report's numbers, written for a normal-100 island (per generation for 'perGen',
+// once for 'once'). The event manager scales them to this game's 0-100 island where 50 is normal.
 
 import type { EventDef } from '../types';
 

@@ -1,7 +1,7 @@
 // Runs active events through their stages and applies their effects to the environment (module view: eventManager).
 // Events only ever change environment variables; they never touch birds or fitness directly.
 
-import { EVENTS } from '../constants';
+import { ENV, EVENTS } from '../constants';
 import { clampEnvironment, cloneEnvironment, getValue, setValue } from '../models/Environment';
 import type { RandomSource } from '../simulation/Random';
 import type { ActiveEvent, EnvironmentState, EnvVariable, EventDef, EventLogEntry } from '../types';
@@ -64,8 +64,9 @@ export function advanceEvents(
     for (const effect of stage.effects) {
       held.add(effect.variable);
       if (effect.mode === 'once' && !firstGen) continue;
-      const delta = rng.triangular(effect.range[0], effect.range[1]) * event.severity;
-      setValue(env, effect.variable, getValue(env, effect.variable) + delta);
+      // Ranges are written on the design report's normal-100 scale; convert, then keep the value whole.
+      const delta = rng.triangular(effect.range[0], effect.range[1]) * event.severity * ENV.REPORT_SCALE;
+      setValue(env, effect.variable, getValue(env, effect.variable) + rng.roundRandomly(delta));
     }
     for (const variable of stage.holds ?? []) held.add(variable);
     if (stage.randomMortality && firstGen) {

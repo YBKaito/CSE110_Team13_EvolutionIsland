@@ -35,7 +35,7 @@ describe('event card', () => {
     expect(text[0]).toBe('The rains are slowing');
     expect(text[1]).toBe(`Generation 6        Your flock: ${game.state.population.birds.length} birds`);
     expect(text).toContain('Rainfall is decreasing, and some plants are beginning to disappear.');
-    expect(text.some((l) => l.startsWith('Rainfall: 100 to '))).toBe(true);
+    expect(text.some((l) => l.startsWith('Rainfall: 50 to '))).toBe(true);
     expect(text).toEqual(expect.arrayContaining(['1. View island changes', '2. Continue simulation']));
   });
 
@@ -46,14 +46,14 @@ describe('event card', () => {
     expect(view.beforeGeneration).toBe(5);
     const rain = view.changeLine.match(/Rainfall: (\d+) to (\d+)/);
     expect(rain).not.toBeNull();
-    expect(Number(rain![1])).toBe(100);
-    expect(Number(rain![2])).toBeLessThan(85);
+    expect(Number(rain![1])).toBe(50);
+    expect(Number(rain![2])).toBeLessThan(43);
   });
 
   it("only lists the event's own changes, even when another event is changing the island too", () => {
     const { game, entry } = runUntil((e) => e.eventId === 'newPredator' && e.kind === 'stageChanged');
     const view = eventCardView(game.state, entry);
-    expect(view.changeLine).toMatch(/^Predators: 100 to \d+$/);
+    expect(view.changeLine).toMatch(/^Predators: 50 to \d+$/);
   });
 
   it('announces when a temporary event ends', () => {
@@ -83,8 +83,8 @@ describe('island changes table (mockup p.42)', () => {
     const text = screenText(spec);
     expect(text[0]).toBe('Island changes at Gen 6');
     expect(text).toContain('Island measure | Before (Gen 5) | After (Gen 6)');
-    expect(text.some((l) => l.startsWith('Rainfall | 100 | '))).toBe(true);
-    expect(text.some((l) => l.startsWith('Hard seeds | 100 | 100'))).toBe(true);
+    expect(text.some((l) => l.startsWith('Rainfall | 50 | '))).toBe(true);
+    expect(text.some((l) => l.startsWith('Hard seeds | 50 | 50'))).toBe(true);
     expect(spec.prompt).toMatchObject({ mode: 'enter', label: 'Press Enter to return to the event.' });
 
     screen.submit('');
