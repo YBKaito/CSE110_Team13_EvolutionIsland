@@ -45,7 +45,7 @@ const TRAIT_ORDER = {
   beakLength: ["short", "medium", "long"],
   bodySize: ["small", "medium", "large"],
   featherDensity: ["thin", "medium", "thick"],
-  color: ["light", "brown", "dark"],
+  color: ["light", "brown", "dark", "gray", "yellow", "white"],
 } as const;
 
 function toStartingSpecies(name: string, traits: SpeciesTraits): StartingSpecies {

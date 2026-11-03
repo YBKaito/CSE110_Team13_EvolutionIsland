@@ -1,14 +1,14 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { MenuState } from "../src/models/GameState";
+import { ScreenState } from "../src/models/GameState";
 import { CreationScreenController } from "../src/screens/CreationScreen/CreationScreenController";
 
 describe("CreationScreenController (US2)", () => {
-  let state: MenuState;
+  let state: ScreenState;
   let controller: CreationScreenController;
 
   beforeEach(() => {
-    state = new MenuState();
+    state = new ScreenState();
     state.goTo("creation");
     controller = new CreationScreenController(state);
   });
@@ -88,7 +88,7 @@ describe("CreationScreenController (US2)", () => {
       const colors = ["brown", "gray", "yellow", "white"];
 
       colors.forEach((color, index) => {
-        const testState = new MenuState();
+        const testState = new ScreenState();
         testState.goTo("creation");
         const testController = new CreationScreenController(testState);
 
