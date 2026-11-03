@@ -8,7 +8,8 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.tests.json",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:us5": "node tests/us5/run-tests.cjs"
   },
   "repository": {
     "type": "git",
