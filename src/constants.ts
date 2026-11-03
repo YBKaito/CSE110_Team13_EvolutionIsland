@@ -188,15 +188,18 @@ export const SIM = {
   COVER_SHIELD: 0.5,
 } as const;
 
-// Every island value is a whole number from MIN to MAX, and NORMAL is the starting level.
-// (Competition is the exception to NORMAL: it starts at 0, meaning no competing species.)
+// Every island value is a whole number from MIN to MAX,
+// and NORMAL is the starting level.
+// Competition starts at 0, meaning no competing species.
+
 export const ENV = {
   NORMAL: 50,
   MIN: 0,
   MAX: 100,
   /**
-   * The design report's event numbers assume normal = 100. Event effects are multiplied by this
-   * so eventDefinitions.ts can keep the report's numbers while the island uses normal = 50.
+   * The design report's event numbers assume normal = 100.
+   * Event effects are multiplied by this so eventDefinitions.ts
+   * can keep the report's numbers while the island uses normal = 50.
    */
   REPORT_SCALE: 50 / 100,
   /** Fraction of the gap to its target a derived resource closes each generation. */

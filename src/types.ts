@@ -40,9 +40,51 @@ export interface SpeciesData {
 // Shared data contracts for the simulation (US3), events (US4), and the game coordinator.
 // Other stories should read these shapes rather than reaching into module internals.
 
+// Add screen and input types for US1
+// Every screen the game can show. Later stories add more.
+export type ScreenId =
+  | "menu"
+  | "howToPlay"
+  | "minigames"
+  | "end"
+  | "creation"
+  | "simulation";
+
+// What the controller returns after the player types something.
+export interface InputResult {
+  nextScreen: ScreenId;
+  error: string | null;
+}
+
+// One page of the How to Play section.
+export interface HowToPlayCard {
+  title: string;
+  lines: string[];
+}
+
+// Used for species creation
+export type BeakLength = "short" | "medium" | "long";
+export type BodySize = "small" | "medium" | "large";
+export type FeatherDensity = "thin" | "medium" | "thick";
+export type BirdColor = "brown" | "gray" | "yellow" | "white";
+
+export interface SpeciesTraits {
+  beakLength: BeakLength;
+  bodySize: BodySize;
+  featherDensity: FeatherDensity;
+  color: BirdColor;
+}
+
+export interface SpeciesData {
+  name: string;
+  traits: SpeciesTraits;
+}
+
+// Shared data contracts for the simulation (US3), events (US4),
+// and the game coordinator.
 // ---------- Birds ----------
 
-export type TraitName = 'beak' | 'body' | 'feathers' | 'color';
+export type TraitName = "beak" | "body" | "feathers" | "color";
 
 /** Each trait is stored as an index into that trait's option list (see simulation/traitContent.ts). */
 export type Traits = Record<TraitName, number>;
@@ -61,10 +103,20 @@ export interface Population {
 
 // ---------- Environment ----------
 
-export type FoodType = 'softPlants' | 'smallSeeds' | 'hardSeeds' | 'insects';
-export const FOOD_TYPES: FoodType[] = ['softPlants', 'smallSeeds', 'hardSeeds', 'insects'];
+export type FoodType =
+  | "softPlants"
+  | "smallSeeds"
+  | "hardSeeds"
+  | "insects";
 
-export type Background = 'forest' | 'scrub' | 'sand';
+export const FOOD_TYPES: FoodType[] = [
+  "softPlants",
+  "smallSeeds",
+  "hardSeeds",
+  "insects",
+];
+
+export type Background = "forest" | "scrub" | "sand";
 
 /** Every island value is a whole number from 0 to 100, where 50 is normal (competition: 0 = no competitor). */
 export interface EnvironmentState {
@@ -84,11 +136,17 @@ export interface EnvironmentState {
   competitorDiet: FoodType | null;
   background: Background;
   /** Regeneration capacity multipliers; 1.0 = normal. Lasting event damage lowers these. */
-  capacity: Record<FoodType | 'cover', number>;
+  capacity: Record<FoodType | "cover", number>;
 }
 
 /** Numeric environment variables that events can change. */
-export type EnvVariable = 'temperature' | 'rainfall' | 'predation' | 'competition' | 'cover' | FoodType;
+export type EnvVariable =
+  | "temperature"
+  | "rainfall"
+  | "predation"
+  | "competition"
+  | "cover"
+  | FoodType;
 
 export interface EnvChange {
   variable: EnvVariable;
@@ -98,8 +156,18 @@ export interface EnvChange {
 
 // ---------- Generation results ----------
 
-export type DeathCause = 'starvation' | 'exposure' | 'predation' | 'disaster';
-export const DEATH_CAUSES: DeathCause[] = ['starvation', 'exposure', 'predation', 'disaster'];
+export type DeathCause =
+  | "starvation"
+  | "exposure"
+  | "predation"
+  | "disaster";
+
+export const DEATH_CAUSES: DeathCause[] = [
+  "starvation",
+  "exposure",
+  "predation",
+  "disaster",
+];
 
 export interface GenerationResult {
   generation: number;
@@ -115,29 +183,37 @@ export interface GenerationResult {
   /** Count of birds per option index, for each trait, in the new population. */
   traitCounts: Record<TraitName, number[]>;
   /** Average per-bird risks the adults faced this generation. */
-  avgRisk: { starvation: number; exposure: number; predation: number };
+  avgRisk: {
+    starvation: number;
+    exposure: number;
+    predation: number;
+  };
   lowPopulation: boolean;
   extinct: boolean;
 }
 
 // ---------- Events ----------
 
-export type EventCategory = 'climate' | 'disturbance' | 'biological' | 'habitat';
+export type EventCategory =
+  | "climate"
+  | "disturbance"
+  | "biological"
+  | "habitat";
 
 export type StageName =
-  | 'warning'
-  | 'growing'
-  | 'peak'
-  | 'recovery'
-  | 'impact'
-  | 'aftermath'
-  | 'establishing'
-  | 'established';
+  | "warning"
+  | "growing"
+  | "peak"
+  | "recovery"
+  | "impact"
+  | "aftermath"
+  | "establishing"
+  | "established";
 
 export interface EffectSpec {
   variable: EnvVariable;
   /** perGen: applied every generation of the stage. once: applied on the stage's first generation. */
-  mode: 'perGen' | 'once';
+  mode: "perGen" | "once";
   /** Change in index points; sampled with a bias toward the middle of the range. */
   range: [number, number];
 }
@@ -152,7 +228,8 @@ export interface StageDef {
   effects: EffectSpec[];
   /**
    * Variables this stage keeps where they are: no drift back to normal and no regeneration.
-   * (e.g. a drought's peak holds rainfall low.) Variables the stage's effects change are held automatically.
+   * (e.g. a drought's peak holds rainfall low.)
+   * Variables the stage's effects change are held automatically.
    */
   holds?: EnvVariable[];
   /** Fraction of the flock killed at random (trait-independent), applied on the stage's first generation. */
@@ -169,10 +246,13 @@ export interface EventDef {
   category: EventCategory;
   /** Relative chance of being picked by the random scheduler. */
   weight: number;
-  persistence: 'temporary' | 'permanent';
+  persistence: "temporary" | "permanent";
   stages: StageDef[];
   /** Chance of permanently lowering regeneration capacity when a temporary event resolves. */
-  lastingEffect?: { chance: number; capacity: Partial<EnvironmentState['capacity']> };
+  lastingEffect?: {
+    chance: number;
+    capacity: Partial<EnvironmentState["capacity"]>;
+  };
   setsCompetitorDiet?: FoodType;
   /** Event ids that cannot be active at the same time as this one. */
   conflictsWith?: string[];
@@ -193,7 +273,7 @@ export interface EventLogEntry {
   generation: number;
   eventId: string;
   eventName: string;
-  kind: 'started' | 'stageChanged' | 'resolved';
+  kind: "started" | "stageChanged" | "resolved";
   stage: StageName;
   message: string;
 }
