@@ -1,0 +1,16 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #1f1f1f;
+  overflow: hidden;
+}
+
+/* The Konva stage keeps the game's shape and is centered in the window. */
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

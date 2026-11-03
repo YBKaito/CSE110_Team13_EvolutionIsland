@@ -7,8 +7,8 @@
 
 | Slice | State |
 |---|---|
-| 1. Simulation core: setup, contracts, RNG, fitness, engine, environment, 5 events, scheduler, coordinator, dev harness, tests | **Done.** 96 tests pass, `tsc` is clean, `npm run build` works |
-| 2. Screens: GameScreen (generation screen) + EventScreen (event card, island changes) | Next |
+| 1. Simulation core: setup, contracts, RNG, fitness, engine, environment, 5 events, scheduler, coordinator, tests | **Done.** |
+| 2. Screens (Konva): GameScreen (generation screen, low-population warning, quit confirm, extinction) + EventScreen (event card, island changes table) | **Done.** 119 tests pass, `tsc` is clean, `npm run build` works |
 | 3. Integration with US1 menu / US2 creation / US5 milestone choice / US6 game over | After the other pairs land their pieces |
 
 **Decisions the report settled:**
@@ -23,7 +23,17 @@
 
 **How to run:**
 - `npm test`
-- `npm run dev`, then open `/?script=mockup` (mockup storyline) or `/?seed=7` (random events). `&gens=60` changes the length of the run.
+- `npm run dev`, then open `/?script=mockup` (mockup storyline) or `/?seed=7` (repeatable random run). With no `?seed`, every run is different.
+- Type a number and press Enter, like in the mockups.
+
+**Frontend structure (slice 2):**
+- `src/screens/ui/`: the shared Konva pieces. `ScreenHost` owns the stage and keyboard input; `TerminalRenderer` draws a `ScreenSpec` (text, tables, trait bars, prompt) in the mockup style; `theme.ts` holds colors, sizes and the font (Google Font "Pixelify Sans").
+- `*View.ts` files are pure: game state in, `ScreenSpec` out. `*Controller.ts` files handle typed input and switch screens through a `ScreenNavigator`. Both are tested without a browser.
+- Other screens (menu, creation, evolution choice, game over) can reuse the same host and renderer: implement `Screen { spec(); submit(input) }`.
+- **Changes from the mockup:**
+  - The generation table is "Adults / Died / Chicks born / Change", because generations don't overlap.
+  - Trait bars show all 3–4 options for each trait.
+  - Decorative feather art isn't in the repo yet, so it isn't drawn.
 
 ---
 

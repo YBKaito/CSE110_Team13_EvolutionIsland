@@ -1,45 +1,45 @@
-// Temporary dev harness for US3/US4: runs a simulation and prints one line per generation.
-// Replace with the real screens once the menu/creation screens land.
-// URL options: ?seed=42  ?script=mockup  ?gens=40
+// Entry point. Until the menu (US1) and species creation (US2) screens exist, this starts a run
+// with a default species and goes straight to the generation screen.
+// URL options: ?seed=42 (repeatable run)  ?script=mockup (drought at Gen 6, predator at Gen 24)
 
+import './styles/styles.css';
 import { MOCKUP_SCRIPT } from './events/eventDefinitions';
-import { RandomScheduler, ScriptedScheduler } from './events/EventFactory';
-import { describeActive } from './events/EventManager';
+import { RandomScheduler, ScriptedScheduler, type EventScheduler } from './events/EventFactory';
 import { GameController } from './game/GameController';
-import { TRAIT_OPTIONS } from './simulation/traitContent';
-import type { GenerationResult, TraitName } from './types';
+import type { StartingSpecies } from './models/GameState';
+import { GameScreenController } from './screens/GameScreen/GameScreenController';
+import { ScreenHost } from './screens/ui/ScreenHost';
+import { FONT_FAMILY } from './screens/ui/theme';
+
+const DEFAULT_SPECIES: StartingSpecies = { name: 'Sparrow', traits: { beak: 0, body: 1, feathers: 1, color: 0 } };
 
 const params = new URLSearchParams(window.location.search);
-const seed = Number(params.get('seed') ?? 42);
-const generations = Number(params.get('gens') ?? 40);
-const scheduler = params.get('script') === 'mockup' ? new ScriptedScheduler(MOCKUP_SCRIPT) : new RandomScheduler();
+const useScript = params.get('script') === 'mockup';
+const makeScheduler = (): EventScheduler => (useScript ? new ScriptedScheduler(MOCKUP_SCRIPT) : new RandomScheduler());
+const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
 
-const game = GameController.startRun({ name: 'Sparrow', traits: { beak: 0, body: 1, feathers: 1, color: 0 } }, seed, scheduler);
+async function boot(): Promise<void> {
+  // Draw with the pixel font from the start instead of flashing the fallback font.
+  try {
+    await Promise.all([document.fonts.load(`24px ${FONT_FAMILY}`), document.fonts.load(`bold 24px ${FONT_FAMILY}`)]);
+  } catch {
+    // Font unavailable (e.g. offline); the fallback font still works.
+  }
 
-function shares(result: GenerationResult, trait: TraitName): string {
-  const total = Math.max(1, result.population);
-  return TRAIT_OPTIONS[trait].map((option, i) => `${option[0]}${Math.round((100 * result.traitCounts[trait][i]) / total)}`).join('/');
+  const container = document.getElementById('app') as HTMLDivElement;
+  const host = new ScreenHost(container);
+
+  const startRun = (seed: number) => {
+    const game = GameController.startRun(DEFAULT_SPECIES, seed, makeScheduler());
+    host.show(
+      new GameScreenController(host, game, {
+        onQuit: () => startRun(randomSeed()),
+        onRestart: () => startRun(randomSeed()),
+      }),
+    );
+  };
+
+  startRun(params.has('seed') ? Number(params.get('seed')) : randomSeed());
 }
 
-const pad = (value: string | number, width: number) => String(value).padStart(width);
-const lines: string[] = [`seed=${seed}  scheduler=${scheduler instanceof ScriptedScheduler ? 'mockup script' : 'random'}`, ''];
-
-for (let i = 0; i < generations && !game.isOver; i++) {
-  const { result, events } = game.step();
-  const env = game.state.environment;
-  const d = result.deathsByCause;
-  const active = game.state.activeEvents.map((e) => describeActive(e)).join(', ') || '-';
-  lines.push(
-    `Gen ${pad(result.generation, 3)} | pop ${pad(result.population, 3)} (adults ${pad(result.startPopulation, 3)}) ` +
-      `| died: starve ${pad(d.starvation, 2)} cold/heat ${pad(d.exposure, 2)} hawks ${pad(d.predation, 2)} storm ${pad(d.disaster, 2)} ` +
-      `| beak ${shares(result, 'beak')} color ${shares(result, 'color')} ` +
-      `| rain ${pad(env.rainfall.toFixed(0), 3)} temp ${pad(env.temperature.toFixed(0), 3)} soft ${pad(env.food.softPlants.toFixed(0), 3)} ` +
-      `hard ${pad(env.food.hardSeeds.toFixed(0), 3)} pred ${pad(env.predation.toFixed(0), 3)} | ${active}`,
-  );
-  for (const entry of events) lines.push(`        >> ${entry.eventName} [${entry.stage}] ${entry.message}`);
-  if (result.lowPopulation) lines.push('        !! Warning: your flock is close to extinction.');
-  if (result.extinct) lines.push('        XX The flock has died out.');
-}
-
-const app = document.getElementById('app');
-if (app) app.textContent = lines.join('\n');
+void boot();

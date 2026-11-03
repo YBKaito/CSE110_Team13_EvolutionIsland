@@ -119,6 +119,8 @@ export interface StageDef {
   randomMortality?: [number, number];
   /** Player-facing text for this stage. */
   message: string;
+  /** Short headline for the event card, e.g. "The rains are slowing". */
+  title?: string;
 }
 
 export interface EventDef {

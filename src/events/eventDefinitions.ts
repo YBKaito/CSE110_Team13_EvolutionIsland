@@ -24,6 +24,7 @@ export const DROUGHT: EventDef = {
         { variable: 'rainfall', mode: 'perGen', range: [-4, -2] },
         { variable: 'softPlants', mode: 'perGen', range: [-2, 0] },
       ],
+      title: 'The rains are slowing',
       message: 'Rainfall is decreasing, and some plants are beginning to disappear.',
     },
     {
@@ -37,6 +38,7 @@ export const DROUGHT: EventDef = {
         { variable: 'smallSeeds', mode: 'perGen', range: [-2, 0] },
         { variable: 'cover', mode: 'perGen', range: [-2, 0] },
       ],
+      title: 'The drought is spreading',
       message: 'The drought is getting worse. Soft plants and small seeds are drying up.',
     },
     {
@@ -46,6 +48,7 @@ export const DROUGHT: EventDef = {
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'softPlants', mode: 'perGen', range: [-2, 0] }],
       holds: ['rainfall'],
+      title: 'Drought grips the island',
       message: 'The drought has become severe. Hard seeds are now the easiest food to find.',
     },
     {
@@ -57,6 +60,7 @@ export const DROUGHT: EventDef = {
         { variable: 'rainfall', mode: 'perGen', range: [2, 5] },
         { variable: 'softPlants', mode: 'perGen', range: [1, 3] },
       ],
+      title: 'The rains return',
       message: 'Rain is returning, and plants are slowly growing back.',
     },
   ],
@@ -75,6 +79,7 @@ export const HARSH_WINTER: EventDef = {
       maxDuration: 5,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'temperature', mode: 'perGen', range: [-4, -2] }],
+      title: 'A cold wind is blowing',
       message: 'Temperatures are falling, and insect activity is declining.',
     },
     {
@@ -87,6 +92,7 @@ export const HARSH_WINTER: EventDef = {
         { variable: 'insects', mode: 'perGen', range: [-3, -1] },
         { variable: 'softPlants', mode: 'perGen', range: [-2, 0] },
       ],
+      title: 'Winter is setting in',
       message: 'The cold is deepening. Insects are becoming hard to find.',
     },
     {
@@ -96,6 +102,7 @@ export const HARSH_WINTER: EventDef = {
       transitionChance: STAGE_CHANCE,
       effects: [],
       holds: ['temperature', 'insects'],
+      title: 'A harsh winter grips the island',
       message: 'A harsh winter grips the island. Staying warm is a struggle.',
     },
     {
@@ -104,6 +111,7 @@ export const HARSH_WINTER: EventDef = {
       maxDuration: 8,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'temperature', mode: 'perGen', range: [2, 5] }],
+      title: 'Spring is coming',
       message: 'The weather is warming, and insects are returning.',
     },
   ],
@@ -124,6 +132,7 @@ export const HURRICANE: EventDef = {
       maxDuration: 3,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'rainfall', mode: 'perGen', range: [5, 12] }],
+      title: 'A storm is coming',
       message: 'Strong storms are approaching; vegetation and nesting areas may be damaged.',
     },
     {
@@ -137,6 +146,7 @@ export const HURRICANE: EventDef = {
       ],
       // Trait-independent losses: luck, not natural selection (a bottleneck).
       randomMortality: [0.1, 0.4],
+      title: 'The hurricane hits',
       message: 'A hurricane strikes! Trees are torn down and some birds are lost in the storm.',
     },
     {
@@ -146,6 +156,7 @@ export const HURRICANE: EventDef = {
       transitionChance: STAGE_CHANCE,
       effects: [],
       holds: ['cover'],
+      title: 'After the storm',
       message: 'With fewer trees and bushes, birds are easier for predators to spot.',
     },
     {
@@ -154,6 +165,7 @@ export const HURRICANE: EventDef = {
       maxDuration: 25,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'cover', mode: 'perGen', range: [1, 3] }],
+      title: 'The island regrows',
       message: 'Plants and shelter are slowly growing back.',
     },
   ],
@@ -172,6 +184,7 @@ export const NEW_PREDATOR: EventDef = {
       maxDuration: 6,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'predation', mode: 'perGen', range: [1, 3] }],
+      title: 'A new predator appears',
       message: 'An unfamiliar predator has been spotted hunting near the flock.',
     },
     {
@@ -180,6 +193,7 @@ export const NEW_PREDATOR: EventDef = {
       maxDuration: 10,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'predation', mode: 'perGen', range: [1, 3] }],
+      title: 'The predator is settling in',
       message: 'The new predator is settling in and hunting more often.',
     },
     {
@@ -188,6 +202,7 @@ export const NEW_PREDATOR: EventDef = {
       maxDuration: null,
       transitionChance: 0,
       effects: [],
+      title: 'The predator is here to stay',
       message: 'The predator is now a permanent part of the island.',
     },
   ],
@@ -210,6 +225,7 @@ export const NEW_COMPETITOR: EventDef = {
         { variable: 'competition', mode: 'perGen', range: [1, 3] },
         { variable: 'smallSeeds', mode: 'perGen', range: [-2, 0] },
       ],
+      title: 'New finches arrive',
       message: "A new finch population has appeared and is feeding on the island's small seeds.",
     },
     {
@@ -218,6 +234,7 @@ export const NEW_COMPETITOR: EventDef = {
       maxDuration: 10,
       transitionChance: STAGE_CHANCE,
       effects: [{ variable: 'competition', mode: 'perGen', range: [2, 4] }],
+      title: 'The finches are spreading',
       message: 'The finches are spreading. Small seeds are getting harder to find.',
     },
     {
@@ -226,6 +243,7 @@ export const NEW_COMPETITOR: EventDef = {
       maxDuration: null,
       transitionChance: 0,
       effects: [],
+      title: 'The finches are here to stay',
       message: 'The finches are here to stay, eating small seeds alongside your flock.',
     },
   ],
