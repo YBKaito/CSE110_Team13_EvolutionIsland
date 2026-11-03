@@ -1,4 +1,4 @@
-name: CI
+name: US1 Start Screen CI
 
 # Run on every push to any branch, and on every pull request into main
 on:
