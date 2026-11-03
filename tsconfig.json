@@ -18,5 +18,11 @@
 
 		// Disallow features that require cross-file awareness
 		"isolatedModules": true,
+
+    "target": "ES2022",
+
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    
+    "moduleResolution": "Bundler"
 	},
 }
