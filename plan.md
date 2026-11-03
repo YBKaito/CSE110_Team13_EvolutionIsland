@@ -1,3 +1,195 @@
+
+# Implementation Plan: US1 (Main Menu) + US2 (Species Creation)
+
+**Branch:** `integration/us2-us3`
+
+## Status
+
+| Feature | State |
+|---|---|
+| US1: Main menu, input handling, and navigation | Done |
+| US2: Species naming, trait selection, and confirmation | Done |
+| US2 unit tests | Done, 15 tests passing |
+| US1/US2 integration with US3 | Done |
+
+---
+
+## 1. Design Decisions
+
+| Decision | Choice |
+|---|---|
+| Architecture | Separate controller, view, and model responsibilities to keep input handling, rendering, and state management independent. |
+| State management | Use `MenuState` to track the current screen, creation progress, selected traits, and completed species. |
+| Species creation | Use a step-by-step process instead of collecting all inputs at once. |
+| Trait definitions | Store trait options in shared constants to avoid repeating choices and validation logic. |
+| Input validation | Validate species names and numbered trait selections before advancing to the next step. |
+| Confirmation | Allow players to review their selected traits before creating the final `Species` object. |
+| Integration | Convert US2's string-based traits into US3's numeric indices without modifying the simulation engine. |
+
+---
+
+## 2. File Structure
+
+| File | Purpose | Story |
+|---|---|---|
+| `src/screens/MenuScreen/MenuScreenController.ts` | Handles menu input and navigation | US1 |
+| `src/screens/MenuScreen/MenuScreenView.ts` | Displays menu content and terminal output | US1 |
+| `src/screens/CreationScreen/CreationScreenController.ts` | Handles species naming, trait selection, validation, and confirmation | US2 |
+| `src/screens/CreationScreen/CreationScreenView.ts` | Displays creation steps, trait advantages/disadvantages, and confirmation | US2 |
+| `src/models/Species.ts` | Stores the species name and selected traits | US2 |
+| `src/models/GameState.ts` | Contains `MenuState` for menu and creation progress | Shared |
+| `src/constants.ts` | Contains creation steps and trait options | US2 |
+| `src/types.ts` | Defines `SpeciesTraits` and `SpeciesData` | Shared |
+| `src/main.ts` | Connects menu, creation, and simulation | Integration |
+| `tests/CreationScreenController.test.ts` | Unit tests for species creation | US2 |
+
+---
+
+## 3. US1: Main Menu
+
+### 3.1 Menu State
+
+`MenuState` tracks the current screen and the information needed during species creation.
+
+The menu and creation screens share this state, allowing navigation without creating separate copies of the player's selections.
+
+### 3.2 Controller and View
+
+- `MenuScreenController` processes player input and handles navigation.
+- `MenuScreenView` displays the menu through the terminal interface.
+- Invalid inputs produce error messages rather than advancing the game.
+- Selecting species creation transitions the player to US2 and initializes the creation state.
+
+### 3.3 Navigation
+
+The menu and creation screens are connected through `main.ts`, which checks the current screen and sends input to the appropriate controller.
+
+The screen is then rendered using the corresponding view.
+
+---
+
+## 4. US2: Species Creation
+
+### 4.1 Creation Process
+
+Species creation follows six steps:
+
+1. Species name
+2. Beak length
+3. Body size
+4. Feather density
+5. Color
+6. Confirmation
+
+The current step is tracked through `MenuState.creationStep`.
+
+### 4.2 Trait Options
+
+| Trait | Options |
+|---|---|
+| Beak length | short, medium, long |
+| Body size | small, medium, large |
+| Feather density | thin, medium, thick |
+| Color | brown, gray, yellow, white |
+
+Each option has an associated advantage and disadvantage displayed during creation.
+
+The controller uses `CREATION_STEPS` and `TRAIT_OPTIONS` to determine which choices are available at each step. This avoids implementing separate selection logic for every trait.
+
+### 4.3 Input Validation
+
+- Species names must contain between 2 and 30 characters.
+- Leading and trailing whitespace is removed from names.
+- Trait selections must be valid numbered options.
+- Invalid input does not advance the creation step.
+- Players can return to the menu using `B`.
+
+### 4.4 Confirmation and Species Model
+
+After selecting all four traits, the player reviews their choices.
+
+- `Y` confirms the selections and creates a `Species` instance.
+- `N` restarts the creation process.
+- The completed species contains a name and a `SpeciesTraits` object.
+
+`Species.toData()` returns the species information as plain data, including a copy of its traits.
+
+---
+
+## 5. US2 → US3 Integration
+
+### 5.1 Trait Representation
+
+US2 and US3 initially used different representations for traits.
+
+- **US2:** Descriptive string values such as `"long"` and `"thick"`.
+- **US3:** Numeric indices used by the simulation engine.
+
+Rather than changing either implementation, a conversion layer was added to `main.ts`.
+
+For example:
+
+    beak: SIM_TRAIT_OPTIONS.beak.indexOf(traits.beakLength)
+
+The same conversion is applied to body size, feather density, and color.
+
+### 5.2 Starting the Simulation
+
+Once the player confirms their species:
+
+1. `CreationScreenController` creates the `Species` object.
+2. `MenuState.screen` changes to `"simulation"`.
+3. `main.ts` converts the selected traits into US3's numeric representation.
+4. `GameController.startRun()` initializes the simulation using the selected species.
+5. `ScreenHost` displays the generation screen.
+
+US3 creates an initial population of 80 birds, with each trait having a 70% chance of matching the player's original selection.
+
+The generation screen also displays the original species name and trait selections so players can compare their choices against the evolving population.
+
+---
+
+## 6. Testing
+
+### 6.1 US2 Unit Tests
+
+**File:** `tests/CreationScreenController.test.ts`
+
+**Framework:** Vitest
+
+15 tests were added covering:
+
+- Species naming and validation
+- Trait selection and invalid inputs
+- Confirmation, restarting, and navigation
+
+The tests verify that invalid inputs do not advance the creation process, valid traits are stored correctly, and a species is created only after confirmation.
+
+**Result:** 15 tests passing.
+
+### 6.2 Manual Integration Testing
+
+The integrated game was run to verify the transition from species creation into the generation simulation.
+
+The initial population was checked to confirm that the selected species name and traits were carried into US3 and reflected in the population distribution.
+
+---
+
+## 7. Future Improvements
+
+The main area for improvement is consistency between different user stories. Since features were developed separately, some components use different approaches to state management, rendering, and trait representation.
+
+Potential improvements include:
+
+- Consolidating repeated code into shared utilities or components.
+- Standardizing controller and view interfaces across screens.
+- Using a shared trait representation to remove the conversion layer.
+- Adding automated integration tests for the complete menu-to-simulation flow.
+
+These changes would reduce duplication and make future features easier to integrate.
+
+---
+
 # Implementation Plan: US3 (Simulate Generations) + US4 (Environmental Events)
 
 **Branch:** `us3-us4-simulation`
