@@ -173,7 +173,7 @@ export type PreferredTraits = Record<TraitKey, string>;
 /** 
  * Environment indices are integers from 0 to 100. They start at 0 and cap at 100.
  */
-export interface EnvironmentState {
+export interface EnvironmentStateMock {
   temperature: number;
   rainfall: number;
   softPlants: number;
@@ -185,7 +185,7 @@ export interface EnvironmentState {
   competition: number;
   habitatBackground: RGB;
 }
-export type NumericEnvironmentKey = Exclude<keyof EnvironmentState, 'habitatBackground'>;
+export type NumericEnvironmentKey = Exclude<keyof EnvironmentStateMock, 'habitatBackground'>;
 
 /**
  * Results from one generation.
@@ -200,7 +200,7 @@ export interface GenerationResults {
 /** Environment values tagged with the generation they belong to. */
 export interface EnvironmentUpdated {
   generation: number;
-  state: Readonly<EnvironmentState>;
+  state: Readonly<EnvironmentStateMock>;
 }
 
 /** Generation results with trait counts for the choice screen's distribution bars. */
@@ -214,7 +214,7 @@ export interface GenerationCompleted {
 export interface ObservationSnapshot {
   generation: number;
   results: GenerationResults;
-  environment: EnvironmentState;
+  environment: EnvironmentStateMock;
   traitCounts: TraitCounts;
 }
 
