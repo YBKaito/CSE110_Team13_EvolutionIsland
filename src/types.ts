@@ -1,44 +1,3 @@
-// Add screen and input types for US1
-// Every screen the game can show. Later stories add more.
-export type ScreenId =
-  | "menu"
-  | "howToPlay"
-  | "minigames"
-  | "end"
-  | "creation"
-  | "simulation";
-
-// What the controller returns after the player types something.
-export interface InputResult {
-  nextScreen: ScreenId;
-  error: string | null;
-}
-
-// One page of the How to Play section.
-export interface HowToPlayCard {
-  title: string;
-  lines: string[];
-}
-
-//Used for species creation 
-export type BeakLength = "short" | "medium" | "long";
-export type BodySize = "small" | "medium" | "large";
-export type FeatherDensity = "thin" | "medium" | "thick";
-export type BirdColor = "light" | "brown" | "dark";
-
-export interface SpeciesTraits {
-  beakLength: BeakLength;
-  bodySize: BodySize;
-  featherDensity: FeatherDensity;
-  color: BirdColor;
-}
-
-export interface SpeciesData {
-  name: string;
-  traits: SpeciesTraits;
-}
-// Shared data contracts for the simulation (US3), events (US4), and the game coordinator.
-// Other stories should read these shapes rather than reaching into module internals.
 
 // Add screen and input types for US1
 // Every screen the game can show. Later stories add more.
@@ -82,6 +41,7 @@ export interface SpeciesData {
 
 // Shared data contracts for the simulation (US3), events (US4),
 // and the game coordinator.
+
 // ---------- Birds ----------
 
 export type TraitName = "beak" | "body" | "feathers" | "color";
@@ -277,6 +237,7 @@ export interface EventLogEntry {
   stage: StageName;
   message: string;
 }
+
 /**
  * Data types shared by the evolution choice screen and simulation.
  */
@@ -289,7 +250,7 @@ export type TraitCounts = Record<TraitKey, Record<string, number>>;
 /** Which option the player currently favors for future offspring. */
 export type PreferredTraits = Record<TraitKey, string>;
 
-/** 
+/**
  * Environment indices are integers from 0 to 100. They start at 0 and cap at 100.
  */
 export interface EnvironmentStateMock {
@@ -304,6 +265,7 @@ export interface EnvironmentStateMock {
   competition: number;
   habitatBackground: RGB;
 }
+
 export type NumericEnvironmentKey = Exclude<keyof EnvironmentStateMock, 'habitatBackground'>;
 
 /**
