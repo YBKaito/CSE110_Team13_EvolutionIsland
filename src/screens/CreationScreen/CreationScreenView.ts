@@ -1,4 +1,3 @@
-
 import { CREATION_STEPS, TRAIT_OPTIONS } from "../../constants";
 import type { MenuState } from "../../models/GameState";
 import type { SpeciesTraits } from "../../types";
@@ -38,7 +37,7 @@ export function renderCreationScreen(state: MenuState): string[] {
       lines.push("");
     });
 
-    lines.push("Enter 1, 2, or 3.");
+    lines.push(`Enter a number from 1 to ${options.length}.`);
     lines.push("Type B to return to the menu.");
 
     return lines;

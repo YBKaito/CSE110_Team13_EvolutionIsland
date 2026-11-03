@@ -26,6 +26,7 @@ import { GameController } from "./game/GameController";
 import { GameScreenController } from "./screens/GameScreen/GameScreenController";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
+import { TRAIT_OPTIONS as SIM_TRAIT_OPTIONS } from "./simulation/traitContent";
 
 const params = new URLSearchParams(window.location.search);
 const useScript = params.get("script") === "mockup";
@@ -72,13 +73,14 @@ async function boot(): Promise<void> {
     const traits = state.species.traits;
 
     // Convert US2's string traits into US3's numeric traits.
+    // Use US3's trait definitions as the source of truth.
     const species: StartingSpecies = {
       name: state.species.name,
       traits: {
-        beak: ["short", "medium", "long"].indexOf(traits.beakLength),
-        body: ["small", "medium", "large"].indexOf(traits.bodySize),
-        feathers: ["thin", "medium", "thick"].indexOf(traits.featherDensity),
-        color: ["light", "brown", "dark"].indexOf(traits.color),
+        beak: SIM_TRAIT_OPTIONS.beak.indexOf(traits.beakLength),
+        body: SIM_TRAIT_OPTIONS.body.indexOf(traits.bodySize),
+        feathers: SIM_TRAIT_OPTIONS.feathers.indexOf(traits.featherDensity),
+        color: SIM_TRAIT_OPTIONS.color.indexOf(traits.color),
       },
     };
 

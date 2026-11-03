@@ -48,13 +48,12 @@ export class CreationScreenController {
       ) {
         return {
           nextScreen: "creation",
-          error: "Please select a valid option (1-3).",
+          error: `Please select a valid option (1-${options.length}).`,
         };
       }
 
       const selected = options[choice - 1];
 
-      // Each trait is assigned its corresponding option.
       this.state.selectedTraits = {
         ...this.state.selectedTraits,
         [trait]: selected.value,
