@@ -1,45 +1,161 @@
-// Entry point. Until the menu (US1) and species creation (US2) screens exist, this starts a run
-// with a default species and goes straight to the generation screen.
-// URL options: ?seed=42 (repeatable run)  ?script=mockup (drought at Gen 6, predator at Gen 24)
 
-import './styles/styles.css';
-import { MOCKUP_SCRIPT } from './events/eventDefinitions';
-import { RandomScheduler, ScriptedScheduler, type EventScheduler } from './events/EventFactory';
-import { GameController } from './game/GameController';
-import type { StartingSpecies } from './models/GameState';
-import { GameScreenController } from './screens/GameScreen/GameScreenController';
-import { ScreenHost } from './screens/ui/ScreenHost';
-import { FONT_FAMILY } from './screens/ui/theme';
+import "@fontsource/pixelify-sans/400.css";
+import "@fontsource/pixelify-sans/700.css";
+import "@fontsource/silkscreen/400.css";
+import "./styles/styles.css";
 
-const DEFAULT_SPECIES: StartingSpecies = { name: 'Sparrow', traits: { beak: 0, body: 1, feathers: 1, color: 0 } };
+import { MenuState } from "./models/GameState";
+import type { StartingSpecies } from "./models/GameState";
+
+import { MenuScreenController } from "./screens/MenuScreen/MenuScreenController";
+import {
+  MenuScreenView,
+  renderScreen,
+} from "./screens/MenuScreen/MenuScreenView";
+
+import { CreationScreenController } from "./screens/CreationScreen/CreationScreenController";
+import { renderCreationScreen } from "./screens/CreationScreen/CreationScreenView";
+
+import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
+import {
+  RandomScheduler,
+  ScriptedScheduler,
+  type EventScheduler,
+} from "./events/EventFactory";
+import { GameController } from "./game/GameController";
+import { GameScreenController } from "./screens/GameScreen/GameScreenController";
+import { ScreenHost } from "./screens/ui/ScreenHost";
+import { FONT_FAMILY } from "./screens/ui/theme";
+import { TRAIT_OPTIONS as SIM_TRAIT_OPTIONS } from "./simulation/traitContent";
 
 const params = new URLSearchParams(window.location.search);
-const useScript = params.get('script') === 'mockup';
-const makeScheduler = (): EventScheduler => (useScript ? new ScriptedScheduler(MOCKUP_SCRIPT) : new RandomScheduler());
+const useScript = params.get("script") === "mockup";
+
+const makeScheduler = (): EventScheduler =>
+  useScript
+    ? new ScriptedScheduler(MOCKUP_SCRIPT)
+    : new RandomScheduler();
+
 const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
 
 async function boot(): Promise<void> {
-  // Draw with the pixel font from the start instead of flashing the fallback font.
   try {
-    await Promise.all([document.fonts.load(`24px ${FONT_FAMILY}`), document.fonts.load(`bold 24px ${FONT_FAMILY}`)]);
+    await Promise.all([
+      document.fonts.load(`24px ${FONT_FAMILY}`),
+      document.fonts.load(`bold 24px ${FONT_FAMILY}`),
+    ]);
   } catch {
-    // Font unavailable (e.g. offline); the fallback font still works.
+    // Font unavailable; fallback font still works.
   }
 
-  const container = document.getElementById('app') as HTMLDivElement;
-  const host = new ScreenHost(container);
+  const output = document.getElementById("terminal-output");
+  const input = document.getElementById("terminal-input");
+  const form = document.getElementById("terminal-form");
 
-  const startRun = (seed: number) => {
-    const game = GameController.startRun(DEFAULT_SPECIES, seed, makeScheduler());
-    host.show(
-      new GameScreenController(host, game, {
-        onQuit: () => startRun(randomSeed()),
-        onRestart: () => startRun(randomSeed()),
-      }),
-    );
-  };
+  if (!output || !(input instanceof HTMLInputElement) || !form) {
+    return;
+  }
 
-  startRun(params.has('seed') ? Number(params.get('seed')) : randomSeed());
+  const state = new MenuState();
+
+  const menuController = new MenuScreenController(state);
+  const creationController = new CreationScreenController(state);
+
+  const view = new MenuScreenView(output, input);
+
+  let simulationStarted = false;
+
+  function startSimulation(): void {
+    if (!state.species || simulationStarted) return;
+
+    simulationStarted = true;
+
+    const traits = state.species.traits;
+
+    // Convert US2's string traits into US3's numeric traits.
+    // Use US3's trait definitions as the source of truth.
+    const species: StartingSpecies = {
+      name: state.species.name,
+      traits: {
+        beak: SIM_TRAIT_OPTIONS.beak.indexOf(traits.beakLength),
+        body: SIM_TRAIT_OPTIONS.body.indexOf(traits.bodySize),
+        feathers: SIM_TRAIT_OPTIONS.feathers.indexOf(traits.featherDensity),
+        color: SIM_TRAIT_OPTIONS.color.indexOf(traits.color),
+      },
+    };
+
+    const seed = params.has("seed")
+      ? Number(params.get("seed"))
+      : randomSeed();
+
+    const game = GameController.startRun(species, seed, makeScheduler());
+
+    // Replace the menu with US3's simulation screen.
+    const container = document.getElementById("app") as HTMLDivElement;
+    const host = new ScreenHost(container);
+
+    const showGame = (controller: GameController): void => {
+      host.show(
+        new GameScreenController(host, controller, {
+          onQuit: () => {
+            window.location.reload();
+          },
+          onRestart: () => {
+            showGame(
+              GameController.startRun(species, randomSeed(), makeScheduler()),
+            );
+          },
+        }),
+      );
+    };
+
+    showGame(game);
+  }
+
+  function renderCurrentScreen(error: string | null = null): void {
+    switch (state.screen) {
+      case "creation":
+        view.show(renderCreationScreen(state), error);
+        break;
+
+      case "simulation":
+        startSimulation();
+        return;
+
+      default:
+        view.show(renderScreen(state), error);
+        break;
+    }
+
+    if (state.screen === "end") {
+      view.disableInput();
+    }
+  }
+
+  renderCurrentScreen();
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const raw = input.value;
+    let error: string | null = null;
+
+    if (state.screen === "creation") {
+      const result = creationController.handleInput(raw);
+      error = result.error;
+    } else if (state.screen === "simulation") {
+      return;
+    } else {
+      const result = menuController.handleInput(raw);
+      error = result.error;
+
+      if (result.nextScreen === "creation") {
+        state.resetCreation();
+      }
+    }
+
+    renderCurrentScreen(error);
+  });
 }
 
 void boot();

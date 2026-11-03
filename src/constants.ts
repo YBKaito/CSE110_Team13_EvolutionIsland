@@ -1,3 +1,153 @@
+
+import type { HowToPlayCard } from "./types";
+
+export const GAME_TITLE = "EVOLUTION SIMULATOR";
+
+export const MENU_OPTIONS: string[] = [
+  "Start the game",
+  "Learn about the mechanics",
+  "Play the minigames",
+  "End",
+];
+
+export const MENU_ERROR =
+  "Please type a number from 1 to 4, then press Enter.";
+
+export const CARD_ERROR =
+  "Press Enter to continue or type B to go back to the menu.";
+
+export const HOW_TO_PLAY_CARDS: HowToPlayCard[] = [
+  {
+    title: "YOUR GOAL",
+    lines: [
+      "You design a bird species on a changing island.",
+      "Keep your flock alive for as many generations as you can.",
+      "If the population reaches 0, your species goes extinct.",
+    ],
+  },
+  {
+    title: "HOW A ROUND WORKS",
+    lines: [
+      "Each round is one generation.",
+      "Events like droughts, floods, and predators change the island.",
+      "Birds with traits that fit the island survive and lay eggs.",
+      "Their chicks inherit those traits.",
+    ],
+  },
+  {
+    title: "YOUR CHOICES",
+    lines: [
+      "You pick 4 traits: beak length, body size, feather density, color.",
+      "At Generation 10, 20, and 30 you make one evolution choice.",
+      "Read the island stats first. Then pick the trait that helps most.",
+      "The game gets harder every 10 generations.",
+    ],
+  },
+];
+
+export const PLACEHOLDER_TEXT: Record<"creation" | "minigames", string> = {
+  creation: "Species creation is coming in US2.",
+  minigames: "Minigames are coming in a later sprint.",
+};
+
+export const TRAIT_OPTIONS = {
+  beakLength: [
+    {
+      value: "short",
+      label: "Short",
+      advantage: "Efficient at eating small seeds and insects.",
+      disadvantage: "Struggles with hard seeds and soft plants.",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      advantage: "Can eat a wide variety of foods.",
+      disadvantage: "Less efficient than specialized beaks.",
+    },
+    {
+      value: "long",
+      label: "Long",
+      advantage: "Efficient at eating soft plants and hard seeds.",
+      disadvantage: "Struggles with small seeds and insects.",
+    },
+  ],
+  bodySize: [
+    {
+      value: "small",
+      label: "Small",
+      advantage: "Requires less food and is less vulnerable to predators.",
+      disadvantage: "Retains less body heat.",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      advantage: "Balances food needs, heat retention, and vulnerability.",
+      disadvantage: "Lacks specialized advantages.",
+    },
+    {
+      value: "large",
+      label: "Large",
+      advantage: "Retains more body heat in cold environments.",
+      disadvantage: "Requires more food and is more vulnerable to predators.",
+    },
+  ],
+  featherDensity: [
+    {
+      value: "thin",
+      label: "Thin",
+      advantage: "Better suited for warm environments.",
+      disadvantage: "Provides less insulation in cold environments.",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      advantage: "Provides balanced insulation.",
+      disadvantage: "Less effective in extreme temperatures.",
+    },
+    {
+      value: "thick",
+      label: "Thick",
+      advantage: "Provides better insulation in cold environments.",
+      disadvantage: "Can increase overheating risk in warm environments.",
+    },
+  ],
+  color: [
+    {
+      value: "brown",
+      label: "Brown",
+      advantage: "Blends into forest environments.",
+      disadvantage: "More visible against sandy backgrounds.",
+    },
+    {
+      value: "gray",
+      label: "Gray",
+      advantage: "Blends into scrub environments.",
+      disadvantage: "More visible in forests.",
+    },
+    {
+      value: "yellow",
+      label: "Yellow",
+      advantage: "Provides some camouflage in sandy environments.",
+      disadvantage: "Highly visible in forests.",
+    },
+    {
+      value: "white",
+      label: "White",
+      advantage: "Blends into sandy environments.",
+      disadvantage: "Highly visible in forests.",
+    },
+  ],
+} as const;
+
+export const CREATION_STEPS = [
+  "name",
+  "beakLength",
+  "bodySize",
+  "featherDensity",
+  "color",
+  "confirm",
+] as const;
+
 // Tunable balance numbers for the simulation and events.
 // These are game-balancing targets, not scientific values; adjust during playtesting.
 
@@ -44,15 +194,18 @@ export const SIM = {
   COVER_SHIELD: 0.5,
 } as const;
 
-// Every island value is a whole number from MIN to MAX, and NORMAL is the starting level.
-// (Competition is the exception to NORMAL: it starts at 0, meaning no competing species.)
+// Every island value is a whole number from MIN to MAX,
+// and NORMAL is the starting level.
+// Competition starts at 0, meaning no competing species.
+
 export const ENV = {
   NORMAL: 50,
   MIN: 0,
   MAX: 100,
   /**
-   * The design report's event numbers assume normal = 100. Event effects are multiplied by this
-   * so eventDefinitions.ts can keep the report's numbers while the island uses normal = 50.
+   * The design report's event numbers assume normal = 100.
+   * Event effects are multiplied by this so eventDefinitions.ts
+   * can keep the report's numbers while the island uses normal = 50.
    */
   REPORT_SCALE: 50 / 100,
   /** Fraction of the gap to its target a derived resource closes each generation. */

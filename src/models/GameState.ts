@@ -1,28 +1,64 @@
-// Everything about a run in one plain, serializable object, so it can be saved, restored, and read by other screens.
 
-import type { ActiveEvent, EnvironmentState, EventLogEntry, GenerationResult, Population, Traits } from '../types';
+import type {
+  ScreenId,
+  SpeciesTraits,
+  ActiveEvent,
+  EnvironmentState,
+  EventLogEntry,
+  GenerationResult,
+  Population,
+  Traits,
+} from "../types";
 
-/** The species the player designed (US2 provides this). */
+import { Species } from "./Species";
+
+// ---------- US1 / US2: Menu and Species Creation ----------
+
+export class MenuState {
+  screen: ScreenId = "menu";
+  cardIndex = 0;
+  creationStep = 0;
+  birdName = "";
+
+  selectedTraits: Partial<SpeciesTraits> = {};
+  species: Species | null = null;
+
+  goTo(screen: ScreenId): void {
+    this.screen = screen;
+
+    if (screen === "howToPlay") {
+      this.cardIndex = 0;
+    }
+  }
+
+  resetCreation(): void {
+    this.creationStep = 0;
+    this.birdName = "";
+    this.selectedTraits = {};
+  }
+}
+
+// ---------- US3 / US4: Simulation State ----------
+
+/** The species passed into the simulation. */
 export interface StartingSpecies {
   name: string;
   traits: Traits;
 }
 
+/** Stores the complete state of a simulation run. */
 export interface GameState {
   seed: number;
-  /** RandomSource state after the last step; restoring it resumes the run exactly. */
   rngState: number;
   generation: number;
   species: StartingSpecies;
   population: Population;
   environment: EnvironmentState;
   activeEvents: ActiveEvent[];
-  /** Generation the most recent event started (0 if none). */
   lastStartGen: number;
+
   history: {
-    /** Result of each generation; generations[i] is generation i + 1. */
     generations: GenerationResult[];
-    /** Environment at each generation; environments[0] is the starting island. */
     environments: EnvironmentState[];
     events: EventLogEntry[];
   };
@@ -44,6 +80,10 @@ export function createGameState(
     environment,
     activeEvents: [],
     lastStartGen: 0,
-    history: { generations: [], environments: [environment], events: [] },
+    history: {
+      generations: [],
+      environments: [environment],
+      events: [],
+    },
   };
 }
