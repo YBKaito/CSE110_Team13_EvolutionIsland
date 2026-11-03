@@ -1,5 +1,5 @@
 // Add menu options and How to Play card text
-import type { HowToPlayCard } from "./types";
+import { BIRD_COLORS, type BirdColor, type HowToPlayCard, type SpeciesTraits } from "./types";
 
 export const GAME_TITLE = "EVOLUTION SIMULATOR";
 
@@ -48,6 +48,33 @@ export const HOW_TO_PLAY_CARDS: HowToPlayCard[] = [
 export const PLACEHOLDER_TEXT: Record<"creation" | "minigames", string> = {
   creation: "Species creation is coming in US2.",
   minigames: "Minigames are coming in a later sprint.",
+};
+
+const COLOR_DESCRIPTIONS: Record<BirdColor, {
+  label: string;
+  advantage: string;
+  disadvantage: string;
+}> = {
+  brown: {
+    label: "Brown",
+    advantage: "Blends into forest environments.",
+    disadvantage: "More visible against sandy backgrounds.",
+  },
+  gray: {
+    label: "Gray",
+    advantage: "Blends into scrub environments.",
+    disadvantage: "More visible in forests.",
+  },
+  yellow: {
+    label: "Yellow",
+    advantage: "Provides some camouflage in sandy environments.",
+    disadvantage: "Highly visible in forests.",
+  },
+  white: {
+    label: "White",
+    advantage: "Blends into sandy environments.",
+    disadvantage: "Highly visible in forests.",
+  },
 };
 
 export const TRAIT_OPTIONS = {
@@ -111,27 +138,15 @@ export const TRAIT_OPTIONS = {
       disadvantage: "Can increase overheating risk.",
     },
   ],
-  color: [
-    {
-      value: "light",
-      label: "Light",
-      advantage: "Camouflages well in pale environments.",
-      disadvantage: "More visible in dark environments.",
-    },
-    {
-      value: "brown",
-      label: "Brown",
-      advantage: "Camouflages well in earthy environments.",
-      disadvantage: "More visible in very pale environments.",
-    },
-    {
-      value: "dark",
-      label: "Dark",
-      advantage: "Camouflages well in dark environments.",
-      disadvantage: "More visible in pale environments.",
-    },
-  ],
-} as const;
+  color: BIRD_COLORS.map((value) => ({ value, ...COLOR_DESCRIPTIONS[value] })),
+} as const satisfies {
+  [Key in keyof SpeciesTraits]: readonly {
+    value: SpeciesTraits[Key];
+    label: string;
+    advantage: string;
+    disadvantage: string;
+  }[];
+};
 
 export const CREATION_STEPS = [
   "name",

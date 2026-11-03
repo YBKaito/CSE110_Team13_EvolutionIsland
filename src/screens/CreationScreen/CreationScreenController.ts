@@ -47,7 +47,7 @@ export class CreationScreenController {
       ) {
         return {
           nextScreen: "creation",
-          error: "Please select a valid option (1-3).",
+          error: `Please select a valid option (1-${options.length}).`,
         };
       }
 

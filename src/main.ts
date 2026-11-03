@@ -13,7 +13,7 @@ import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
 import { RandomScheduler, ScriptedScheduler, type EventScheduler } from "./events/EventFactory";
 import { GameController } from "./game/GameController";
 import { ScreenState, type StartingSpecies } from "./models/GameState";
-import type { SpeciesTraits } from "./types";
+import { toStartingSpecies } from "./models/Species";
 
 import { MenuScreenController } from "./screens/MenuScreen/MenuScreenController";
 import { MenuScreenView, renderScreen } from "./screens/MenuScreen/MenuScreenView";
@@ -36,29 +36,6 @@ const useScript = params.get("script") === "mockup";
 const makeScheduler = (): EventScheduler =>
   useScript ? new ScriptedScheduler(MOCKUP_SCRIPT) : new RandomScheduler();
 const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
-
-// ---------- US2 -> US3 handoff ----------
-
-// Creation stores traits as words ("short"). The simulation stores traits as list positions (0).
-// This order must match the option order in simulation/traitContent.ts.
-const TRAIT_ORDER = {
-  beakLength: ["short", "medium", "long"],
-  bodySize: ["small", "medium", "large"],
-  featherDensity: ["thin", "medium", "thick"],
-  color: ["light", "brown", "dark", "gray", "yellow", "white"],
-} as const;
-
-function toStartingSpecies(name: string, traits: SpeciesTraits): StartingSpecies {
-  return {
-    name,
-    traits: {
-      beak: TRAIT_ORDER.beakLength.indexOf(traits.beakLength),
-      body: TRAIT_ORDER.bodySize.indexOf(traits.bodySize),
-      feathers: TRAIT_ORDER.featherDensity.indexOf(traits.featherDensity),
-      color: TRAIT_ORDER.color.indexOf(traits.color),
-    },
-  };
-}
 
 function getEl<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);

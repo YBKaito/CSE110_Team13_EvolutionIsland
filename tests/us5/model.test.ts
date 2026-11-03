@@ -117,7 +117,7 @@ test('all snapshot and preference getters return copies, not internal state', ()
   const history = model.getObservations();
   history[0].results.newPopulation = 99;
   const prefs = model.getPreferences();
-  prefs.color = 'tan';
+  prefs.color = 'white';
   assert.equal(model.getCurrentObservation().results.eventList.length, 0);
   assert.equal(model.getCurrentObservation().environment.habitatBackground[0], 182);
   assert.equal(model.getCurrentObservation().traitCounts.beakLength.medium, 12);

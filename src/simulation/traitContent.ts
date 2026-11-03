@@ -2,13 +2,13 @@
 // This is the single source of truth for trait effects: fitness, hints, and feedback should all read from here.
 // Option lists are provisional until US2 (species creation) confirms them.
 
-import type { Background, FoodType, TraitName } from '../types';
+import { BIRD_COLORS, type Background, type FoodType, type TraitName } from '../types';
 
 export const TRAIT_OPTIONS: Record<TraitName, readonly string[]> = {
   beak: ['short', 'medium', 'long'],
   body: ['small', 'medium', 'large'],
   feathers: ['thin', 'medium', 'thick'],
-  color: ['brown', 'gray', 'yellow', 'white'],
+  color: BIRD_COLORS,
 };
 
 export const TRAIT_NAMES: TraitName[] = ['beak', 'body', 'feathers', 'color'];

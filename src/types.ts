@@ -24,7 +24,10 @@ export interface HowToPlayCard {
 export type BeakLength = "short" | "medium" | "long";
 export type BodySize = "small" | "medium" | "large";
 export type FeatherDensity = "thin" | "medium" | "thick";
-export type BirdColor = "brown" | "gray" | "yellow" | "white" | "light" | "dark";
+export type BirdColor = "brown" | "gray" | "yellow" | "white";
+
+/** Shared display and simulation order: color indexes are 0 through 3. */
+export const BIRD_COLORS = ["brown", "gray", "yellow", "white"] as const satisfies readonly BirdColor[];
 
 export interface SpeciesTraits {
   beakLength: BeakLength;
