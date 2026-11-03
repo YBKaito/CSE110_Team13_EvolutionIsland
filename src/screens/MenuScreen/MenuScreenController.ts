@@ -1,4 +1,5 @@
 // Add menu controller with input checks and navigation
+// Controller: Decides what happens when the player types
 import { CARD_ERROR, HOW_TO_PLAY_CARDS, MENU_ERROR } from "../../constants";
 import type { GameState } from "../../models/GameState";
 import type { InputResult } from "../../types";

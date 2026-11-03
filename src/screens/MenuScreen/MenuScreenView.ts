@@ -1,4 +1,5 @@
 // Add menu view to render screens and error lines
+// View: Shows the text on screen 
 import {
     GAME_TITLE,
     HOW_TO_PLAY_CARDS,
@@ -46,23 +47,30 @@ import {
       private input: HTMLInputElement,
     ) {}
   
+    // show(lines, error)
     show(lines: string[], error: string | null): void {
-      this.output.innerHTML = "";
+      this.output.innerHTML = ""; // clears the old screen
+      // The for loop creates one div per line.
       for (const line of lines) {
         const div = document.createElement("div");
+        // Sets the text safely
         div.textContent = line === "" ? " " : line;
         this.output.appendChild(div);
       }
       if (error !== null) {
+        // The view adds a div with class “error”. The CSS colors this class red.
         const div = document.createElement("div");
         div.className = "error";
         div.textContent = error;
         this.output.appendChild(div);
       }
+      // Clears what the player typed.
       this.input.value = "";
+      // Puts the cursor back in the box so the player types again with no click.
       this.input.focus();
     }
   
+    // Locks the input after the player picks end 
     disableInput(): void {
       this.input.disabled = true;
     }

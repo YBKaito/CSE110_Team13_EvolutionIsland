@@ -1,4 +1,5 @@
 // Add GameState to track current screen and card
+// Model: Stores where the player is 
 import type { ScreenId } from "../types";
 
 // Holds where the player is. Later stories add the species, generation, and seed here.
