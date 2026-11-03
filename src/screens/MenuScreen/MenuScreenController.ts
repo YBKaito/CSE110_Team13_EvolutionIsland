@@ -1,12 +1,12 @@
 // Add menu controller with input checks and navigation
 // Controller: Decides what happens when the player types
 import { CARD_ERROR, HOW_TO_PLAY_CARDS, MENU_ERROR } from "../../constants";
-import type { GameState } from "../../models/GameState";
+import type { ScreenState } from "../../models/GameState";
 import type { InputResult } from "../../types";
 
 // Pure logic, no DOM. This keeps every rule testable.
 export class MenuScreenController {
-  constructor(private state: GameState) {}
+  constructor(private state: ScreenState) {}
 
   // Main menu: the player types 1 to 4.
   handleMenuInput(raw: string): InputResult {
@@ -61,6 +61,7 @@ export class MenuScreenController {
         return this.handleCardInput(raw);
       case "creation":
       case "minigames":
+      case "simulation":
         return this.handlePlaceholderInput();
       case "end":
         return { nextScreen: "end", error: null };

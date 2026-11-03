@@ -1,6 +1,15 @@
 {
 	"compilerOptions": {
 
+		// Catch type errors early
+		"strict": true,
+
+		// Vite does the bundling; tsc only type-checks
+		"noEmit": true,
+
+		// Don't type-check library .d.ts files (vite's types need @types/node)
+		"skipLibCheck": true,
+
 		// Treat files as modules even if it doesn't use import/export
 		"moduleDetection": "force",
 
@@ -18,5 +27,12 @@
 
 		// Disallow features that require cross-file awareness
 		"isolatedModules": true,
+
+    "target": "ES2022",
+
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    
+    "moduleResolution": "Bundler"
 	},
+	"include": ["src"],
 }

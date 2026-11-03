@@ -3,9 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Evolution Simulator</title>
+    <title>Evolution Island</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!-- US1 and US2: text menu and species creation -->
     <div id="terminal">
       <div id="terminal-output"></div>
       <form id="terminal-form" autocomplete="off">
@@ -13,6 +17,10 @@
         <input id="terminal-input" type="text" aria-label="Your choice" />
       </form>
     </div>
+
+    <!-- US3 to US6: simulation, event, and evolution screens -->
+    <div id="app"></div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

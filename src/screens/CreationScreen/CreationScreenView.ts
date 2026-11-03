@@ -1,9 +1,9 @@
 
 import { CREATION_STEPS, TRAIT_OPTIONS } from "../../constants";
-import type { GameState } from "../../models/GameState";
+import type { ScreenState } from "../../models/GameState";
 import type { SpeciesTraits } from "../../types";
 
-export function renderCreationScreen(state: GameState): string[] {
+export function renderCreationScreen(state: ScreenState): string[] {
   const step = CREATION_STEPS[state.creationStep];
 
   const lines: string[] = [

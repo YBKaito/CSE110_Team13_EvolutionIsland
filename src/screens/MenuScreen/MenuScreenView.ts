@@ -6,10 +6,10 @@ import {
     MENU_OPTIONS,
     PLACEHOLDER_TEXT,
   } from "../../constants";
-  import type { GameState } from "../../models/GameState";
+  import type { ScreenState } from "../../models/GameState";
   
   // Builds the text for each screen. Returns plain strings so tests can check them.
-  export function renderScreen(state: GameState): string[] {
+  export function renderScreen(state: ScreenState): string[] {
     switch (state.screen) {
       case "menu":
         return [
@@ -37,6 +37,8 @@ import {
         return [PLACEHOLDER_TEXT[state.screen], "", "Press Enter to return to the menu."];
       case "end":
         return ["Thanks for playing!", "", "Refresh the page to play again."];
+      case "simulation":
+        return [];
     }
   }
   
