@@ -44,6 +44,9 @@ export class EvolutionScreenController extends ScreenController {
   /** The change option for the trait the player picked, or null if they haven't picked one. */
   private selectedTarget: string | null = null;
 
+  /** Option id whose hint is showing. Only one hint can be open at a time. */
+  private selectedHint: string | null = null;
+
   /**
    * Generation currently waiting for a player choice.
    * null means there's no active checkpoint to submit for.
@@ -69,6 +72,7 @@ export class EvolutionScreenController extends ScreenController {
       back: () => this.back(),
       selectTrait: trait => this.selectTrait(trait),
       selectTarget: target => this.selectTarget(target),
+      toggleHint: hintId => this.toggleHint(hintId),
       submit: () => { void this.submitChoice(); },
     });
     /**
@@ -193,6 +197,15 @@ export class EvolutionScreenController extends ScreenController {
     this.render();
   }
 
+  /** Open the hint for a neighboring option, or close it if it's already open. Opening one replaces any other. */
+  private toggleHint(hintId: string): void {
+    if (this.disposed || this.submitting || this.page !== 'choice') return;
+    const current = this.model.getPreferences()[this.selectedTrait];
+    if (!adjacentTargets(this.selectedTrait, current).includes(hintId)) return;
+    this.selectedHint = this.selectedHint === hintId ? null : hintId;
+    this.render();
+  }
+
   /** 
    * Validate the choice, submit it for future offspring, and return to the game. 
    */
@@ -283,6 +296,11 @@ export class EvolutionScreenController extends ScreenController {
     }
     if (key === '5') { event.preventDefault(); this.openPage('stats'); return; }
     if (key === '6') { event.preventDefault(); this.openPage('decisions'); return; }
+    if (key === 'h') {
+      event.preventDefault();
+      if (this.selectedTarget) this.toggleHint(this.selectedTarget);
+      return;
+    }
     // Move one position left or right in the ORDERED trait options.
     // selectTarget() still checks that the requested value is actually valid.
     if (key === 'arrowleft' || key === 'arrowright') {
@@ -321,6 +339,7 @@ export class EvolutionScreenController extends ScreenController {
       page: this.page,
       selectedTrait: this.selectedTrait,
       selectedTarget: this.selectedTarget,
+      selectedHint: this.selectedHint,
       submitting: this.submitting,
     });
   }
@@ -339,6 +358,7 @@ export class EvolutionScreenController extends ScreenController {
     this.view.bind({
       openPage: () => { }, back: () => { }, selectTrait: () => { },
       selectTarget: () => { }, submit: () => { },
+      toggleHint: () => { },
     });
     this.view.getGroup().destroy();
   }

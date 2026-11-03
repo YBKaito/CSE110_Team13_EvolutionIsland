@@ -13,6 +13,7 @@ export interface EvolutionScreenViewHandlers {
   back(): void;
   selectTrait(trait: TraitKey): void;
   selectTarget(target: string): void;
+  toggleHint(hintId: string): void;
   submit(): void;
 }
 
@@ -24,5 +25,6 @@ export interface EvolutionScreenRenderState {
   page: EvolutionScreenPage;
   selectedTrait: TraitKey;
   selectedTarget: string | null; // Nothing selected yet when null
+  selectedHint: string | null;	// Which hint is showing, or null
   submitting: boolean;
 }

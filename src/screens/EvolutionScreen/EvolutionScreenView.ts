@@ -5,6 +5,7 @@ import { STAGE_WIDTH, STAGE_HEIGHT } from '../../constants';
 import { signed } from '../../stats';
 import { TRAITS, traitKeys, adjacentTargets, labelFor } from '../../traits';
 import type { TraitKey } from '../../types';
+import { hintText } from './hints';
 import type {
   EvolutionScreenRenderState,
   EvolutionScreenViewHandlers,
@@ -39,6 +40,10 @@ interface TextOptions {
   bold?: boolean;
   align?: 'left' | 'center' | 'right';
 }
+
+const HINT_SIZE = 32;
+const HINT_SPRITE_URL = 'graphics/hint_button.png';
+let hintSprite: HTMLImageElement | null = null;
 
 /**
  * Add a Konva Text object to a group and return it if we ever need it later.
@@ -103,6 +108,42 @@ function option(
   parent.add(row);
 }
 
+/** Load the hint button sprite once and reuse it*/
+function loadHintSprite(): Promise<void> {
+  return new Promise(resolve => {
+    if (typeof Image === 'undefined') return resolve();
+    const img = new Image();
+    img.onload = () => { hintSprite = img; resolve(); };
+    img.onerror = () => resolve(); // fall back to the drawn "?" button
+    img.src = HINT_SPRITE_URL;
+  });
+}
+
+function hintButton(parent: Group, x: number, y: number, active: boolean, onClick: () => void): void {
+  const btn = new Konva.Group({ x, y });
+  if (hintSprite) {
+    btn.add(new Konva.Image({ image: hintSprite, width: HINT_SIZE, height: HINT_SIZE, imageSmoothingEnabled: false }));
+  } else {
+    btn.add(new Konva.Circle({ x: HINT_SIZE / 2, y: HINT_SIZE / 2, radius: HINT_SIZE / 2 - 2, fill: COLOR.selected, stroke: COLOR.border }));
+    btn.add(new Konva.Text({ x: 0, y: 6, width: HINT_SIZE, align: 'center', text: '?', fontFamily: FONT, fontSize: 24, fill: COLOR.white, listening: false }));
+  }
+  if (active) {
+    btn.add(new Konva.Circle({ x: HINT_SIZE / 2, y: HINT_SIZE / 2, radius: HINT_SIZE / 2 + 2, stroke: COLOR.white, strokeWidth: 2, listening: false }));
+  }
+  btn.on('click tap', e => { e.cancelBubble = true; onClick(); });
+  btn.on('mouseenter', () => {
+    btn.opacity(0.8);
+    if (typeof document !== 'undefined') document.body.style.cursor = 'pointer';
+    btn.getLayer()?.batchDraw();
+  });
+  btn.on('mouseleave', () => {
+    btn.opacity(1);
+    if (typeof document !== 'undefined') document.body.style.cursor = 'default';
+    btn.getLayer()?.batchDraw();
+  });
+  parent.add(btn);
+}
+
 /** Feather image */
 function featherImagePlaceholder(parent: Group, x: number, y: number): void {
   Konva.Image.fromURL("graphics/feather.png", function (image) {
@@ -141,10 +182,13 @@ function bar(parent: Group, x: number, y: number, width: number, ratio: number):
 export class EvolutionScreenView implements View {
   private readonly group: Group = new Konva.Group({ visible: false });
   private handlers: EvolutionScreenViewHandlers | null = null;
+  private lastState: EvolutionScreenRenderState | null = null;
 
   /** Load the pixel font, then redraw once the browser has it. */
   constructor() {
-    void loadPixelifySans().then(() => this.group.getLayer()?.batchDraw());
+    const redraw = () => { if (this.lastState) this.render(this.lastState); };
+    void loadPixelifySans().then(redraw);
+    void loadHintSprite().then(redraw);
   }
 
   /** Give the screen manager the group it should add to the layer. */
@@ -162,6 +206,7 @@ export class EvolutionScreenView implements View {
 
   /** Clear the group and draw the page requested by the controller. */
   render(state: EvolutionScreenRenderState): void {
+    this.lastState = state;
     this.group.destroyChildren();
     this.group.add(new Konva.Rect({
       x: 0, y: 0, width: STAGE_WIDTH, height: STAGE_HEIGHT, fill: COLOR.bg,
@@ -216,13 +261,15 @@ export class EvolutionScreenView implements View {
         { size: 24, width: 395, fill: COLOR.muted });
     }
     targets.forEach((target, i) => {
+      const y = 320 + i * 65;
       const index = TRAITS[trait].options.findIndex(o => o.id === target);
       const currentIndex = TRAITS[trait].options.findIndex(o => o.id === prefs[trait]);
       const arrow = index < currentIndex ? '<' : '>';
-      option(g, `${arrow} ${labelFor(trait, target)}`, 651, 320 + i * 65,
+      option(g, `${arrow} ${labelFor(trait, target)}`, 651, y,
         () => this.handlers?.selectTarget(target), {
-          width: 400, size: 29, selected: s.selectedTarget === target,
+          width: 340, size: 29, selected: s.selectedTarget === target,
         });
+      hintButton(g, 1000, y + 2, s.selectedHint === target, () => this.handlers?.toggleHint(target));
     });
 
     const current = s.model.getCurrentObservation();
@@ -234,11 +281,19 @@ export class EvolutionScreenView implements View {
     text(g, s.selectedTarget
       ? `Selected: ${labelFor(trait, s.selectedTarget)} (${share}% of flock)`
       : 'Select a neighboring option above.',
-    639, 472, { size: 23, width: 450, fill: COLOR.muted });
+    639, 446, { size: 22, width: 450, fill: COLOR.muted });
+
+    if (s.selectedHint && targets.includes(s.selectedHint)) {
+      g.add(new Konva.Rect({
+        x: 639, y: 478, width: 450, height: 76,
+        fill: COLOR.selected, stroke: COLOR.border, strokeWidth: 1, listening: false,
+      }));
+      text(g, hintText(trait, s.selectedHint), 651, 484, { size: 19, width: 428 });
+    }
 
     option(g,
       s.submitting ? 'Saving preference...' : 'S. Confirm and continue',
-      645, 530, () => this.handlers?.submit(),
+      645, 566, () => this.handlers?.submit(),
       { width: 415, size: 28, disabled: s.submitting || !s.selectedTarget });
 
     line(g, 616);
@@ -246,7 +301,7 @@ export class EvolutionScreenView implements View {
       () => this.handlers?.openPage('stats'), { width: 460, size: 27 });
     option(g, '6. Review previous choices', 616, 643,
       () => this.handlers?.openPage('decisions'), { width: 454, size: 27 });
-    bottomHint(g, '1-4 SELECT TRAIT   |   LEFT/RIGHT SELECT OPTION   |   S/ENTER CONFIRM');
+        bottomHint(g, '1-4 SELECT TRAIT   |   LEFT/RIGHT SELECT OPTION   |   H HINT   |   S/ENTER CONFIRM');
   }
 
   /** Draw the saved population, trait, and environment statistics. */
