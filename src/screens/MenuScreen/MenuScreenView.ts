@@ -55,6 +55,9 @@ import {
         const div = document.createElement("div");
         // Sets the text safely
         div.textContent = line === "" ? " " : line;
+        if (line === GAME_TITLE) {
+            div.className = "title";
+            }
         this.output.appendChild(div);
       }
       if (error !== null) {

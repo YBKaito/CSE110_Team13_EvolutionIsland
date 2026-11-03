@@ -1,47 +1,72 @@
+:root {
+    --bg: 
+    #1d1e1c;
+    --line: 
+    #3b3c38;
+    --fg: 
+    #f2f0e8;
+    --muted: 
+    #a3a197;
+    --box: 
+    #e8c547;
+    --miss: 
+    #e0685a;
+    --display: "Pixelify Sans", "Courier New", monospace;
+    --label: "Silkscreen", "Courier New", monospace;
+}
+    
 body {
     margin: 0;
     min-height: 100vh;
-    background: black;  
-    color: #ffffff;
-    font-family: "Courier New", monospace;
-    font-size: 18px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--display);
+    font-size: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  
-  #terminal {
+}
+    
+#terminal {
     width: min(720px, 92vw);
-    border: 1px solid #ffffff;
+    border: 2px solid var(--line);
     padding: 24px;
-  }
-  
-  #terminal-output div {
+}
+    
+#terminal-output div {
     white-space: pre-wrap;
-    line-height: 1.5;
-  }
-  
-  #terminal-output .error {
-    color: #ff5555;
+    line-height: 1.45;
+}
+    
+#terminal-output .title {
+    font-size: clamp(34px, 7vw, 52px);
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    margin-bottom: 16px;
+}
+    
+#terminal-output .error {
+    color: var(--miss);
     margin-top: 8px;
-  }
-  
-  #terminal-form {
+}
+    
+#terminal-form {
     display: flex;
     margin-top: 12px;
-  }
-  
-  #terminal-form span {
+}
+    
+#terminal-form span {
     margin-right: 8px;
-  }
-  
-  #terminal-input {
+    color: var(--box);
+}
+    
+#terminal-input {
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
-    color: #ffffff;
+    color: var(--fg);
     font: inherit;
-    caret-color: #ffffff;
-  }
-  
+    caret-color: var(--box);
+}

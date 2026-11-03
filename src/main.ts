@@ -4,6 +4,11 @@ import { GameState } from "./models/GameState";
 import { MenuScreenController } from "./screens/MenuScreen/MenuScreenController";
 import { MenuScreenView, renderScreen } from "./screens/MenuScreen/MenuScreenView";
 
+import "@fontsource/pixelify-sans/400.css";
+import "@fontsource/pixelify-sans/700.css";
+import "@fontsource/silkscreen/400.css";
+import "./styles/styles.css";
+
 const output = document.getElementById("terminal-output");
 const input = document.getElementById("terminal-input");
 const form = document.getElementById("terminal-form");
