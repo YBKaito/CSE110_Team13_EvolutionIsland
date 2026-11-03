@@ -49,3 +49,97 @@ export const PLACEHOLDER_TEXT: Record<"creation" | "minigames", string> = {
   creation: "Species creation is coming in US2.",
   minigames: "Minigames are coming in a later sprint.",
 };
+
+
+
+export const TRAIT_OPTIONS = {
+  beakLength: [
+    {
+      value: "short",
+      label: "Short",
+      advantage: "Good for handling some small seeds.",
+      disadvantage: "Cannot reach food in deep flowers.",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      advantage: "Can access a variety of foods.",
+      disadvantage: "Less specialized for certain foods.",
+    },
+    {
+      value: "long",
+      label: "Long",
+      advantage: "Can reach food inside deep flowers.",
+      disadvantage: "May struggle with some hard seeds.",
+    },
+  ],
+  bodySize: [
+    {
+      value: "small",
+      label: "Small",
+      advantage: "Requires less food to survive.",
+      disadvantage: "Vulnerable to some predators.",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      advantage: "Balances food needs and body strength.",
+      disadvantage: "Lacks some specialized advantages.",
+    },
+    {
+      value: "large",
+      label: "Large",
+      advantage: "Can resist some smaller predators.",
+      disadvantage: "Requires more food.",
+    },
+  ],
+  featherDensity: [
+    {
+      value: "thin",
+      label: "Thin",
+      advantage: "Helps release heat in warm weather.",
+      disadvantage: "Provides less cold insulation.",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      advantage: "Provides moderate insulation.",
+      disadvantage: "Less effective in extreme temperatures.",
+    },
+    {
+      value: "thick",
+      label: "Thick",
+      advantage: "Provides better insulation in cold weather.",
+      disadvantage: "Can increase overheating risk.",
+    },
+  ],
+  color: [
+    {
+      value: "light",
+      label: "Light",
+      advantage: "Camouflages well in pale environments.",
+      disadvantage: "More visible in dark environments.",
+    },
+    {
+      value: "brown",
+      label: "Brown",
+      advantage: "Camouflages well in earthy environments.",
+      disadvantage: "More visible in very pale environments.",
+    },
+    {
+      value: "dark",
+      label: "Dark",
+      advantage: "Camouflages well in dark environments.",
+      disadvantage: "More visible in pale environments.",
+    },
+  ],
+} as const;
+
+export const CREATION_STEPS = [
+  "name",
+  "beakLength",
+  "bodySize",
+  "featherDensity",
+  "color",
+  "confirm",
+] as const;
