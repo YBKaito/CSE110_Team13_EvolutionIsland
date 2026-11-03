@@ -57,6 +57,16 @@ export class RandomSource {
     return min + ((this.next() + this.next()) / 2) * (max - min);
   }
 
+  /**
+   * Rounds to a whole number at random, in proportion to the fraction: 2.3 becomes 3 with a 30% chance, else 2.
+   * Keeps values whole while small changes still add up correctly on average.
+   */
+  roundRandomly(value: number): number {
+    const floor = Math.floor(value);
+    const fraction = value - floor;
+    return fraction > 0 && this.chance(fraction) ? floor + 1 : floor;
+  }
+
   getState(): number {
     return this.state;
   }

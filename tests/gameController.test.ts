@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SIM } from '../src/constants';
+import { ENV, SIM } from '../src/constants';
+import { ENV_VARIABLES, getValue } from '../src/models/Environment';
 import { MOCKUP_SCRIPT } from '../src/events/eventDefinitions';
 import { ScriptedScheduler } from '../src/events/EventFactory';
 import { GameController } from '../src/game/GameController';
@@ -24,7 +25,7 @@ describe('step order and history', () => {
   it('applies the event to the environment before the birds face it', () => {
     const game = GameController.startRun(species, 1, new ScriptedScheduler([{ generation: 1, eventId: 'newPredator' }]));
     game.step();
-    expect(game.state.history.environments[1].predation).toBeGreaterThan(100);
+    expect(game.state.history.environments[1].predation).toBeGreaterThan(50);
     expect(game.state.population.generation).toBe(1);
   });
 
@@ -33,6 +34,21 @@ describe('step order and history', () => {
     for (let i = 0; i < 60 && !game.isOver; i++) game.step();
     expect(game.state.generation).toBeGreaterThan(0);
     expect(game.state.population.birds.length).toBe(game.generationHistory().at(-1)!.population);
+  });
+
+  it('records every island value as a whole number from 0 to 100 (what US5/US6 read)', () => {
+    for (let seed = 1; seed <= 15; seed++) {
+      const game = GameController.startRun(species, seed);
+      for (let i = 0; i < 80 && !game.isOver; i++) game.step();
+      for (const env of game.state.history.environments) {
+        for (const variable of ENV_VARIABLES) {
+          const value = getValue(env, variable);
+          expect(Number.isInteger(value), `seed ${seed}: ${variable} = ${value}`).toBe(true);
+          expect(value).toBeGreaterThanOrEqual(ENV.MIN);
+          expect(value).toBeLessThanOrEqual(ENV.MAX);
+        }
+      }
+    }
   });
 });
 

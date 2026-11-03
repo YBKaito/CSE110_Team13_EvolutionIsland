@@ -65,16 +65,17 @@ export const FOOD_TYPES: FoodType[] = ['softPlants', 'smallSeeds', 'hardSeeds', 
 
 export type Background = 'forest' | 'scrub' | 'sand';
 
+/** Every island value is a whole number from 0 to 100, where 50 is normal (competition: 0 = no competitor). */
 export interface EnvironmentState {
-  /** 100 = island baseline climate. */
+  /** 50 = the island's normal climate. */
   temperature: number;
-  /** 100 = normal rainfall. */
+  /** 50 = normal rainfall. */
   rainfall: number;
-  /** Derived food resources, 100 = normal abundance. */
+  /** Derived food resources, 50 = normal abundance. */
   food: Record<FoodType, number>;
-  /** Derived habitat cover / shelter, 100 = normal. */
+  /** Derived habitat cover / shelter, 50 = normal. */
   cover: number;
-  /** 100 = baseline predator pressure. */
+  /** 50 = normal predator pressure. */
   predation: number;
   /** 0 = no competing species. */
   competition: number;
@@ -149,7 +150,7 @@ export interface StageDef {
   transitionChance: number;
   effects: EffectSpec[];
   /**
-   * Variables this stage keeps where they are: no drift back to baseline and no regeneration.
+   * Variables this stage keeps where they are: no drift back to normal and no regeneration.
    * (e.g. a drought's peak holds rainfall low.) Variables the stage's effects change are held automatically.
    */
   holds?: EnvVariable[];

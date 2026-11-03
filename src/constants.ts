@@ -178,31 +178,32 @@ export const SIM = {
   // Exposure: clamp(EXPOSURE_SLOPE * |insulation - ideal|, 0, EXPOSURE_MAX)
   EXPOSURE_SLOPE: 0.08,
   EXPOSURE_MAX: 0.6,
-  /** Temperature points per unit of ideal insulation. */
-  TEMP_PER_INSULATION: 20,
+  /** Temperature points (on the 0-100 scale) per unit of ideal insulation. */
+  TEMP_PER_INSULATION: 10,
   IDEAL_INSULATION_MAX: 1.5,
 
-  // Predation: clamp(PRED_BASE * (predation/100) * detect * exposure * vulnerability, 0, PRED_MAX)
+  // Predation: clamp(PRED_BASE * (predation/NORMAL) * detect * exposure * vulnerability, 0, PRED_MAX)
   PRED_BASE: 0.12,
   PRED_MAX: 0.8,
   /** How much full habitat cover reduces exposure to predators. */
   COVER_SHIELD: 0.5,
 } as const;
 
+// Every island value is a whole number from MIN to MAX, and NORMAL is the starting level.
+// (Competition is the exception to NORMAL: it starts at 0, meaning no competing species.)
 export const ENV = {
+  NORMAL: 50,
+  MIN: 0,
+  MAX: 100,
+  /**
+   * The design report's event numbers assume normal = 100. Event effects are multiplied by this
+   * so eventDefinitions.ts can keep the report's numbers while the island uses normal = 50.
+   */
+  REPORT_SCALE: 50 / 100,
   /** Fraction of the gap to its target a derived resource closes each generation. */
   REGEN_RATE: 0.2,
-  /** Fraction of the gap to baseline that rainfall/temperature close when no event touches them. */
+  /** Fraction of the gap to normal that rainfall/temperature close when no event touches them. */
   PRIMARY_DRIFT: 0.1,
-  BASELINE: 100,
-  BOUNDS: {
-    temperature: [50, 150],
-    rainfall: [0, 150],
-    food: [0, 150],
-    cover: [0, 150],
-    predation: [0, 200],
-    competition: [0, 100],
-  },
 } as const;
 
 export const EVENTS = {
