@@ -31,10 +31,19 @@ class Shape {
     }
     return this;
   }
-  fire(name: string) { for (const handler of (this.listeners.get(name) || [])) handler(); }
+  fire(name: string) {
+    const event = { cancelBubble: false };
+    for (const handler of this.listeners.get(name) || []) {
+      (handler as (e: typeof event) => void)(event);
+    }
+  }
   getLayer() { return { batchDraw() {} }; }
   getAttr(name: string) { return this.attrs[name]; }
   fill(value?: any) { if (value === undefined) return this.attrs.fill; this.attrs.fill = value; }
+  opacity(value?: number) {
+    if (value === undefined) return this.attrs.opacity ?? 1;
+    this.attrs.opacity = value;
+  }
   show() { this.visible = true; }
   hide() { this.visible = false; }
   destroyChildren() { this.children.forEach(child => child.destroy()); this.children.length = 0; }
@@ -44,6 +53,8 @@ class Group extends Shape {}
 class Rect extends Shape {}
 class Text extends Shape {}
 class Line extends Shape {}
+class Circle extends Shape {}
+
 /**
  * A fake Konva image for the feather placeholders. 
  * In the real game, fromURL loads an image asynchronously. 
@@ -54,7 +65,7 @@ class Image extends Shape {
     /** No image load is needed for text, navigation, or layout tests. */
   }
 }
-const fakeKonva = { Group, Rect, Text, Line, Image };
+const fakeKonva = { Group, Rect, Text, Line, Image, Circle };
 
 /** Make only imports from Konva use our fake objects. The other code is real. */
 function installFakeKonva() {
