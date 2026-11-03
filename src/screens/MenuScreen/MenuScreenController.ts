@@ -18,10 +18,11 @@ export class MenuScreenController {
       "4": "end",
     };
 
-    const next = routes[choice];
-    if (next === undefined) {
-      return { nextScreen: "menu", error: MENU_ERROR };
+    if (!Object.hasOwn(routes, choice)) {
+        return { nextScreen: 'menu', error: MENU_ERROR };
     }
+    const next = routes[choice];
+
     this.state.goTo(next);
     return { nextScreen: next, error: null };
   }
