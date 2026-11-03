@@ -1,10 +1,6 @@
 {
 	"compilerOptions": {
 
-		// Modern JS output and browser + language typings
-		"target": "ES2022",
-		"lib": ["ES2022", "DOM"],
-
 		// Catch type errors early
 		"strict": true,
 
@@ -31,6 +27,13 @@
 
 		// Disallow features that require cross-file awareness
 		"isolatedModules": true,
+
+    // Modern JS output and browser + language typings
+    "target": "ES2022",
+
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    
+    "moduleResolution": "Bundler"
 	},
 	"include": ["src", "tests"],
 }
