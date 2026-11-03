@@ -1,0 +1,35 @@
+name: CI
+
+# Run on every push to any branch, and on every pull request into main
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Download the repo code onto the GitHub machine
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # 2. Install Node.js and cache npm downloads for faster runs
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 3. Install the exact versions from package-lock.json
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Run all Vitest tests. A failing test fails the check.
+      - name: Run tests
+        run: npm test
+
+      # 5. Build the site. A broken import or missing file fails the check.
+      - name: Build
+        run: npm run build
