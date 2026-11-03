@@ -1,15 +1,16 @@
+
 // Testing the menu controller with input checks and navigation
 import { beforeEach, describe, expect, it } from "vitest";
 import { CARD_ERROR, HOW_TO_PLAY_CARDS, MENU_ERROR } from "../../constants";
-import { GameState } from "../../models/GameState";
+import { MenuState } from "../../models/GameState";
 import { MenuScreenController } from "./MenuScreenController";
 import { renderScreen } from "./MenuScreenView";
 
-let state: GameState;
+let state: MenuState;
 let controller: MenuScreenController;
 
 beforeEach(() => {
-  state = new GameState();
+  state = new MenuState();
   controller = new MenuScreenController(state);
 });
 

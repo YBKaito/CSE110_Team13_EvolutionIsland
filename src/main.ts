@@ -4,7 +4,8 @@ import "@fontsource/pixelify-sans/700.css";
 import "@fontsource/silkscreen/400.css";
 import "./styles/styles.css";
 
-import { GameState } from "./models/GameState";
+import { MenuState } from "./models/GameState";
+import type { StartingSpecies } from "./models/GameState";
 
 import { MenuScreenController } from "./screens/MenuScreen/MenuScreenController";
 import {
@@ -15,22 +16,100 @@ import {
 import { CreationScreenController } from "./screens/CreationScreen/CreationScreenController";
 import { renderCreationScreen } from "./screens/CreationScreen/CreationScreenView";
 
-const output = document.getElementById("terminal-output");
-const input = document.getElementById("terminal-input");
-const form = document.getElementById("terminal-form");
+import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
+import {
+  RandomScheduler,
+  ScriptedScheduler,
+  type EventScheduler,
+} from "./events/EventFactory";
+import { GameController } from "./game/GameController";
+import { GameScreenController } from "./screens/GameScreen/GameScreenController";
+import { ScreenHost } from "./screens/ui/ScreenHost";
+import { FONT_FAMILY } from "./screens/ui/theme";
 
-if (output && input instanceof HTMLInputElement && form) {
-  // Shared game state for all screens
-  const state = new GameState();
+const params = new URLSearchParams(window.location.search);
+const useScript = params.get("script") === "mockup";
 
-  // Controllers
+const makeScheduler = (): EventScheduler =>
+  useScript
+    ? new ScriptedScheduler(MOCKUP_SCRIPT)
+    : new RandomScheduler();
+
+const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
+
+async function boot(): Promise<void> {
+  try {
+    await Promise.all([
+      document.fonts.load(`24px ${FONT_FAMILY}`),
+      document.fonts.load(`bold 24px ${FONT_FAMILY}`),
+    ]);
+  } catch {
+    // Font unavailable; fallback font still works.
+  }
+
+  const output = document.getElementById("terminal-output");
+  const input = document.getElementById("terminal-input");
+  const form = document.getElementById("terminal-form");
+
+  if (!output || !(input instanceof HTMLInputElement) || !form) {
+    return;
+  }
+
+  const state = new MenuState();
+
   const menuController = new MenuScreenController(state);
   const creationController = new CreationScreenController(state);
 
-  // Reuse the existing terminal view
   const view = new MenuScreenView(output, input);
 
-  // Display the appropriate screen
+  let simulationStarted = false;
+
+  function startSimulation(): void {
+    if (!state.species || simulationStarted) return;
+
+    simulationStarted = true;
+
+    const traits = state.species.traits;
+
+    // Convert US2's string traits into US3's numeric traits.
+    const species: StartingSpecies = {
+      name: state.species.name,
+      traits: {
+        beak: ["short", "medium", "long"].indexOf(traits.beakLength),
+        body: ["small", "medium", "large"].indexOf(traits.bodySize),
+        feathers: ["thin", "medium", "thick"].indexOf(traits.featherDensity),
+        color: ["light", "brown", "dark"].indexOf(traits.color),
+      },
+    };
+
+    const seed = params.has("seed")
+      ? Number(params.get("seed"))
+      : randomSeed();
+
+    const game = GameController.startRun(species, seed, makeScheduler());
+
+    // Replace the menu with US3's simulation screen.
+    const container = document.getElementById("app") as HTMLDivElement;
+    const host = new ScreenHost(container);
+
+    const showGame = (controller: GameController): void => {
+      host.show(
+        new GameScreenController(host, controller, {
+          onQuit: () => {
+            window.location.reload();
+          },
+          onRestart: () => {
+            showGame(
+              GameController.startRun(species, randomSeed(), makeScheduler()),
+            );
+          },
+        }),
+      );
+    };
+
+    showGame(game);
+  }
+
   function renderCurrentScreen(error: string | null = null): void {
     switch (state.screen) {
       case "creation":
@@ -38,40 +117,21 @@ if (output && input instanceof HTMLInputElement && form) {
         break;
 
       case "simulation":
-        view.show(
-          [
-            "=== EVOLUTION ISLAND ===",
-            "",
-            "Your species has been created!",
-            "",
-            `Species: ${state.species?.name ?? "Unknown"}`,
-            `Beak Length: ${state.species?.traits.beakLength ?? ""}`,
-            `Body Size: ${state.species?.traits.bodySize ?? ""}`,
-            `Feather Density: ${state.species?.traits.featherDensity ?? ""}`,
-            `Color: ${state.species?.traits.color ?? ""}`,
-            "",
-            "Simulation coming soon!",
-          ],
-          error,
-        );
-        break;
+        startSimulation();
+        return;
 
       default:
         view.show(renderScreen(state), error);
         break;
     }
 
-    // Disable input when the game ends or reaches
-    // the simulation placeholder
-    if (state.screen === "end" || state.screen === "simulation") {
+    if (state.screen === "end") {
       view.disableInput();
     }
   }
 
-  // Initial menu
   renderCurrentScreen();
 
-  // Handle terminal input
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -79,24 +139,21 @@ if (output && input instanceof HTMLInputElement && form) {
     let error: string | null = null;
 
     if (state.screen === "creation") {
-      // US2: Species creation
       const result = creationController.handleInput(raw);
       error = result.error;
     } else if (state.screen === "simulation") {
-      // US6: Simulation will be implemented later
       return;
     } else {
-      // US1: Main menu and instructions
       const result = menuController.handleInput(raw);
       error = result.error;
 
-      // Initialize creation when entering from menu
       if (result.nextScreen === "creation") {
         state.resetCreation();
       }
     }
 
-    // Update the terminal
     renderCurrentScreen(error);
   });
 }
+
+void boot();

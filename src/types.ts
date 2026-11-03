@@ -37,3 +37,161 @@ export interface SpeciesData {
   name: string;
   traits: SpeciesTraits;
 }
+// Shared data contracts for the simulation (US3), events (US4), and the game coordinator.
+// Other stories should read these shapes rather than reaching into module internals.
+// ---------- Birds ----------
+
+export type TraitName = 'beak' | 'body' | 'feathers' | 'color';
+
+/** Each trait is stored as an index into that trait's option list (see simulation/traitContent.ts). */
+export type Traits = Record<TraitName, number>;
+
+export interface Bird {
+  id: number;
+  traits: Traits;
+}
+
+export interface Population {
+  birds: Bird[];
+  generation: number;
+  /** Next id to hand out to a newborn bird. */
+  nextId: number;
+}
+
+// ---------- Environment ----------
+
+export type FoodType = 'softPlants' | 'smallSeeds' | 'hardSeeds' | 'insects';
+export const FOOD_TYPES: FoodType[] = ['softPlants', 'smallSeeds', 'hardSeeds', 'insects'];
+
+export type Background = 'forest' | 'scrub' | 'sand';
+
+export interface EnvironmentState {
+  /** 100 = island baseline climate. */
+  temperature: number;
+  /** 100 = normal rainfall. */
+  rainfall: number;
+  /** Derived food resources, 100 = normal abundance. */
+  food: Record<FoodType, number>;
+  /** Derived habitat cover / shelter, 100 = normal. */
+  cover: number;
+  /** 100 = baseline predator pressure. */
+  predation: number;
+  /** 0 = no competing species. */
+  competition: number;
+  /** What the competing species eats, if one exists. */
+  competitorDiet: FoodType | null;
+  background: Background;
+  /** Regeneration capacity multipliers; 1.0 = normal. Lasting event damage lowers these. */
+  capacity: Record<FoodType | 'cover', number>;
+}
+
+/** Numeric environment variables that events can change. */
+export type EnvVariable = 'temperature' | 'rainfall' | 'predation' | 'competition' | 'cover' | FoodType;
+
+export interface EnvChange {
+  variable: EnvVariable;
+  before: number;
+  after: number;
+}
+
+// ---------- Generation results ----------
+
+export type DeathCause = 'starvation' | 'exposure' | 'predation' | 'disaster';
+export const DEATH_CAUSES: DeathCause[] = ['starvation', 'exposure', 'predation', 'disaster'];
+
+export interface GenerationResult {
+  generation: number;
+  /** Adults alive at the start of the generation. */
+  startPopulation: number;
+  /** Chicks that make up the next generation. */
+  population: number;
+  born: number;
+  /** Every adult leaves the flock (non-overlapping generations). */
+  died: number;
+  /** Adults that died before they could breed, by cause. */
+  deathsByCause: Record<DeathCause, number>;
+  /** Count of birds per option index, for each trait, in the new population. */
+  traitCounts: Record<TraitName, number[]>;
+  /** Average per-bird risks the adults faced this generation. */
+  avgRisk: { starvation: number; exposure: number; predation: number };
+  lowPopulation: boolean;
+  extinct: boolean;
+}
+
+// ---------- Events ----------
+
+export type EventCategory = 'climate' | 'disturbance' | 'biological' | 'habitat';
+
+export type StageName =
+  | 'warning'
+  | 'growing'
+  | 'peak'
+  | 'recovery'
+  | 'impact'
+  | 'aftermath'
+  | 'establishing'
+  | 'established';
+
+export interface EffectSpec {
+  variable: EnvVariable;
+  /** perGen: applied every generation of the stage. once: applied on the stage's first generation. */
+  mode: 'perGen' | 'once';
+  /** Change in index points; sampled with a bias toward the middle of the range. */
+  range: [number, number];
+}
+
+export interface StageDef {
+  name: StageName;
+  minDuration: number;
+  /** null = indefinite (e.g. an established predator). */
+  maxDuration: number | null;
+  /** Chance per generation of moving on once minDuration is reached. */
+  transitionChance: number;
+  effects: EffectSpec[];
+  /**
+   * Variables this stage keeps where they are: no drift back to baseline and no regeneration.
+   * (e.g. a drought's peak holds rainfall low.) Variables the stage's effects change are held automatically.
+   */
+  holds?: EnvVariable[];
+  /** Fraction of the flock killed at random (trait-independent), applied on the stage's first generation. */
+  randomMortality?: [number, number];
+  /** Player-facing text for this stage. */
+  message: string;
+  /** Short headline for the event card, e.g. "The rains are slowing". */
+  title?: string;
+}
+
+export interface EventDef {
+  id: string;
+  name: string;
+  category: EventCategory;
+  /** Relative chance of being picked by the random scheduler. */
+  weight: number;
+  persistence: 'temporary' | 'permanent';
+  stages: StageDef[];
+  /** Chance of permanently lowering regeneration capacity when a temporary event resolves. */
+  lastingEffect?: { chance: number; capacity: Partial<EnvironmentState['capacity']> };
+  setsCompetitorDiet?: FoodType;
+  /** Event ids that cannot be active at the same time as this one. */
+  conflictsWith?: string[];
+}
+
+export interface ActiveEvent {
+  defId: string;
+  stageIndex: number;
+  /** Generations completed in the current stage. */
+  genInStage: number;
+  startedAt: number;
+  /** Per-run strength multiplier applied to every effect of this event. */
+  severity: number;
+  resolved: boolean;
+}
+
+export interface EventLogEntry {
+  generation: number;
+  eventId: string;
+  eventName: string;
+  kind: 'started' | 'stageChanged' | 'resolved';
+  stage: StageName;
+  message: string;
+}

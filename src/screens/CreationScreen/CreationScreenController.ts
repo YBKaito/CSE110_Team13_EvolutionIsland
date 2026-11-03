@@ -1,13 +1,13 @@
 
 import { CREATION_STEPS, TRAIT_OPTIONS } from "../../constants";
-import type { GameState } from "../../models/GameState";
+import type { MenuState } from "../../models/GameState";
 import { Species } from "../../models/Species";
 import type { InputResult, SpeciesTraits } from "../../types";
 
 type TraitKey = keyof SpeciesTraits;
 
 export class CreationScreenController {
-  constructor(private state: GameState) {}
+  constructor(private state: MenuState) {}
 
   handleInput(raw: string): InputResult {
     const input = raw.trim();
