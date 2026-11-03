@@ -28,7 +28,6 @@
 		// Disallow features that require cross-file awareness
 		"isolatedModules": true,
 
-    // Modern JS output and browser + language typings
     "target": "ES2022",
 
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
