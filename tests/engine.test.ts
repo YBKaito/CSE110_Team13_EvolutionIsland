@@ -69,7 +69,7 @@ describe('runGeneration invariants', () => {
 
 describe('reproducibility', () => {
   it('gives identical results for the same seed and starting state', () => {
-    expect(runMany(21, envWith({ predation: 130 }), 50).results).toEqual(runMany(21, envWith({ predation: 130 }), 50).results);
+    expect(runMany(21, envWith({ predation: 65 }), 50).results).toEqual(runMany(21, envWith({ predation: 65 }), 50).results);
   });
 
   it('gives different results for different seeds', () => {
@@ -167,7 +167,7 @@ describe('natural selection (science check)', () => {
       const rng = new RandomSource(seed);
       const start = createStartingPopulation(MEDIUM_BIRD, rng);
       const startShare = countTraits(start.birds).feathers[2] / start.birds.length;
-      const { results } = runMany(seed, envWith({ temperature: 60 }), 20, start);
+      const { results } = runMany(seed, envWith({ temperature: 30 }), 20, start);
       const last = results.at(-1)!;
       const endShare = last.population > 0 ? last.traitCounts.feathers[2] / last.population : 0;
       if (endShare > startShare) rose++;

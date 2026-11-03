@@ -17,32 +17,35 @@ export function invalidChoiceMessage(count: number): string {
   return `Invalid. Type ${options.slice(0, -1).join(', ')}, or ${options[count - 1]}.`;
 }
 
-/** Food, rainfall, and cover levels (100 = normal). */
+// Island values run 0-100 with 50 as normal.
+
+/** Food, rainfall, and cover levels. */
 export function amountLabel(value: number): string {
-  if (value < 60) return 'Scarce';
-  if (value < 85) return 'Low';
-  if (value <= 115) return 'Normal';
+  if (value < 30) return 'Scarce';
+  if (value < 43) return 'Low';
+  if (value <= 57) return 'Normal';
   return 'High';
 }
 
 export function temperatureLabel(value: number): string {
-  if (value < 75) return 'Very cold';
-  if (value < 90) return 'Cold';
-  if (value <= 110) return 'Normal';
-  if (value <= 125) return 'Warm';
+  if (value < 38) return 'Very cold';
+  if (value < 45) return 'Cold';
+  if (value <= 55) return 'Normal';
+  if (value <= 62) return 'Warm';
   return 'Hot';
 }
 
 export function predatorLabel(value: number): string {
-  if (value < 80) return 'Low';
-  if (value <= 115) return 'Moderate';
+  if (value < 40) return 'Low';
+  if (value <= 57) return 'Moderate';
   return 'High';
 }
 
+/** Competition starts at 0 (no competing species). */
 export function competitionLabel(value: number): string {
   if (value < 1) return 'None';
-  if (value < 20) return 'Low';
-  if (value < 50) return 'Moderate';
+  if (value < 10) return 'Low';
+  if (value < 25) return 'Moderate';
   return 'High';
 }
 
