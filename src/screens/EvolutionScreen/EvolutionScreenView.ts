@@ -12,12 +12,11 @@ import type {
 import { loadPixelifySans } from './loadPixelifySans';
 
 /**
- * US5 Konva view: exactly three pages (evolution choice, current stats,
- * previous choices). The user chooses one trait to favor in FUTURE offspring.
- * All images are placeholders until the art team supplies sprites.
+ * Draws the three evolution choice pages:
+ * evolution choice, current stats, and previous choices.
+ * All actions go back to the controller through handlers.
  *
- * The page is drawn at a logical 1200 x 820 size, then scaled into the
- * existing stage dimensions from constants.ts, without changing main.ts.
+ * The layout uses a 1200 x 820 coordinate system, then scales to the STAGE_WIDTH and STAGE_HEIGHT in constants.
  */
 const UI_WIDTH = 1200;
 const UI_HEIGHT = 820;
@@ -41,6 +40,9 @@ interface TextOptions {
   align?: 'left' | 'center' | 'right';
 }
 
+/**
+ * Add a Konva Text object to a group and return it if we ever need it later.
+ */
 function text(parent: Group, value: string, x: number, y: number, options: TextOptions = {}): Konva.Text {
   const t = new Konva.Text({
     x, y,
@@ -59,13 +61,17 @@ function text(parent: Group, value: string, x: number, y: number, options: TextO
   return t;
 }
 
+/** Draw a divider between sections of a page. */
 function line(parent: Group, y: number, x = 105, width = 990): void {
   parent.add(new Konva.Line({
     points: [x, y, x + width, y], stroke: COLOR.border, strokeWidth: 1,
   }));
 }
 
-/** Clickable terminal-style menu option. */
+/**
+ * Draw one clickable text-menu option, like '5. View current stats'.
+ * The background changes on hover/selection.
+ */
 function option(
   parent: Group, value: string, x: number, y: number, onClick: () => void,
   options: { width?: number; size?: number; selected?: boolean; disabled?: boolean } = {},
@@ -97,25 +103,29 @@ function option(
   parent.add(row);
 }
 
+/** Feather image */
 function featherImagePlaceholder(parent: Group, x: number, y: number): void {
-  Konva.Image.fromURL("/graphics/feather.png", (image) => {
-    image.position({ x, y });
-    image.size({ width: 125, height: 125 });
+  Konva.Image.fromURL("graphics/feather.png", function (image) {
+    image.x(x);
+    image.y(y);
+    image.width(125);
+    image.height(125);
     parent.add(image);
   });
-  
-  
 }
 
+/** Draw a title and subtitle in the same spot on each page. */
 function header(parent: Group, title: string, subtitle: string): void {
   text(parent, title, 171, 69, { size: 45, width: 880, bold: true });
   text(parent, subtitle, 171, 136, { size: 25, width: 875, fill: COLOR.muted });
 }
 
+/** Show keyboard controls near the bottom of a page. */
 function bottomHint(parent: Group, value: string): void {
   text(parent, value, 105, 766, { size: 18, fill: COLOR.dim, width: 955 });
 }
 
+/** Draw a segmented bar showing how common a trait is. */
 function bar(parent: Group, x: number, y: number, width: number, ratio: number): void {
   const cells = 24;
   const filled = Math.round(cells * Math.min(1, Math.max(0, ratio)));
@@ -132,25 +142,32 @@ export class EvolutionScreenView implements View {
   private readonly group: Group = new Konva.Group({ visible: false });
   private handlers: EvolutionScreenViewHandlers | null = null;
 
+  /** Load the pixel font, then redraw once the browser has it. */
   constructor() {
     void loadPixelifySans().then(() => this.group.getLayer()?.batchDraw());
   }
 
+  /** Give the screen manager the group it should add to the layer. */
   getGroup(): Group { return this.group; }
+  /** Show the current evolution choice page. */
   show(): void { this.group.show(); this.group.getLayer()?.batchDraw(); }
+  /** Hide the page and reset the mouse cursor. */
   hide(): void {
     this.group.hide();
     if (typeof document !== 'undefined') document.body.style.cursor = 'default';
     this.group.getLayer()?.batchDraw();
   }
+  /** Connect clicks to the controller without putting game logic in the view. */
   bind(handlers: EvolutionScreenViewHandlers): void { this.handlers = handlers; }
 
+  /** Clear the group and draw the page requested by the controller. */
   render(state: EvolutionScreenRenderState): void {
     this.group.destroyChildren();
     this.group.add(new Konva.Rect({
       x: 0, y: 0, width: STAGE_WIDTH, height: STAGE_HEIGHT, fill: COLOR.bg,
     }));
 
+    // Keep the design in the same proportions if the stage size changes.
     const scale = Math.min(STAGE_WIDTH / UI_WIDTH, STAGE_HEIGHT / UI_HEIGHT);
     const canvas = new Konva.Group({
       x: (STAGE_WIDTH - UI_WIDTH * scale) / 2,
@@ -174,6 +191,7 @@ export class EvolutionScreenView implements View {
     this.group.getLayer()?.batchDraw();
   }
 
+  /** Draw the trait picker and links to the other two pages. */
   private choicePage(g: Group, s: EvolutionScreenRenderState): void {
     const prefs = s.model.getPreferences();
     header(g, 'Evolution Choice', `Generation ${s.generation}  |  Observation every ${s.interval} generations`);
@@ -188,7 +206,7 @@ export class EvolutionScreenView implements View {
       });
     });
 
-    // Neighbor choices are shown on the same page, not in another screen.
+    // Show only the options immediately next to the current preference.
     const trait = s.selectedTrait;
     const targets = adjacentTargets(trait, prefs[trait]);
     text(g, `Favor ${TRAITS[trait].label.toLowerCase()}:`, 644, 262,
@@ -208,6 +226,7 @@ export class EvolutionScreenView implements View {
     });
 
     const current = s.model.getCurrentObservation();
+    // A choice is still valid at 0%. This number is only shown as information.
     const share = s.selectedTarget
       ? Math.round(100 * (current.traitCounts[trait][s.selectedTarget] ?? 0) /
           Math.max(1, current.results.newPopulation))
@@ -230,7 +249,9 @@ export class EvolutionScreenView implements View {
     bottomHint(g, '1-4 SELECT TRAIT   |   LEFT/RIGHT SELECT OPTION   |   S/ENTER CONFIRM');
   }
 
+  /** Draw the saved population, trait, and environment statistics. */
   private statsPage(g: Group, s: EvolutionScreenRenderState): void {
+    // The current and previous saved checkpoints let us show changes over time.
     const current = s.model.getCurrentObservation();
     const previous = s.model.getPreviousObservation();
     const population = current.results.newPopulation;
@@ -283,6 +304,7 @@ export class EvolutionScreenView implements View {
       () => this.handlers?.back(), { width: 710, size: 23 });
   }
 
+  /** Show current preferences and the player's latest trait choices. */
   private decisionsPage(g: Group, s: EvolutionScreenRenderState): void {
     header(g, 'Previous Trait Choices', `Generation ${s.generation}   |   Changes to future breeding preferences`);
     const prefs = s.model.getPreferences();
@@ -300,6 +322,7 @@ export class EvolutionScreenView implements View {
       text(g, 'No traits have been favored yet.', 131, 489,
         { size: 27, fill: COLOR.muted });
     } else {
+      // Only show the last five decisions so this page does not overflow.
       const visible = decisions.slice(-5);
       const startIndex = decisions.length - visible.length;
       visible.forEach((d, i) => {
