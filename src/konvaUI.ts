@@ -130,17 +130,13 @@ export function styleCanvas(root: Group): Group {
 
 /** Decorative slot; replace with actual Konva.Image when art is available. */
 export function styleFeatherImageSlot(parent: Group, x: number, y: number): void {
-  const slot = new Konva.Group({ x, y });
-  slot.add(new Konva.Rect({
-    x: 0, y: 0, width: 104, height: 105,
-    dash: [7, 5], stroke: STYLE.dim,
-    strokeWidth: 2, fill: '#242424',
-  }));
-  styleText(slot, 'FEATHER', 6, 34,
-    { size: 18, width: 92, align: 'center', fill: STYLE.muted });
-  styleText(slot, 'IMAGE', 6, 58,
-    { size: 16, width: 92, align: 'center', fill: STYLE.dim });
-  parent.add(slot);
+  Konva.Image.fromURL("graphics/feather.png", function (image) {
+    image.x(x);
+    image.y(y);
+    image.width(125);
+    image.height(125);
+    parent.add(image);
+  });
 }
 
 export function styleRule(parent: Group, y: number, x = 105, width = 990): void {
