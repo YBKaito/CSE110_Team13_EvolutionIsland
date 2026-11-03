@@ -109,8 +109,8 @@ describe('ScriptedScheduler', () => {
       [24, 'newPredator'],
     ]);
     const envs = game.state.history.environments;
-    expect(envs[5].rainfall).toBe(100);
-    expect(envs[6].rainfall).toBeLessThan(100);
+    expect(envs[5].rainfall).toBe(50);
+    expect(envs[6].rainfall).toBeLessThan(50);
   });
 
   it('rejects unknown event ids', () => {

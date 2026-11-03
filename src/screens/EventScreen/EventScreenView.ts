@@ -1,6 +1,7 @@
 // What the event card (mockup p.41/43/44) and the island-changes table (p.42) show.
 // Pure functions: game state + event log entry in, ScreenSpec out.
 
+import { ENV } from '../../constants';
 import { EVENT_DEFS } from '../../events/eventDefinitions';
 import { diffEnvironment, getValue } from '../../models/Environment';
 import type { GameState } from '../../models/GameState';
@@ -17,7 +18,7 @@ export interface EventCardView {
   generation: number;
   flock: number;
   message: string;
-  /** e.g. "Rainfall: 100 to 80 / Soft plants: 100 to 90" (since the event began). */
+  /** e.g. "Rainfall: 50 to 40 / Soft plants: 50 to 45" (since the event began). */
   changeLine: string;
   beforeGeneration: number;
   before: EnvironmentState;
@@ -98,7 +99,7 @@ export function islandChangesSpec(view: EventCardView): ScreenSpec {
         rows,
         columnWidths: [500, 280, 260],
       },
-      text('Island measures start at 100 when your flock arrives.', { size: 'small' }),
+      text(`Island measures start at ${ENV.NORMAL} (normal) when your flock arrives, on a scale of 0 to ${ENV.MAX}.`, { size: 'small' }),
     ],
     prompt: { mode: 'enter', label: 'Press Enter to return to the event.' },
   };

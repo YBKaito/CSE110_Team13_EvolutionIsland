@@ -1,7 +1,7 @@
 // Trait-dependent fitness. Pure functions: bird traits + environment in, probabilities out.
 // Three separate components (feeding, thermal, predation) so each death has an explainable cause.
 
-import { SIM } from '../constants';
+import { ENV, SIM } from '../constants';
 import { FOOD_TYPES, type EnvironmentState, type Traits } from '../types';
 import {
   BEAK_FOOD_EFFICIENCY,
@@ -18,7 +18,7 @@ export function clamp(value: number, min: number, max: number): number {
 
 /**
  * How well a bird can feed, relative to normal (1.0 = normal).
- * Equals 1.0 for every beak when all food is at baseline, so no beak is best everywhere.
+ * Equals 1.0 for every beak when all food is at the normal level, so no beak is best everywhere.
  */
 export function feedingFitness(traits: Traits, env: EnvironmentState): number {
   const efficiency = BEAK_FOOD_EFFICIENCY[traits.beak];
@@ -26,7 +26,7 @@ export function feedingFitness(traits: Traits, env: EnvironmentState): number {
   let normal = 0;
   for (const food of FOOD_TYPES) {
     eaten += efficiency[food] * env.food[food];
-    normal += efficiency[food] * 100;
+    normal += efficiency[food] * ENV.NORMAL;
   }
   return eaten / normal / BODY_FOOD_NEED[traits.body];
 }
@@ -38,7 +38,7 @@ export function starvationRisk(traits: Traits, env: EnvironmentState): number {
 
 /** Insulation that suits the current temperature: positive when cold, negative when hot. */
 export function idealInsulation(env: EnvironmentState): number {
-  return clamp((100 - env.temperature) / SIM.TEMP_PER_INSULATION, -SIM.IDEAL_INSULATION_MAX, SIM.IDEAL_INSULATION_MAX);
+  return clamp((ENV.NORMAL - env.temperature) / SIM.TEMP_PER_INSULATION, -SIM.IDEAL_INSULATION_MAX, SIM.IDEAL_INSULATION_MAX);
 }
 
 export function exposureRisk(traits: Traits, env: EnvironmentState): number {
@@ -48,9 +48,9 @@ export function exposureRisk(traits: Traits, env: EnvironmentState): number {
 
 export function predationRisk(traits: Traits, env: EnvironmentState): number {
   const detect = COLOR_DETECTABILITY[env.background][traits.color];
-  const exposure = 1 - SIM.COVER_SHIELD * (Math.min(env.cover, 100) / 100);
+  const exposure = 1 - SIM.COVER_SHIELD * (Math.min(env.cover, ENV.NORMAL) / ENV.NORMAL);
   const vulnerability = BODY_PREDATOR_VULNERABILITY[traits.body];
-  return clamp(SIM.PRED_BASE * (env.predation / 100) * detect * exposure * vulnerability, 0, SIM.PRED_MAX);
+  return clamp(SIM.PRED_BASE * (env.predation / ENV.NORMAL) * detect * exposure * vulnerability, 0, SIM.PRED_MAX);
 }
 
 /** Scales hatching success: well-fed parents raise more chicks. */

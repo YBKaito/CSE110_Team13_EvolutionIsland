@@ -67,7 +67,7 @@ export class GameController {
     const generation = s.generation + 1;
 
     const events = advanceEvents(s.environment, s.activeEvents, generation, this.scheduler, this.rng, s.lastStartGen);
-    const environment = regenerate(events.env, events.held);
+    const environment = regenerate(events.env, this.rng, events.held);
     const { population, result } = runGeneration(s.population, environment, this.rng, {
       birthMultiplier: options.birthMultiplier,
       disasterFraction: events.mortality,

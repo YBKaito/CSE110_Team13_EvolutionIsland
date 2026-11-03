@@ -11,9 +11,9 @@ export function envWith(changes: EnvChanges = {}): EnvironmentState {
   return { ...env, ...rest, food: { ...env.food, ...food } };
 }
 
-/** Food levels during a drought peak: rain-fed food is low, hard seeds hold steady. */
+/** Food levels during a drought peak: rain-fed food is low, hard seeds hold steady at normal (50). */
 export function droughtEnv(): EnvironmentState {
-  return envWith({ rainfall: 55, food: { softPlants: 49, smallSeeds: 55, hardSeeds: 100, insects: 55 } });
+  return envWith({ rainfall: 28, food: { softPlants: 25, smallSeeds: 28, hardSeeds: 50, insects: 28 } });
 }
 
 export function populationOf(traitsList: Traits[]): Population {

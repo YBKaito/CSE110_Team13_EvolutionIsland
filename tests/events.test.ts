@@ -28,7 +28,7 @@ function runEvent(eventId: string, seed: number, generations = 120, defs: Record
     const stageBefore = gen === 1 ? 0 : active[0]?.stageIndex;
     const step = advanceEvents(env, active, gen, scheduler, rng, 0, defs);
     if (stageBefore !== undefined && (gen === 1 || active.length > 0)) run.stages.push(stageBefore);
-    env = regenerate(step.env, step.held);
+    env = regenerate(step.env, rng, step.held);
     active = step.active;
     run.envs.push(env);
     run.log.push(...step.log);
@@ -77,8 +77,8 @@ describe.each(Object.values(EVENT_DEFS))('$name', (def) => {
         expect(run.resolvedAt).not.toBeNull();
         expect(run.active).toHaveLength(0);
         const end = run.envs.at(-1)!;
-        expect(Math.abs(end.rainfall - 100)).toBeLessThan(5);
-        expect(Math.abs(end.temperature - 100)).toBeLessThan(5);
+        expect(Math.abs(end.rainfall - 50)).toBeLessThanOrEqual(2);
+        expect(Math.abs(end.temperature - 50)).toBeLessThanOrEqual(2);
       }
     });
   } else {
@@ -97,14 +97,14 @@ describe('specific event effects', () => {
   it('drought lowers rainfall and soft plants', () => {
     const run = runEvent('drought', 1, 25);
     const lowest = (key: 'rainfall') => Math.min(...run.envs.map((e) => e[key]));
-    expect(lowest('rainfall')).toBeLessThan(80);
-    expect(Math.min(...run.envs.map((e) => e.food.softPlants))).toBeLessThan(85);
+    expect(lowest('rainfall')).toBeLessThan(40);
+    expect(Math.min(...run.envs.map((e) => e.food.softPlants))).toBeLessThan(43);
   });
 
   it('harsh winter lowers temperature and insects', () => {
     const run = runEvent('harshWinter', 1, 25);
-    expect(Math.min(...run.envs.map((e) => e.temperature))).toBeLessThan(85);
-    expect(Math.min(...run.envs.map((e) => e.food.insects))).toBeLessThan(85);
+    expect(Math.min(...run.envs.map((e) => e.temperature))).toBeLessThan(43);
+    expect(Math.min(...run.envs.map((e) => e.food.insects))).toBeLessThan(43);
   });
 
   it('hurricane kills a random share of the flock exactly once and strips cover', () => {
@@ -114,25 +114,25 @@ describe('specific event effects', () => {
       expect(hits).toHaveLength(1);
       expect(hits[0]).toBeGreaterThanOrEqual(0.1 * 0.8);
       expect(hits[0]).toBeLessThanOrEqual(0.4 * 1.2);
-      expect(Math.min(...run.envs.map((e) => e.cover))).toBeLessThan(90);
+      expect(Math.min(...run.envs.map((e) => e.cover))).toBeLessThan(45);
     }
   });
 
   it('new predator raises predation pressure', () => {
-    expect(runEvent('newPredator', 1, 30).envs.at(-1)!.predation).toBeGreaterThan(110);
+    expect(runEvent('newPredator', 1, 30).envs.at(-1)!.predation).toBeGreaterThan(55);
   });
 
   it('new competitor eats small seeds only', () => {
     const end = runEvent('newCompetitor', 1, 40).envs.at(-1)!;
     expect(end.competitorDiet).toBe('smallSeeds');
-    expect(end.competition).toBeGreaterThan(10);
-    expect(end.food.smallSeeds).toBeLessThan(97);
-    expect(end.food.hardSeeds).toBeCloseTo(100, 5);
+    expect(end.competition).toBeGreaterThan(5);
+    expect(end.food.smallSeeds).toBeLessThan(48);
+    expect(end.food.hardSeeds).toBe(50);
   });
 
   it('effects vary between runs but stay within the configured ranges', () => {
     const lows = Array.from({ length: 30 }, (_, i) => Math.min(...runEvent('drought', i + 1, 30).envs.map((e) => e.rainfall)));
-    expect(new Set(lows.map((x) => x.toFixed(2))).size).toBeGreaterThan(20);
+    expect(new Set(lows).size).toBeGreaterThan(5);
     for (const low of lows) expect(low).toBeGreaterThanOrEqual(0);
   });
 });
@@ -158,7 +158,7 @@ describe('extending with a new event', () => {
       ],
     };
     const run = runEvent('heatWave', 1, 30, { ...EVENT_DEFS, heatWave });
-    expect(Math.max(...run.envs.map((e) => e.temperature))).toBeGreaterThan(105);
+    expect(Math.max(...run.envs.map((e) => e.temperature))).toBeGreaterThan(52);
     expect(run.resolvedAt).not.toBeNull();
   });
 });
