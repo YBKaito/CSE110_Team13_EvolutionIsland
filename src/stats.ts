@@ -1,5 +1,5 @@
 import type {
-  EnvironmentState, GenerationResults, NumericEnvironmentKey, TraitCounts, TraitKey
+  EnvironmentStateMock as EnvironmentState, GenerationResults, NumericEnvironmentKey, TraitCounts, TraitKey
 } from './types';
 
 /** The numeric environment fields we can compare and validate. */

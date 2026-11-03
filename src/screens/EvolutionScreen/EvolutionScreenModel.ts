@@ -7,7 +7,7 @@ import {
 import { DEFAULT_PREFERENCES, isValidAdjacentChoice } from "../../traits";
 import type {
   DecisionRecord,
-  EnvironmentState,
+  EnvironmentStateMock as EnvironmentState,
   EnvironmentUpdated,
   GenerationCompleted,
   GenerationResults,
