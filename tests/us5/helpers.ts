@@ -88,11 +88,13 @@ function clickOption(node: Shape, fragment: string) {
 }
 
 function counts(population = 12): any {
-  const { TRAITS, traitKeys } = game('traits.js');
+  const { TRAITS, traitKeys, DEFAULT_PREFERENCES } = game('traits.js');
   const obj: Record<string, Record<string, number>> = {};
   for (const key of traitKeys) {
     const options = TRAITS[key].options;
-    obj[key] = Object.fromEntries(options.map((item: { id: string }, i: number) => [item.id, i === 1 ? population : 0]));
+    obj[key] = Object.fromEntries(options.map((item: { id: string }) => [
+      item.id, item.id === DEFAULT_PREFERENCES[key] ? population : 0
+    ]));
   }
   return obj;
 }

@@ -91,6 +91,7 @@ test('stats page shows population difference, trait shares, and current island v
   assert.ok(texts.includes('Population: 9'));
   assert.ok(texts.includes('Net change: -3'));
   assert.ok(texts.some(s => s.includes('Medium: 100%')));
+  assert.ok(texts.includes('Brown: 100%   Gray: 0%   Yellow: 0%   White: 0%'));
   assert.ok(texts.includes('Rainfall: 27'));
   assert.ok(texts.some(s => s.startsWith('Habitat color: RGB(')));
   assert.ok(walk(view.getGroup()).some(n => n instanceof fakeKonva.Rect && n.attrs.fill === 'rgb(182,155,105)'));

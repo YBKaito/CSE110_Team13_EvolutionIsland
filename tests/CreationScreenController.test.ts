@@ -1,14 +1,19 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { MenuState } from "../src/models/GameState";
+import { ScreenState } from "../src/models/GameState";
+import { toStartingSpecies } from "../src/models/Species";
+import { GameController } from "../src/game/GameController";
+import { ScriptedScheduler } from "../src/events/EventFactory";
 import { CreationScreenController } from "../src/screens/CreationScreen/CreationScreenController";
+import { renderCreationScreen } from "../src/screens/CreationScreen/CreationScreenView";
+import { generationViewFromState } from "../src/screens/GameScreen/GameScreenView";
 
 describe("CreationScreenController (US2)", () => {
-  let state: MenuState;
+  let state: ScreenState;
   let controller: CreationScreenController;
 
   beforeEach(() => {
-    state = new MenuState();
+    state = new ScreenState();
     state.goTo("creation");
     controller = new CreationScreenController(state);
   });
@@ -88,7 +93,7 @@ describe("CreationScreenController (US2)", () => {
       const colors = ["brown", "gray", "yellow", "white"];
 
       colors.forEach((color, index) => {
-        const testState = new MenuState();
+        const testState = new ScreenState();
         testState.goTo("creation");
         const testController = new CreationScreenController(testState);
 
@@ -101,7 +106,32 @@ describe("CreationScreenController (US2)", () => {
 
         expect(result.error).toBeNull();
         expect(testState.selectedTraits.color).toBe(color);
+
+        expect(testController.handleInput("y").error).toBeNull();
+        const created = testState.species!;
+        const species = toStartingSpecies(created.name, created.traits);
+        expect(species.traits).toEqual({ beak: 0, body: 0, feathers: 0, color: index });
+
+        const game = GameController.startRun(species, 42, new ScriptedScheduler([]));
+        expect(game.state.population.birds).toHaveLength(80);
+        expect(generationViewFromState(game.state).traitCounts.color).toHaveLength(4);
+        const resultAfterBreeding = game.step().result;
+        expect(resultAfterBreeding.traitCounts.color).toHaveLength(4);
+        expect(resultAfterBreeding.traitCounts.color.reduce((sum, count) => sum + count, 0))
+          .toBe(resultAfterBreeding.population);
       });
+    });
+
+    it("shows all four colors and the correct input range", () => {
+      controller.handleInput("1");
+      controller.handleInput("1");
+      controller.handleInput("1");
+
+      expect(renderCreationScreen(state)).toEqual(expect.arrayContaining([
+        "1. Brown", "2. Gray", "3. Yellow", "4. White", "Enter a number from 1 to 4.",
+      ]));
+      expect(controller.handleInput("5").error).toBe("Please select a valid option (1-4).");
+      expect(state.creationStep).toBe(4);
     });
 
     it("rejects invalid trait choices without advancing", () => {

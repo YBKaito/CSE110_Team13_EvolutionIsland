@@ -1,5 +1,5 @@
-
-import type { HowToPlayCard } from "./types";
+// Add menu options and How to Play card text
+import { BIRD_COLORS, type BirdColor, type HowToPlayCard, type SpeciesTraits } from "./types";
 
 export const GAME_TITLE = "EVOLUTION SIMULATOR";
 
@@ -50,94 +50,103 @@ export const PLACEHOLDER_TEXT: Record<"creation" | "minigames", string> = {
   minigames: "Minigames are coming in a later sprint.",
 };
 
+const COLOR_DESCRIPTIONS: Record<BirdColor, {
+  label: string;
+  advantage: string;
+  disadvantage: string;
+}> = {
+  brown: {
+    label: "Brown",
+    advantage: "Blends into forest environments.",
+    disadvantage: "More visible against sandy backgrounds.",
+  },
+  gray: {
+    label: "Gray",
+    advantage: "Blends into scrub environments.",
+    disadvantage: "More visible in forests.",
+  },
+  yellow: {
+    label: "Yellow",
+    advantage: "Provides some camouflage in sandy environments.",
+    disadvantage: "Highly visible in forests.",
+  },
+  white: {
+    label: "White",
+    advantage: "Blends into sandy environments.",
+    disadvantage: "Highly visible in forests.",
+  },
+};
+
 export const TRAIT_OPTIONS = {
   beakLength: [
     {
       value: "short",
       label: "Short",
-      advantage: "Efficient at eating small seeds and insects.",
-      disadvantage: "Struggles with hard seeds and soft plants.",
+      advantage: "Good for handling some small seeds.",
+      disadvantage: "Cannot reach food in deep flowers.",
     },
     {
       value: "medium",
       label: "Medium",
-      advantage: "Can eat a wide variety of foods.",
-      disadvantage: "Less efficient than specialized beaks.",
+      advantage: "Can access a variety of foods.",
+      disadvantage: "Less specialized for certain foods.",
     },
     {
       value: "long",
       label: "Long",
-      advantage: "Efficient at eating soft plants and hard seeds.",
-      disadvantage: "Struggles with small seeds and insects.",
+      advantage: "Can reach food inside deep flowers.",
+      disadvantage: "May struggle with some hard seeds.",
     },
   ],
   bodySize: [
     {
       value: "small",
       label: "Small",
-      advantage: "Requires less food and is less vulnerable to predators.",
-      disadvantage: "Retains less body heat.",
+      advantage: "Requires less food to survive.",
+      disadvantage: "Vulnerable to some predators.",
     },
     {
       value: "medium",
       label: "Medium",
-      advantage: "Balances food needs, heat retention, and vulnerability.",
-      disadvantage: "Lacks specialized advantages.",
+      advantage: "Balances food needs and body strength.",
+      disadvantage: "Lacks some specialized advantages.",
     },
     {
       value: "large",
       label: "Large",
-      advantage: "Retains more body heat in cold environments.",
-      disadvantage: "Requires more food and is more vulnerable to predators.",
+      advantage: "Can resist some smaller predators.",
+      disadvantage: "Requires more food.",
     },
   ],
   featherDensity: [
     {
       value: "thin",
       label: "Thin",
-      advantage: "Better suited for warm environments.",
-      disadvantage: "Provides less insulation in cold environments.",
+      advantage: "Helps release heat in warm weather.",
+      disadvantage: "Provides less cold insulation.",
     },
     {
       value: "medium",
       label: "Medium",
-      advantage: "Provides balanced insulation.",
+      advantage: "Provides moderate insulation.",
       disadvantage: "Less effective in extreme temperatures.",
     },
     {
       value: "thick",
       label: "Thick",
-      advantage: "Provides better insulation in cold environments.",
-      disadvantage: "Can increase overheating risk in warm environments.",
+      advantage: "Provides better insulation in cold weather.",
+      disadvantage: "Can increase overheating risk.",
     },
   ],
-  color: [
-    {
-      value: "brown",
-      label: "Brown",
-      advantage: "Blends into forest environments.",
-      disadvantage: "More visible against sandy backgrounds.",
-    },
-    {
-      value: "gray",
-      label: "Gray",
-      advantage: "Blends into scrub environments.",
-      disadvantage: "More visible in forests.",
-    },
-    {
-      value: "yellow",
-      label: "Yellow",
-      advantage: "Provides some camouflage in sandy environments.",
-      disadvantage: "Highly visible in forests.",
-    },
-    {
-      value: "white",
-      label: "White",
-      advantage: "Blends into sandy environments.",
-      disadvantage: "Highly visible in forests.",
-    },
-  ],
-} as const;
+  color: BIRD_COLORS.map((value) => ({ value, ...COLOR_DESCRIPTIONS[value] })),
+} as const satisfies {
+  [Key in keyof SpeciesTraits]: readonly {
+    value: SpeciesTraits[Key];
+    label: string;
+    advantage: string;
+    disadvantage: string;
+  }[];
+};
 
 export const CREATION_STEPS = [
   "name",
@@ -226,6 +235,7 @@ export const EVENTS = {
   SEVERITY: [0.8, 1.2],
   MILESTONE_EVERY: 10,
 } as const;
+
 // Stage dimensions
 export const STAGE_WIDTH = 1200;
 export const STAGE_HEIGHT = 820;

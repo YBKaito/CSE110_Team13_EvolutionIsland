@@ -1,4 +1,4 @@
-import type { PreferredTraits, TraitKey } from './types';
+import { BIRD_COLORS, type BirdColor, type PreferredTraits, type TraitKey } from './types';
 
 /** Keep a stable order for trait selectors and keyboard shortcuts. */
 export const traitKeys: readonly TraitKey[] = ['beakLength', 'bodySize', 'featherDensity', 'color'];
@@ -6,10 +6,16 @@ export const traitKeys: readonly TraitKey[] = ['beakLength', 'bodySize', 'feathe
 /**
  * Trait options shown to the player, in neighboring order.
  */
-export const TRAITS: Record<TraitKey, {
-  label: string;
-  options: readonly { id: string; label: string; color?: string }[];
-}> = {
+const COLOR_SWATCHES: Record<BirdColor, string> = {
+  brown: '#9d6c47', gray: '#808080', yellow: '#e8c547', white: '#f2f0e8'
+};
+
+export const TRAITS: {
+  [Key in TraitKey]: {
+    label: string;
+    options: readonly { id: Key extends 'color' ? BirdColor : string; label: string; color?: string }[];
+  };
+} = {
   beakLength: {
     label: 'Beak length',
     options: [{ id: 'short', label: 'Short' }, { id: 'medium', label: 'Medium' }, { id: 'long', label: 'Long' }]
@@ -24,11 +30,9 @@ export const TRAITS: Record<TraitKey, {
   },
   color: {
     label: 'Color',
-    options: [
-      { id: 'tan', label: 'Light tan', color: '#d4b98c' },
-      { id: 'brown', label: 'Brown', color: '#9d6c47' },
-      { id: 'dark-brown', label: 'Dark brown', color: '#4f352c' }
-    ]
+    options: BIRD_COLORS.map(id => ({
+      id, label: id.charAt(0).toUpperCase() + id.slice(1), color: COLOR_SWATCHES[id]
+    }))
   }
 };
 
