@@ -39,6 +39,7 @@ const productionFiles = [
   'src/stats.ts',
   'src/types.ts',
   'src/screens/ScreenController.ts',
+  'src/screens/EvolutionScreen/hints.ts',
   ...[
     'EvolutionScreenController', 'EvolutionScreenModel', 'EvolutionScreenTypes',
     'EvolutionScreenView', 'SimulationCoordinator', 'loadPixelifySans'
