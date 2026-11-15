@@ -95,6 +95,44 @@ describe('pauses', () => {
   });
 });
 
+describe('evolution choices', () => {
+  it('saves an adjacent evolution choice at a checkpoint without changing existing birds', () => {
+    const game = GameController.startRun(species, 2, quiet());
+    expect(() => game.applyEvolutionChoice({
+      generation: 0, traitKey: 'beakLength', fromValue: 'medium', targetValue: 'long',
+    })).toThrow(/checkpoint/);
+
+    for (let i = 0; i < 10; i++) game.step();
+    const existingBirds = structuredClone(game.state.population.birds);
+    const choice = { generation: 10, traitKey: 'beakLength' as const, fromValue: 'medium', targetValue: 'long' };
+    game.applyEvolutionChoice(choice);
+
+    expect(game.state.favoredTraits).toEqual({ beak: 2 });
+    expect(game.state.population.birds).toEqual(existingBirds);
+    expect(() => game.applyEvolutionChoice(choice)).toThrow(/already/);
+    expect(() => game.applyEvolutionChoice({ ...choice, generation: 20 })).toThrow(/checkpoint/);
+
+    for (let i = 0; i < 10; i++) game.step();
+    game.applyEvolutionChoice({
+      generation: 20, traitKey: 'bodySize', fromValue: 'medium', targetValue: 'large',
+    });
+    expect(game.state.favoredTraits).toEqual({ beak: 2, body: 2 });
+  });
+
+  it('keeps accepted preferences when a run is saved and resumed', () => {
+    const original = GameController.startRun(species, 2, quiet());
+    for (let i = 0; i < 10; i++) original.step();
+    original.applyEvolutionChoice({
+      generation: 10, traitKey: 'beakLength', fromValue: 'medium', targetValue: 'long',
+    });
+
+    const resumed = GameController.resume(structuredClone(original.state), quiet());
+    expect(resumed.state.favoredTraits).toEqual({ beak: 2 });
+    expect(resumed.step()).toEqual(original.step());
+    expect(resumed.state).toEqual(original.state);
+  });
+});
+
 describe('saving and resuming', () => {
   it('continues a saved run exactly as if it had never stopped', () => {
     const original = GameController.startRun(species, 11, new ScriptedScheduler(MOCKUP_SCRIPT));
