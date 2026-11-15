@@ -9,7 +9,7 @@ import { RandomSource } from '../../simulation/Random';
 import { runGeneration } from '../../simulation/SimulationEngine';
 import { FOOD_TYPES, type Bird, type EnvironmentState, type FoodType, type Population, type Traits } from '../../types';
 
-export const gameRules = {
+export const EXTINCTION = {
   //Flock size at Gen 1
   START_POP: 40,
   //Longest run we show; a flock still alive after this many generations "survived"
@@ -33,3 +33,33 @@ export const DEFAULT_SPECIES: StartingSpecies = SPECIES[0];
 export function pickSpecies(seed: number, exclude?: string): StartingSpecies {
   return new RandomSource(seed).pick(SPECIES.filter((s) => s.name !== exclude));
 }
+
+export type ConditionKey = 'rainfall' | 'temperature' | 'predators' | 'arrival';
+
+//The option index picked for each condition.
+export type Scenario = Record<ConditionKey, number>;
+
+export interface Choice {
+  label: string;
+  apply(env: EnvironmentState): void; //Sets this choice's island values on a baseline environment
+}
+
+export interface Condition {
+  key: ConditionKey;
+  title: string;
+  choices: Choice[];
+  normalIndex: number;	//The option that leaves the island unchanged.
+}
+
+
+const NORMAL = ENV.NORMAL; //The baseline environment value
+
+const newArrival = (label: string, diet: FoodType | null): Choice => ({
+  label,
+  apply: (env) => {
+    env.competition = diet ? EXTINCTION.COMPETITOR_STRENGTH : 0;
+    env.competitorDiet = diet;
+  },
+});
+
+
