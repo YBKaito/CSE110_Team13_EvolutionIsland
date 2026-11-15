@@ -10,6 +10,7 @@ import "./styles/styles.css";
 import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
 import { RandomScheduler, ScriptedScheduler, type EventScheduler } from "./events/EventFactory";
 import { GameController } from "./game/GameController";
+import { startGameSession } from "./game/startGameSession";
 import { ScreenState, type StartingSpecies } from "./models/GameState";
 import { toStartingSpecies } from "./models/Species";
 
@@ -18,7 +19,6 @@ import { MenuScreenView, renderScreen } from "./screens/MenuScreen/MenuScreenVie
 import { CreationScreenController } from "./screens/CreationScreen/CreationScreenController";
 import { renderCreationScreen } from "./screens/CreationScreen/CreationScreenView";
 
-import { GameScreenController } from "./screens/GameScreen/GameScreenController";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
 
@@ -68,6 +68,7 @@ async function boot(): Promise<void> {
 
   // US3 to US6: Konva screens. Created on first use, after #app is visible, so Konva measures a real size.
   let host: ScreenHost | null = null;
+  let session: { dispose(): void } | null = null;
 
   const renderCurrentScreen = (error: string | null = null): void => {
     if (state.screen === "creation") {
@@ -93,21 +94,22 @@ async function boot(): Promise<void> {
   };
 
   const backToMenu = (): void => {
+    session?.dispose();
+    session = null;
     state.goTo("menu");
     showTerminal();
     renderCurrentScreen();
   };
 
   const startRun = (species: StartingSpecies, seed: number): void => {
+    session?.dispose();
     showApp();
     const screens = host ?? (host = new ScreenHost(app));
     const game = GameController.startRun(species, seed, makeScheduler());
-    screens.show(
-      new GameScreenController(screens, game, {
-        onQuit: backToMenu,
-        onRestart: () => startRun(species, randomSeed()),
-      }),
-    );
+    session = startGameSession(screens, game, {
+      onQuit: backToMenu,
+      onRestart: () => startRun(species, randomSeed()),
+    });
   };
 
   form.addEventListener("submit", (e) => {
