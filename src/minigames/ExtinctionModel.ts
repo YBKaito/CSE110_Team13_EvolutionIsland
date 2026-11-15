@@ -14,8 +14,9 @@ export const EXTINCTION = {
   START_POP: 40,
   //Longest run we show; a flock still alive after this many generations "survived"
   MAX_GENERATIONS: 12,
-  //Competition level (0-100) that a new arrival brings
+  //Competition level (0-100) when a competing species arrives
   COMPETITOR_STRENGTH: 40,
+  PREDATOR_STRENGTH: 90,
 } as const;
 
 //The species a round can start with. Each is badly matched to at least one island the player can build
@@ -34,7 +35,7 @@ export function pickSpecies(seed: number, exclude?: string): StartingSpecies {
   return new RandomSource(seed).pick(SPECIES.filter((s) => s.name !== exclude));
 }
 
-export type ConditionKey = 'rainfall' | 'temperature' | 'predators' | 'arrival';
+export type ConditionKey = 'rainfall' | 'temperature' | 'arrival';
 
 //The option index picked for each condition.
 export type Scenario = Record<ConditionKey, number>;
@@ -54,12 +55,61 @@ export interface Condition {
 
 const NORMAL = ENV.NORMAL; //The baseline environment value
 
-const newArrival = (label: string, diet: FoodType | null): Choice => ({
+const newcomer = (label: string, predation: number, diet: FoodType | null): Choice => ({
   label,
   apply: (env) => {
+    env.predation = predation;
     env.competition = diet ? EXTINCTION.COMPETITOR_STRENGTH : 0;
     env.competitorDiet = diet;
   },
 });
 
+export const CONDITIONS: readonly Condition[] = [
+  {
+    key: 'rainfall',
+    title: 'Rainfall',
+    normalIndex: 1,
+    choices: [
+      { label: 'Heavy rain', apply: (env) => { env.rainfall = 80; } },
+      { label: 'Normal', apply: (env) => { env.rainfall = NORMAL; } },
+      { label: 'Drought', apply: (env) => { env.rainfall = 20; } },
+    ],
+  },
+  {
+    key: 'temperature',
+    title: 'Temperature',
+    normalIndex: 1,
+    choices: [
+      { label: 'Colder', apply: (env) => { env.temperature = 25; } },
+      { label: 'Normal', apply: (env) => { env.temperature = NORMAL; } },
+      { label: 'Hotter', apply: (env) => { env.temperature = 75; } },
+    ],
+  },
+  {
+    key: 'arrival',
+    title: 'New arrival',
+    normalIndex: 0,
+    choices: [
+      newcomer('Hawks', EXTINCTION.PREDATOR_STRENGTH, null),
+      newcomer('Insect-eating warbler', NORMAL, 'insects'),
+      newcomer('Seed-eating finch', NORMAL, 'smallSeeds'),
+    ],
+  },
+];
 
+export function conditionOf(key: ConditionKey): Condition {
+  const condition = CONDITIONS.find((c) => c.key === key);
+  if (!condition) throw new Error(`Unknown condition: ${key}`);
+  return condition;
+}
+
+export const normalScenario = (): Scenario =>
+  Object.fromEntries(CONDITIONS.map((c) => [c.key, c.normalIndex])) as Scenario;
+
+export function allScenarios(): Scenario[] {
+  let scenarios: Scenario[] = [normalScenario()];
+  for (const condition of CONDITIONS) {
+    scenarios = scenarios.flatMap((s) => condition.choices.map((_, i) => ({ ...s, [condition.key]: i })));
+  }
+  return scenarios;
+}
