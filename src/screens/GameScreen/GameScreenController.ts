@@ -20,6 +20,10 @@ export interface GameScreenOptions {
   onQuit: () => void;
   /** Player wants a fresh run after extinction. */
   onRestart: () => void;
+  /** Runs generations and publishes updates to the evolution screen. */
+  simulation?: Pick<GameController, 'step' | 'advance'>;
+  /** Opens the evolution choice after any event cards have been shown. */
+  onCheckpoint?: () => boolean;
 }
 
 export class GameScreenController implements Screen {
@@ -42,8 +46,9 @@ export class GameScreenController implements Screen {
     if (this.game.isOver) return this.submitExtinct(input);
 
     const choice = parseChoice(input, GENERATION_CHOICES);
-    if (choice === 1) return this.afterSimulating([this.game.step()]);
-    if (choice === 2) return this.afterSimulating(this.game.advance(5));
+    const simulation = this.options.simulation ?? this.game;
+    if (choice === 1) return this.afterSimulating([simulation.step()]);
+    if (choice === 2) return this.afterSimulating(simulation.advance(5));
     if (choice === 3) {
       this.mode = 'confirmQuit';
       this.error = undefined;
@@ -81,6 +86,8 @@ export class GameScreenController implements Screen {
   private showEvents(queue: EventLogEntry[]): void {
     const [next, ...rest] = queue;
     if (!next) {
+      // Event cards come first; a checkpoint choice opens only after the last card.
+      if (this.options.onCheckpoint?.()) return;
       this.nav.show(this);
       return;
     }
