@@ -30,14 +30,6 @@ export const TRACK = {
   leadInMs: 1000,
 } as const;
 
-/** Settings used until difficulty is chosen from the bird's fitness. */
-export const DEFAULT_TRACK: TrackSettings = {
-  speed: 0.4,
-  beatInterval: 650,
-  boxWidth: 160,
-  noteCount: 20,
-};
-
 /** Gap between bars, as a multiple of the beat interval. Mostly steady, with some doubles and rests. */
 const GAP_PATTERN = [1, 1, 1, 0.5, 1.5] as const;
 

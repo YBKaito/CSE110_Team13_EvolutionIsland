@@ -3,6 +3,7 @@
 
 import Konva from 'konva';
 import { COLORS, FONT_FAMILY, SCREEN_HEIGHT, SCREEN_WIDTH } from '../ui/theme';
+import { HARD_MESSAGE } from './difficulty';
 import type { HatchingRhythmGame } from './HatchingRhythmGame';
 import { isOnTrack, noteX, TRACK } from './noteTrack';
 import { formatPercent, type Judgment } from './timingJudge';
@@ -188,6 +189,22 @@ export class HatchingRhythmView {
         fill: COLORS.normal,
       }),
     );
+
+    // Hard mode explains why: the bird's poor fitness made the bars faster and the box smaller.
+    if (game.difficulty === 'hard') {
+      this.layer.add(
+        new Konva.Text({
+          x: 330,
+          y: 260,
+          width: 300,
+          text: HARD_MESSAGE,
+          fontFamily: FONT_FAMILY,
+          fontSize: 28,
+          lineHeight: 1.3,
+          fill: COLORS.normal,
+        }),
+      );
+    }
   }
 
   /** Scales the fixed-size screen to fit the browser window, keeping its shape. */
