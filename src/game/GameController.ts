@@ -9,7 +9,8 @@ import { createGameState, type GameState, type StartingSpecies } from '../models
 import { createStartingPopulation } from '../simulation/Population';
 import { RandomSource } from '../simulation/Random';
 import { runGeneration } from '../simulation/SimulationEngine';
-import type { EnvVariable, EventLogEntry, GenerationResult } from '../types';
+import { SIMULATION_TRAIT_FOR_CHOICE, TRAIT_OPTIONS } from '../simulation/traitContent';
+import type { EnvVariable, EventLogEntry, GenerationResult, TraitFocusChoice } from '../types';
 
 /** A reason to stop and show the player something before simulating further. */
 export type Pause =
@@ -60,6 +61,32 @@ export class GameController {
     return this.gameState.population.birds.length === 0;
   }
 
+  /** Apply one adjacent preference change at the current observation checkpoint. */
+  applyEvolutionChoice(choice: TraitFocusChoice): void {
+    const s = this.gameState;
+    if (this.isOver) throw new Error('Cannot choose a trait after extinction.');
+    if (choice.generation !== s.generation || s.generation === 0 ||
+      s.generation % EVENTS.MILESTONE_EVERY !== 0) {
+      throw new Error('Evolution choices are only allowed at the current checkpoint.');
+    }
+    if (s.lastEvolutionChoiceGeneration === choice.generation) {
+      throw new Error('An evolution choice was already made at this checkpoint.');
+    }
+
+    const trait = SIMULATION_TRAIT_FOR_CHOICE[choice.traitKey];
+    if (!trait) throw new Error('Unknown trait.');
+    const options = TRAIT_OPTIONS[trait];
+    const previousIndex = s.favoredTraits[trait] ?? s.species.traits[trait];
+    const targetIndex = options.indexOf(choice.targetValue);
+    if (choice.fromValue !== options[previousIndex] ||
+      targetIndex < 0 || Math.abs(targetIndex - previousIndex) !== 1) {
+      throw new Error('Choose one neighboring option from the current preference.');
+    }
+
+    s.favoredTraits[trait] = targetIndex;
+    s.lastEvolutionChoiceGeneration = choice.generation;
+  }
+
   /** Simulates exactly one generation. */
   step(options: StepOptions = {}): StepOutcome {
     if (this.isOver) throw new Error('The flock is extinct; start a new run.');
@@ -71,6 +98,7 @@ export class GameController {
     const { population, result } = runGeneration(s.population, environment, this.rng, {
       birthMultiplier: options.birthMultiplier,
       disasterFraction: events.mortality,
+      favoredTraits: s.favoredTraits,
     });
 
     s.generation = generation;
