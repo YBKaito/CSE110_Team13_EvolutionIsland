@@ -158,11 +158,12 @@ export class HatchingRhythmView {
       );
     }
 
-    const flashing = game.time - game.lastPressTime < FLASH_MS;
+    // The song clock stops when the song ends, so flashes and popups end with it.
+    const flashing = !game.isFinished && game.time - game.lastPressTime < FLASH_MS;
     this.box.stroke(flashing ? COLORS.normal : BOX_COLOR);
 
     const last = game.lastJudgment;
-    if (last && game.time - last.time < POPUP_MS) {
+    if (last && !game.isFinished && game.time - last.time < POPUP_MS) {
       const style = JUDGMENT_TEXT[last.judgment];
       this.popup.text(style.text);
       this.popup.fill(style.color);

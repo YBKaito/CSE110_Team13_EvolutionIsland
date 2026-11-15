@@ -19,8 +19,11 @@ export const EASY_FITNESS_THRESHOLD = 0.5;
 /** Fitness used when the player picks a difficulty from the minigames menu (no bird yet). */
 export const DIFFICULTY_FITNESS: Record<MinigameDifficulty, number> = { easy: 1, hard: 0 };
 
-/** Shown under the title on hard, like the mockup. */
-export const HARD_MESSAGE = '“A poor fit made hatching harder.”';
+/**
+ * Shown under the title on hard, like the mockup.
+ * The zero-width non-joiner (‌) stops Pixelify Sans from drawing "fi" as a ligature that reads like "At".
+ */
+export const HARD_MESSAGE = '“A poor f‌it made hatching harder.”';
 
 function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * t;
