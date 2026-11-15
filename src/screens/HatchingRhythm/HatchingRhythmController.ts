@@ -5,14 +5,15 @@ import type { MinigameDifficulty } from '../../types';
 import { HatchingRhythmGame } from './HatchingRhythmGame';
 import { HatchingRhythmView } from './HatchingRhythmView';
 import { DIFFICULTY_FITNESS, difficultyForFitness, trackForFitness } from './difficulty';
+import type { HatchResult } from './hatchResult';
 
 export interface HatchingRhythmOptions {
   /** Difficulty picked in the minigames menu. */
   difficulty: MinigameDifficulty;
   /** A bird's fitness (0 to 1). When given, it sets the speed and box size instead of `difficulty`. */
   fitness?: number;
-  /** Called once the player leaves the minigame. */
-  onExit: () => void;
+  /** Called once the player leaves the minigame, with the hatch result (null if they quit early). */
+  onExit: (result: HatchResult | null) => void;
   /** Seed for the bar pattern; random by default. */
   seed?: number;
 }
@@ -65,6 +66,6 @@ export class HatchingRhythmController {
     cancelAnimationFrame(this.frame);
     window.removeEventListener('keydown', this.onKey);
     this.view.destroy();
-    this.options.onExit();
+    this.options.onExit(this.game.isFinished ? this.game.result : null);
   }
 }

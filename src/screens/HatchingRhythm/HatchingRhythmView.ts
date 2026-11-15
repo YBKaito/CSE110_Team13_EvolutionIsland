@@ -42,6 +42,15 @@ export class HatchingRhythmView {
   private readonly footer: Konva.Text;
   private readonly popup: Konva.Text;
   private readonly scoreTexts: Konva.Text[];
+  private readonly results = new Konva.Text({
+    x: EGG_CENTER_X + 110,
+    y: 250,
+    width: 500,
+    fontFamily: FONT_FAMILY,
+    fontSize: 28,
+    lineHeight: 1.35,
+    fill: COLORS.normal,
+  });
   private readonly egg = new Konva.Image({ image: undefined, x: EGG_CENTER_X, y: EGG_BOTTOM_Y });
   private readonly eggImages: Record<EggStage, HTMLImageElement> = {
     egg: loadImage(EGG_SPRITES.egg),
@@ -58,6 +67,7 @@ export class HatchingRhythmView {
     this.drawHeader(game);
     this.egg.scale({ x: EGG_SCALE, y: EGG_SCALE });
     this.layer.add(this.egg);
+    this.layer.add(this.results);
 
     // Note track: a grey line the bars slide along.
     this.layer.add(
@@ -166,6 +176,18 @@ export class HatchingRhythmView {
 
     const scores = [`Perfect: ${tally.perfect}`, `Good: ${tally.good}`, `Miss: ${tally.miss}`, `Accuracy: ${formatPercent(game.accuracy)}`];
     scores.forEach((value, i) => this.scoreTexts[i].text(value));
+
+    // Song over: show how many eggs hatched (the offspring count).
+    if (game.isFinished) {
+      const result = game.result;
+      this.results.text(
+        `${result.hatched} of ${result.eggs} eggs hatched!\n` +
+          `Hatch rate: ${formatPercent(result.hatchRate)}\n` +
+          `Offspring bonus: x${result.birthMultiplier.toFixed(2)}`,
+      );
+    } else {
+      this.results.text('');
+    }
 
     this.footer.text(game.isFinished ? 'Song over! Press Enter to go back to the minigames.' : 'Press Esc to quit.');
     this.layer.batchDraw();

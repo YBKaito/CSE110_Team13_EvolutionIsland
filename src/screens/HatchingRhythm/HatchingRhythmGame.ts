@@ -2,6 +2,7 @@
 // Knows nothing about Konva or the clock; the controller passes in the current time.
 
 import type { MinigameDifficulty } from '../../types';
+import { hatchResult, type HatchResult } from './hatchResult';
 import { createNotes, hasPassedBox, offsetFromBox, type Note, type TrackSettings } from './noteTrack';
 import { accuracy, emptyTally, judgeOffset, type Judgment, type Tally } from './timingJudge';
 
@@ -81,6 +82,11 @@ export class HatchingRhythmGame {
 
   get isFinished(): boolean {
     return this.judgments.size === this.notes.length;
+  }
+
+  /** Hatch rate and offspring count, one egg per bar. Final once the song is over. */
+  get result(): HatchResult {
+    return hatchResult(this.tally, this.notes.length);
   }
 
   private judge(note: Note, judgment: Judgment): void {
