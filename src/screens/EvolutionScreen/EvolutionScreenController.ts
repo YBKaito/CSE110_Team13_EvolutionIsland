@@ -306,7 +306,7 @@ export class EvolutionScreenController extends ScreenController {
     if (key === 'arrowleft' || key === 'arrowright') {
       event.preventDefault();
       const current = this.model.getPreferences()[this.selectedTrait];
-      const values = TRAITS[this.selectedTrait].options.map(o => o.id);
+      const values: string[] = TRAITS[this.selectedTrait].options.map(o => o.id);
       const index = values.indexOf(current);
       const next = values[index + (key === 'arrowleft' ? -1 : 1)];
       if (next) this.selectTarget(next);

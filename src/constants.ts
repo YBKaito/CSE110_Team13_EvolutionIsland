@@ -1,5 +1,6 @@
 // Add menu options and How to Play card text
-import { BIRD_COLORS, type BirdColor, type HowToPlayCard, type SpeciesTraits } from "./types";
+import { type HowToPlayCard, type SpeciesTraits } from "./types";
+import { TRAITS } from "./traits";
 
 export const GAME_TITLE = "EVOLUTION SIMULATOR";
 
@@ -50,96 +51,22 @@ export const PLACEHOLDER_TEXT: Record<"creation" | "minigames", string> = {
   minigames: "Minigames are coming in a later sprint.",
 };
 
-const COLOR_DESCRIPTIONS: Record<BirdColor, {
-  label: string;
-  advantage: string;
-  disadvantage: string;
-}> = {
-  brown: {
-    label: "Brown",
-    advantage: "Blends into forest environments.",
-    disadvantage: "More visible against sandy backgrounds.",
-  },
-  gray: {
-    label: "Gray",
-    advantage: "Blends into scrub environments.",
-    disadvantage: "More visible in forests.",
-  },
-  yellow: {
-    label: "Yellow",
-    advantage: "Provides some camouflage in sandy environments.",
-    disadvantage: "Highly visible in forests.",
-  },
-  white: {
-    label: "White",
-    advantage: "Blends into sandy environments.",
-    disadvantage: "Highly visible in forests.",
-  },
-};
+/** Use the same options as evolution choices, but keep the fields creation already expects. */
+function toCreationOptions<Key extends keyof SpeciesTraits>(key: Key) {
+  return TRAITS[key].options.map(({ id, label, advantage, disadvantage }) => ({
+    value: id,
+    label,
+    advantage,
+    disadvantage,
+  }));
+}
 
 export const TRAIT_OPTIONS = {
-  beakLength: [
-    {
-      value: "short",
-      label: "Short",
-      advantage: "Good for handling some small seeds.",
-      disadvantage: "Cannot reach food in deep flowers.",
-    },
-    {
-      value: "medium",
-      label: "Medium",
-      advantage: "Can access a variety of foods.",
-      disadvantage: "Less specialized for certain foods.",
-    },
-    {
-      value: "long",
-      label: "Long",
-      advantage: "Can reach food inside deep flowers.",
-      disadvantage: "May struggle with some hard seeds.",
-    },
-  ],
-  bodySize: [
-    {
-      value: "small",
-      label: "Small",
-      advantage: "Requires less food to survive.",
-      disadvantage: "Vulnerable to some predators.",
-    },
-    {
-      value: "medium",
-      label: "Medium",
-      advantage: "Balances food needs and body strength.",
-      disadvantage: "Lacks some specialized advantages.",
-    },
-    {
-      value: "large",
-      label: "Large",
-      advantage: "Can resist some smaller predators.",
-      disadvantage: "Requires more food.",
-    },
-  ],
-  featherDensity: [
-    {
-      value: "thin",
-      label: "Thin",
-      advantage: "Helps release heat in warm weather.",
-      disadvantage: "Provides less cold insulation.",
-    },
-    {
-      value: "medium",
-      label: "Medium",
-      advantage: "Provides moderate insulation.",
-      disadvantage: "Less effective in extreme temperatures.",
-    },
-    {
-      value: "thick",
-      label: "Thick",
-      advantage: "Provides better insulation in cold weather.",
-      disadvantage: "Can increase overheating risk.",
-    },
-  ],
-  color: BIRD_COLORS.map((value) => ({ value, ...COLOR_DESCRIPTIONS[value] })),
-} as const satisfies {
+  beakLength: toCreationOptions("beakLength"),
+  bodySize: toCreationOptions("bodySize"),
+  featherDensity: toCreationOptions("featherDensity"),
+  color: toCreationOptions("color"),
+} satisfies {
   [Key in keyof SpeciesTraits]: readonly {
     value: SpeciesTraits[Key];
     label: string;

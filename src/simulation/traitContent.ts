@@ -1,8 +1,11 @@
-// Trait options and how each option interacts with the environment.
-// This is the single source of truth for trait effects: fitness, hints, and feedback should all read from here.
-// Option lists are provisional until US2 (species creation) confirms them.
+// How bird traits affect the environment and survival.
+// The option names and order come from the shared trait list, so the
+// simulation uses the same indexes as creation and evolution choices.
+// If we reorder options there, we also need to update the indexed trait
+// effect arrays below so they still match the correct bird traits.
 
-import { BIRD_COLORS, type Background, type FoodType, type TraitKey, type TraitName } from '../types';
+import { TRAITS, traitKeys } from '../traits';
+import { type Background, type FoodType, type TraitKey, type TraitName } from '../types';
 
 /** Match evolution-screen trait keys to the names stored on simulated birds. */
 export const SIMULATION_TRAIT_FOR_CHOICE: Record<TraitKey, TraitName> = {
@@ -13,13 +16,13 @@ export const SIMULATION_TRAIT_FOR_CHOICE: Record<TraitKey, TraitName> = {
 };
 
 export const TRAIT_OPTIONS: Record<TraitName, readonly string[]> = {
-  beak: ['short', 'medium', 'long'],
-  body: ['small', 'medium', 'large'],
-  feathers: ['thin', 'medium', 'thick'],
-  color: BIRD_COLORS,
+  beak: TRAITS.beakLength.options.map(option => option.id),
+  body: TRAITS.bodySize.options.map(option => option.id),
+  feathers: TRAITS.featherDensity.options.map(option => option.id),
+  color: TRAITS.color.options.map(option => option.id),
 };
 
-export const TRAIT_NAMES: TraitName[] = ['beak', 'body', 'feathers', 'color'];
+export const TRAIT_NAMES: TraitName[] = traitKeys.map(key => SIMULATION_TRAIT_FOR_CHOICE[key]);
 
 /** Traits whose options are ordered, so a mutation moves one step. Color mutates to any other option. */
 export const ORDINAL_TRAITS: ReadonlySet<TraitName> = new Set(['beak', 'body', 'feathers']);
