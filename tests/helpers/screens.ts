@@ -25,6 +25,7 @@ export function screenText(spec: ScreenSpec): string[] {
     if (block.kind === 'text') lines.push(block.text);
     if (block.kind === 'table') lines.push(block.columns.join(' | '), ...block.rows.map((r) => r.join(' | ')));
     if (block.kind === 'bars') lines.push(`${block.label}: ${block.segments.map((s) => `${s.option} ${s.count}`).join(', ')}`);
+    if (block.kind === 'statCards') lines.push(...block.items.map(item => `${item.value} — ${item.label}`));
   }
   if (spec.prompt.error) lines.push(spec.prompt.error);
   lines.push(spec.prompt.label);

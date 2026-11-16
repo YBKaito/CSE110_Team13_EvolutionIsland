@@ -9,7 +9,7 @@ import "./styles/styles.css";
 
 import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
 import { RandomScheduler, ScriptedScheduler, type EventScheduler } from "./events/EventFactory";
-import { GameController } from "./game/GameController";
+import { GAME_OVER_PREVIEW_GENERATION, GameController } from "./game/GameController";
 import { ScreenState, type StartingSpecies } from "./models/GameState";
 import { toStartingSpecies } from "./models/Species";
 
@@ -101,7 +101,7 @@ async function boot(): Promise<void> {
   const startRun = (species: StartingSpecies, seed: number): void => {
     showApp();
     const screens = host ?? (host = new ScreenHost(app));
-    const game = GameController.startRun(species, seed, makeScheduler());
+    const game = GameController.startRun(species, seed, makeScheduler(), GAME_OVER_PREVIEW_GENERATION);
     screens.show(
       new GameScreenController(screens, game, {
         onQuit: backToMenu,

@@ -4,10 +4,10 @@
 import type { GameController, StepOutcome } from '../../game/GameController';
 import type { EventLogEntry } from '../../types';
 import { EventScreenController } from '../EventScreen/EventScreenController';
+import { GameOverScreenController } from '../GameOverScreen/GameOverScreenController';
 import { invalidChoiceMessage, parseChoice } from '../format';
 import type { Screen, ScreenNavigator, ScreenSpec } from '../ui/screenSpec';
 import {
-  EXTINCT_CHOICES,
   GENERATION_CHOICES,
   generationScreenSpec,
   generationViewFromState,
@@ -25,6 +25,7 @@ export interface GameScreenOptions {
 export class GameScreenController implements Screen {
   private mode: 'generation' | 'confirmQuit' = 'generation';
   private error: string | undefined;
+  private gameOverShown = false;
 
   constructor(
     private readonly nav: ScreenNavigator,
@@ -38,8 +39,9 @@ export class GameScreenController implements Screen {
   }
 
   submit(input: string): void {
+    if (this.gameOverShown) return;
     if (this.mode === 'confirmQuit') return this.submitQuit(input);
-    if (this.game.isOver) return this.submitExtinct(input);
+    if (this.shouldShowGameOver()) return this.showGameOver();
 
     const choice = parseChoice(input, GENERATION_CHOICES);
     if (choice === 1) return this.afterSimulating([this.game.step()]);
@@ -65,12 +67,6 @@ export class GameScreenController implements Screen {
     this.nav.refresh();
   }
 
-  private submitExtinct(input: string): void {
-    if (parseChoice(input, EXTINCT_CHOICES) === 1) return this.options.onRestart();
-    this.error = 'Invalid. Type 1.';
-    this.nav.refresh();
-  }
-
   /** Shows a card for each event that happened, in order, then comes back to the generation screen. */
   private afterSimulating(outcomes: StepOutcome[]): void {
     this.error = undefined;
@@ -81,9 +77,23 @@ export class GameScreenController implements Screen {
   private showEvents(queue: EventLogEntry[]): void {
     const [next, ...rest] = queue;
     if (!next) {
-      this.nav.show(this);
+      if (this.shouldShowGameOver()) this.showGameOver();
+      else this.nav.show(this);
       return;
     }
     this.nav.show(new EventScreenController(this.nav, this.game.state, next, () => this.showEvents(rest)));
+  }
+
+  private showGameOver(): void {
+    if (this.gameOverShown) return;
+    this.gameOverShown = true;
+    this.nav.show(new GameOverScreenController(this.nav, this.game.state, {
+      onRestart: this.options.onRestart,
+      onReturnToMenu: this.options.onQuit,
+    }));
+  }
+
+  private shouldShowGameOver(): boolean {
+    return this.game.isOver;
   }
 }
