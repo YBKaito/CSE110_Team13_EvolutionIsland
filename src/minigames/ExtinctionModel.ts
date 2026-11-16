@@ -113,3 +113,27 @@ export function allScenarios(): Scenario[] {
   }
   return scenarios;
 }
+
+//The island after changes
+export function islandFor(scenario: Scenario): EnvironmentState {
+  const env = createBaselineEnvironment();
+  for (const condition of CONDITIONS) condition.choices[scenario[condition.key]].apply(env);
+  const targets = resourceTargets(env);
+  for (const food of FOOD_TYPES) env.food[food] = targets[food];
+  env.cover = targets.cover;
+  return clampEnvironment(env);
+}
+
+//A flock of identical birds, so the species' traits are the only thing in play
+export function createFlock(traits: Traits, size: number = EXTINCTION.START_POP): Population {
+  const birds: Bird[] = Array.from({ length: size }, (_, id) => ({ id, traits: { ...traits } }));
+  return { birds, generation: 0, nextId: size };
+}
+
+//Chance one bird survives a generation here: it must pass the starvation, exposure and predation rolls in turn
+export function survivalChance(traits: Traits, env: EnvironmentState): number {
+  const risk = riskProfile(traits, env);
+  return (1 - risk.starvation) * (1 - risk.exposure) * (1 - risk.predation);
+}
+
+
