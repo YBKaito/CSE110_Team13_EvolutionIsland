@@ -20,6 +20,8 @@ import { MenuScreenView, renderScreen } from "./screens/MenuScreen/MenuScreenVie
 import { CreationScreenController } from "./screens/CreationScreen/CreationScreenController";
 import { renderCreationScreen } from "./screens/CreationScreen/CreationScreenView";
 
+import { ExtinctionScreenController } from './screens/ExtinctionScreen/ExtinctionScreenController';
+
 import { GameScreenController } from "./screens/GameScreen/GameScreenController";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
@@ -112,6 +114,19 @@ async function boot(): Promise<void> {
     );
   };
 
+  const startExtinction = (seed: number, avoidSpecies?: string): void => {
+    showApp();
+    const screens = host ?? (host = new ScreenHost(app));
+    screens.show(
+      new ExtinctionScreenController(screens, {
+        seed,
+        avoidSpecies,
+        onRestart: (played) => startExtinction(randomSeed(), played.name),
+        onExit: backToMenu, // no minigames menu yet, so "Back to minigames" returns to the main menu
+      }),
+    );
+  };
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const raw = input.value;
@@ -140,13 +155,21 @@ async function boot(): Promise<void> {
   });
 
   // Dev shortcut: a seed or script in the URL skips the menu.
-  if (params.has("seed") || useScript) {
+  console.log("minigame param:", params.get("minigame"), "seed param:", params.get("seed"));
+  
+  if (params.get("minigame") === "extinction") {
+    startExtinction(params.has("seed") ? Number(params.get("seed")) : randomSeed());
+  }
+  else if (params.has("seed") || useScript) {
     const seed = params.has("seed") ? Number(params.get("seed")) : randomSeed();
     startRun(DEFAULT_SPECIES, seed);
-  } else {
+  }
+  else {
     showTerminal();
     renderCurrentScreen();
   }
+
+
 }
 
 void boot();
