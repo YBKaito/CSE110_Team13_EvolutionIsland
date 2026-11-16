@@ -167,6 +167,8 @@ export const SIM = {
   START_MATCH: 0.7,
   /** Chance per trait per chick of a mutation. */
   MUTATION: 0.02,
+  /** Extra chance for a chick to develop an option the player has favored. */
+  INHERITANCE_BIAS_CHANCE: 0.10,
   LOW_POP: 10,
   MAX_POP: 250,
 
