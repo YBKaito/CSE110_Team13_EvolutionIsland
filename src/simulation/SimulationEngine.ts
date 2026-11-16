@@ -22,6 +22,8 @@ export interface GenerationOptions {
   /** Fraction of adults killed at random by a disaster this generation (trait-independent). */
   disasterFraction?: number;
   mutationRate?: number;
+  /** Options favored by evolution choices, stored as trait option indexes. */
+  favoredTraits?: Partial<Traits>;
 }
 
 export interface SurvivalOutcome {
@@ -80,8 +82,14 @@ export function simulateSurvival(birds: readonly Bird[], env: EnvironmentState, 
   };
 }
 
-/** Each trait comes from a random parent, with a small chance of mutating. */
-export function inheritTraits(a: Traits, b: Traits, rng: RandomSource, mutationRate: number): Traits {
+/** Each trait comes from a parent, then may mutate or receive the inheritance bias. */
+export function inheritTraits(
+  a: Traits,
+  b: Traits,
+  rng: RandomSource,
+  mutationRate: number,
+  favoredTraits: Partial<Traits> = {},
+): Traits {
   const child = {} as Traits;
   for (const trait of TRAIT_NAMES) {
     let value = rng.chance(0.5) ? a[trait] : b[trait];
@@ -93,6 +101,11 @@ export function inheritTraits(a: Traits, b: Traits, rng: RandomSource, mutationR
       } else {
         value = randomOtherOption(trait, value, rng);
       }
+    }
+    // Only offspring are affected. Unselected traits use the normal inheritance rules.
+    const favoredValue = favoredTraits[trait];
+    if (favoredValue !== undefined && rng.chance(SIM.INHERITANCE_BIAS_CHANCE)) {
+      value = favoredValue;
     }
     child[trait] = value;
   }
@@ -111,7 +124,7 @@ export function simulateReproduction(
   env: EnvironmentState,
   rng: RandomSource,
   firstId: number,
-  options: { birthMultiplier: number; mutationRate: number },
+  options: { birthMultiplier: number; mutationRate: number; favoredTraits?: Partial<Traits> },
 ): Bird[] {
   const chicks: Bird[] = [];
   const shuffled = rng.shuffle(survivors);
@@ -125,7 +138,10 @@ export function simulateReproduction(
     for (let egg = 0; egg < SIM.EGGS_PER_PAIR; egg++) {
       if (chicks.length >= SIM.MAX_POP) return chicks;
       if (rng.chance(p)) {
-        chicks.push({ id: nextId++, traits: inheritTraits(mom.traits, dad.traits, rng, options.mutationRate) });
+        chicks.push({
+          id: nextId++,
+          traits: inheritTraits(mom.traits, dad.traits, rng, options.mutationRate, options.favoredTraits),
+        });
       }
     }
   }
@@ -147,7 +163,11 @@ export function runGeneration(
   const survival = simulateSurvival(disaster.remaining, env, rng);
   survival.deathsByCause.disaster = disaster.killed;
 
-  const chicks = simulateReproduction(survival.survivors, env, rng, pop.nextId, { birthMultiplier, mutationRate });
+  const chicks = simulateReproduction(survival.survivors, env, rng, pop.nextId, {
+    birthMultiplier,
+    mutationRate,
+    favoredTraits: options.favoredTraits,
+  });
   const nextId = chicks.length > 0 ? chicks[chicks.length - 1].id + 1 : pop.nextId;
 
   const result: GenerationResult = {

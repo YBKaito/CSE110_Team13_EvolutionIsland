@@ -130,7 +130,7 @@ test('selecting a different trait clears the old target; Back clears an unsubmit
   fixture.controller.chooseTrait('color');
   assert.equal(fixture.view.last().selectedTrait, 'color');
   assert.equal(fixture.view.last().selectedTarget, null);
-  fixture.controller.chooseTarget('dark-brown');
+  fixture.controller.chooseTarget('gray');
   fixture.view.handlers.back();
   assert.equal(fixture.view.last().selectedTarget, null);
   fixture.controller.dispose();

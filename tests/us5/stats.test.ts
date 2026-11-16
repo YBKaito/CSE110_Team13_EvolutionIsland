@@ -58,9 +58,8 @@ test('validateTraitCounts rejects mismatched, fractional, and negative counts', 
   fraction.bodySize.small = 0.5;
   assert.throws(() => validateTraitCounts(fraction, 12), /nonnegative integers/);
   const negative = counts(12);
-  negative.color.medium = -1;
-  negative.color.brown = -1;
-  negative.color.tan = 13;
+  negative.color.gray = -1;
+  negative.color.brown = 13;
   assert.throws(() => validateTraitCounts(negative, 12));
 });
 

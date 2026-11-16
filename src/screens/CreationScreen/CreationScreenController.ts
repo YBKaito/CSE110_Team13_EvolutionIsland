@@ -1,13 +1,12 @@
-
 import { CREATION_STEPS, TRAIT_OPTIONS } from "../../constants";
-import type { MenuState } from "../../models/GameState";
+import type { ScreenState } from "../../models/GameState";
 import { Species } from "../../models/Species";
 import type { InputResult, SpeciesTraits } from "../../types";
 
 type TraitKey = keyof SpeciesTraits;
 
 export class CreationScreenController {
-  constructor(private state: MenuState) {}
+  constructor(private state: ScreenState) {}
 
   handleInput(raw: string): InputResult {
     const input = raw.trim();
@@ -54,6 +53,7 @@ export class CreationScreenController {
 
       const selected = options[choice - 1];
 
+      // Each trait is assigned its corresponding option.
       this.state.selectedTraits = {
         ...this.state.selectedTraits,
         [trait]: selected.value,
