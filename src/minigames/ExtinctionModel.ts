@@ -136,4 +136,22 @@ export function survivalChance(traits: Traits, env: EnvironmentState): number {
   return (1 - risk.starvation) * (1 - risk.exposure) * (1 - risk.predation);
 }
 
+export interface RunResult {
+  populations: number[];	//Flock size in each generation
+  extinctAt: number | null;	
+}
+
+export function runScenario(traits: Traits, scenario: Scenario, seed: number): RunResult {
+  const env = islandFor(scenario);
+  const rng = new RandomSource(seed);
+  let flock = createFlock(traits);
+  const populations = [flock.birds.length];
+
+  while (flock.birds.length > 0 && populations.length < EXTINCTION.MAX_GENERATIONS) {
+    flock = runGeneration(flock, env, rng).population;
+    populations.push(flock.birds.length);
+  }
+  return { populations, extinctAt: flock.birds.length === 0 ? populations.length : null };
+}
+
 
