@@ -2,7 +2,15 @@
 // This is the single source of truth for trait effects: fitness, hints, and feedback should all read from here.
 // Option lists are provisional until US2 (species creation) confirms them.
 
-import { BIRD_COLORS, type Background, type FoodType, type TraitName } from '../types';
+import { BIRD_COLORS, type Background, type FoodType, type TraitKey, type TraitName } from '../types';
+
+/** Match evolution-screen trait keys to the names stored on simulated birds. */
+export const SIMULATION_TRAIT_FOR_CHOICE: Record<TraitKey, TraitName> = {
+  beakLength: 'beak',
+  bodySize: 'body',
+  featherDensity: 'feathers',
+  color: 'color',
+};
 
 export const TRAIT_OPTIONS: Record<TraitName, readonly string[]> = {
   beak: ['short', 'medium', 'long'],

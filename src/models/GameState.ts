@@ -56,6 +56,10 @@ import type {
     generation: number;
     species: StartingSpecies;
     population: Population;
+    /** Preferred options chosen at checkpoints, indexed the same way as bird traits. */
+    favoredTraits: Partial<Traits>;
+    /** Prevent submitting more than one evolution choice for a checkpoint. */
+    lastEvolutionChoiceGeneration: number | null;
     environment: EnvironmentState;
     activeEvents: ActiveEvent[];
     /** Generation the most recent event started (0 if none). */
@@ -82,6 +86,8 @@ import type {
       generation: 0,
       species,
       population,
+      favoredTraits: {},
+      lastEvolutionChoiceGeneration: null,
       environment,
       activeEvents: [],
       lastStartGen: 0,
