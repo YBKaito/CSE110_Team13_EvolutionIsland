@@ -1,4 +1,4 @@
-import { CONDITIONS, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
+import { CONDITIONS,type condition, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
 import type { StartingSpecies } from '../../models/GameState';
 import { TRAIT_NAMES, TRAIT_OPTIONS } from '../../simulation/traitContent';
 import type { TraitName } from '../../types';
@@ -6,7 +6,7 @@ import { capitalize } from '../format';
 import { CHOICE_PROMPT, gap, text, type Block, type ScreenSpec } from '../ui/screenSpec';
 import type { ResultView } from './ExtinctionExplanation';
 
-export const SUMMARY_CHOICES = 2;
+export const SUMMARY_CHOICES = 3;
 export const WHY_CHOICES = 2;
 
 const TRAIT_LABELS: Record<TraitName, string> = { beak: 'Beak', body: 'Body', feathers: 'Feathers', color: 'Color' };
@@ -31,6 +31,8 @@ export function introSpec(species: StartingSpecies): ScreenSpec {
   };
 }
 
+export const reviewChoiceNumber = (condition: Condition): number => condition.choices.length + 1;
+
 export function conditionSpec(index: number, error?: string): ScreenSpec {
   const condition = CONDITIONS[index];
   return {
@@ -38,6 +40,7 @@ export function conditionSpec(index: number, error?: string): ScreenSpec {
       text(`Condition ${index + 1} of ${CONDITIONS.length}: ${condition.title}`, { size: 'heading', bold: true }),
       gap(12),
       ...condition.choices.map((choice, i) => text(`${i + 1}. ${choice.label}`, { indent: 16 })),
+      text(`${reviewChoiceNumber(condition)}. Review species and traits`, { indent: 16 }),
     ],
     prompt: { mode: 'choice', label: CHOICE_PROMPT, error },
   };
@@ -52,6 +55,7 @@ export function summarySpec(scenario: Scenario, error?: string): ScreenSpec {
       gap(12),
       text('1. Run the simulation', { indent: 16 }),
       text('2. Change my choices', { indent: 16 }),
+      text('3. Review species and traits', { indent: 16 }),
     ],
     prompt: { mode: 'choice', label: CHOICE_PROMPT, error },
   };
