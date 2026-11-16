@@ -10,7 +10,6 @@ export interface ResultView {
   populations: number[];
   extinctAt: number | null;
   fastestAt: number | null;
-  happened: string[];
   missed: string[];
   matchedFastest: boolean;
 }
