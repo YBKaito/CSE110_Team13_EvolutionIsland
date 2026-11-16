@@ -48,7 +48,7 @@ export class ExtinctionScreenController implements Screen {
     switch (this.step) {
       case 'intro': return this.go('condition');
       case 'condition': return this.submitCondition(input);
-      case 'species': return this.go('reviewReturn');
+      case 'species': return this.go(this.reviewReturn);
       case 'summary': return this.submitSummary(input);
       case 'result': return this.go('why');
       case 'why': return this.submitWhy(input);
@@ -58,7 +58,7 @@ export class ExtinctionScreenController implements Screen {
   private submitCondition(input: string): void {
     const condition = CONDITIONS[this.conditionIndex];
     const reviewChoice = reviewChoiceNumber(condition);
-    const choice = parseChoice(input, condition.choices.length);
+    const choice = parseChoice(input, reviewChoice);
     if (choice === null) return this.fail(invalidChoiceMessage(reviewChoice));
     if (choice === reviewChoice) return this.review('condition');
 
