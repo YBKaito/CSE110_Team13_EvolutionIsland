@@ -2,9 +2,7 @@
 // Run `npm run dev` and open http://localhost:5173/dev/quiz/ (add ?show=wrong etc. below)
 // Uses the PR1 fixtures only; no engine. Production code must not import this file.
 
-import '@fontsource/pixelify-sans/400.css';
-import '@fontsource/pixelify-sans/700.css';
-import '@fontsource/silkscreen/400.css';
+import '@fontsource/vt323/400.css';
 import '../../src/styles/styles.css';
 
 import type {
@@ -55,6 +53,8 @@ feedback.bind({
 
 const demos: Record<string, () => void> = {
   'Question 1': () => showQuestion(0),
+  'Question 2': () => showQuestion(1),
+  'Question 3': () => showQuestion(2),
   'Question 4': () => showQuestion(3),
   'Correct feedback': () => showFeedback(correctFeedbackSession),
   'Wrong feedback': () => showFeedback(wrongFeedbackSession),
@@ -87,9 +87,9 @@ for (const [label, run] of Object.entries(demos)) {
   bar.append(button);
 }
 
-// ?show=question4 | correct | wrong | final picks the starting state; the default is Question 1.
+// ?show=question1..question4 | correct | wrong | final picks the starting state; the default is Question 1.
 const slugs: Record<string, string> = {
-  question1: 'Question 1', question4: 'Question 4',
+  question1: 'Question 1', question2: 'Question 2', question3: 'Question 3', question4: 'Question 4',
   correct: 'Correct feedback', wrong: 'Wrong feedback', final: 'Final feedback',
 };
 const start = slugs[new URLSearchParams(window.location.search).get('show') ?? ''] ?? 'Question 1';

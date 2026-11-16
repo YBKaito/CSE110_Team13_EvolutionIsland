@@ -18,7 +18,7 @@
   border: 2px solid var(--quiz-line);
   background: var(--quiz-bg);
   color: var(--quiz-fg);
-  font-family: var(--display, "Pixelify Sans", "Courier New", monospace);
+  font-family: var(--display, "VT323", "Courier New", monospace);
   font-size: 20px;
   line-height: 1.45;
 }
@@ -125,9 +125,9 @@ label.quiz-option:hover {
   flex: none;
   padding: 0 8px;
   border: 1px solid currentColor;
-  font-family: var(--label, "Silkscreen", "Courier New", monospace);
-  font-size: 13px;
-  line-height: 1.8;
+  font-family: var(--label, "VT323", "Courier New", monospace);
+  font-size: 15px;
+  line-height: 1.6;
   text-transform: uppercase;
 }
 
