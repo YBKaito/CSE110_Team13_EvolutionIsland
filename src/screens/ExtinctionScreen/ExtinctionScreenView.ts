@@ -1,4 +1,4 @@
-import { CONDITIONS,type condition, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
+import { CONDITIONS, type Condition, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
 import type { StartingSpecies } from '../../models/GameState';
 import { TRAIT_NAMES, TRAIT_OPTIONS } from '../../simulation/traitContent';
 import type { TraitName } from '../../types';
