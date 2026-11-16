@@ -154,4 +154,30 @@ export function runScenario(traits: Traits, scenario: Scenario, seed: number): R
   return { populations, extinctAt: flock.birds.length === 0 ? populations.length : null };
 }
 
+export interface RankedScenario {
+  scenario: Scenario;
+  run: RunResult;
+  survival: number;
+}
 
+//Helper function
+function isFaster(a: RankedScenario, b: RankedScenario): boolean {
+  const generationsA = a.run.extinctAt ?? Infinity;
+  const generationsB = b.run.extinctAt ?? Infinity;
+  return generationsA !== generationsB ? generationsA < generationsB : a.survival < b.survival;
+}
+
+//Find the best way to wipe out the species
+export function fastestScenario(traits: Traits, seed: number): RankedScenario {
+  let best: RankedScenario | null = null;
+  for (const scenario of allScenarios()) {
+    const candidate = {
+      scenario,
+      run: runScenario(traits, scenario, seed),
+      survival: survivalChance(traits, islandFor(scenario)),
+    };
+    if (!best || isFaster(candidate, best)) best = candidate;
+  }
+  if (!best) throw new Error('No scenarios to rank');
+  return best;
+}
