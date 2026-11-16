@@ -1,5 +1,5 @@
 
-import "@fontsource/vt323/400.css";
+import "@fontsource/jersey-10/400.css";
 import "./styles/styles.css";
 
 import { MenuState } from "./models/GameState";

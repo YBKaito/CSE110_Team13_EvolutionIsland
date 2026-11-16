@@ -143,7 +143,7 @@ export class EvolutionScreenView implements View {
   private readonly group: Group = new Konva.Group({ visible: false });
   private handlers: EvolutionScreenViewHandlers | null = null;
 
-  /** Load the pixel font, then redraw once the browser has it. */
+  /** Load the arcade font, then redraw once the browser has it. */
   constructor() {
     void loadGameFont().then(() => this.group.getLayer()?.batchDraw());
   }
