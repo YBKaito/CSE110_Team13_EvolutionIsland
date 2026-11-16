@@ -4,9 +4,7 @@
 //   ?seed=42        repeatable run
 //   ?script=mockup  drought at Gen 6, predator at Gen 24
 
-import "@fontsource/pixelify-sans/400.css";
-import "@fontsource/pixelify-sans/700.css";
-import "@fontsource/silkscreen/400.css";
+import "@fontsource/jersey-10/400.css";
 import "./styles/styles.css";
 
 import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
