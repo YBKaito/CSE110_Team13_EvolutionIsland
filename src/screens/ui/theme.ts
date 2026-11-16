@@ -9,7 +9,7 @@ export const MARGIN_X = 90;
 export const MARGIN_TOP = 60;
 export const MARGIN_BOTTOM = 40;
 
-export const FONT_FAMILY = '"Pixelify Sans", "Courier New", monospace';
+export const FONT_FAMILY = '"VT323", "Courier New", monospace';
 
 export const COLORS: Record<TextColor, string> & { background: string; barFilled: string; barEmpty: string; border: string } = {
   background: '#1f1f1f',

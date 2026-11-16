@@ -9,7 +9,8 @@ import type {
   EvolutionScreenRenderState,
   EvolutionScreenViewHandlers,
 } from './EvolutionScreenTypes';
-import { loadPixelifySans } from './loadPixelifySans';
+import { loadGameFont } from './loadGameFont';
+import { FONT_FAMILY } from '../ui/theme';
 
 /**
  * Draws the three evolution choice pages:
@@ -20,7 +21,7 @@ import { loadPixelifySans } from './loadPixelifySans';
  */
 const UI_WIDTH = 1200;
 const UI_HEIGHT = 820;
-const FONT = 'Pixelify Sans, monospace';
+const FONT = FONT_FAMILY;
 const COLOR = {
   bg: '#1d1d1d',
   white: '#f7f7f7',
@@ -144,7 +145,7 @@ export class EvolutionScreenView implements View {
 
   /** Load the pixel font, then redraw once the browser has it. */
   constructor() {
-    void loadPixelifySans().then(() => this.group.getLayer()?.batchDraw());
+    void loadGameFont().then(() => this.group.getLayer()?.batchDraw());
   }
 
   /** Give the screen manager the group it should add to the layer. */

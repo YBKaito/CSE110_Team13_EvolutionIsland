@@ -24,8 +24,8 @@ body {
   --muted: #a3a197;
   --box: #e8c547;
   --miss: #e0685a;
-  --display: "Pixelify Sans", "Courier New", monospace;
-  --label: "Silkscreen", "Courier New", monospace;
+  --display: "VT323", "Courier New", monospace;
+  --label: "VT323", "Courier New", monospace;
 
   position: absolute;
   top: 50%;
