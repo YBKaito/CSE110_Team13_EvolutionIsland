@@ -12,6 +12,9 @@ import { runGeneration } from '../simulation/SimulationEngine';
 import { SIMULATION_TRAIT_FOR_CHOICE, TRAIT_OPTIONS } from '../simulation/traitContent';
 import type { EnvVariable, EventLogEntry, GenerationResult, TraitFocusChoice } from '../types';
 
+/** TEMP: end the active app run here while the Game Over screen is being reviewed. */
+export const GAME_OVER_PREVIEW_GENERATION = 100;
+
 /** A reason to stop and show the player something before simulating further. */
 export type Pause =
   | { kind: 'event'; entry: EventLogEntry }
@@ -34,23 +37,36 @@ export class GameController {
   private rng: RandomSource;
   private gameState: GameState;
 
-  private constructor(state: GameState, private readonly scheduler: EventScheduler) {
+  private constructor(
+    state: GameState,
+    private readonly scheduler: EventScheduler,
+    private readonly previewEndGeneration: number | null,
+  ) {
     this.gameState = state;
     this.rng = new RandomSource(state.seed);
     this.rng.setState(state.rngState);
   }
 
   /** Starts a new run from the player's species. */
-  static startRun(species: StartingSpecies, seed: number, scheduler: EventScheduler = new RandomScheduler()): GameController {
+  static startRun(
+    species: StartingSpecies,
+    seed: number,
+    scheduler: EventScheduler = new RandomScheduler(),
+    previewEndGeneration: number | null = null,
+  ): GameController {
     const rng = new RandomSource(seed);
     const population = createStartingPopulation(species.traits, rng);
     const state = createGameState(species, seed, rng.getState(), population, createBaselineEnvironment());
-    return new GameController(state, scheduler);
+    return new GameController(state, scheduler, previewEndGeneration);
   }
 
   /** Continues a saved run exactly where it left off. */
-  static resume(state: GameState, scheduler: EventScheduler = new RandomScheduler()): GameController {
-    return new GameController(structuredClone(state), scheduler);
+  static resume(
+    state: GameState,
+    scheduler: EventScheduler = new RandomScheduler(),
+    previewEndGeneration: number | null = null,
+  ): GameController {
+    return new GameController(structuredClone(state), scheduler, previewEndGeneration);
   }
 
   get state(): Readonly<GameState> {
@@ -58,7 +74,8 @@ export class GameController {
   }
 
   get isOver(): boolean {
-    return this.gameState.population.birds.length === 0;
+    return this.gameState.population.birds.length === 0 ||
+      (this.previewEndGeneration !== null && this.gameState.generation >= this.previewEndGeneration);
   }
 
   /** Apply one adjacent preference change at the current observation checkpoint. */
@@ -89,7 +106,12 @@ export class GameController {
 
   /** Simulates exactly one generation. */
   step(options: StepOptions = {}): StepOutcome {
-    if (this.isOver) throw new Error('The flock is extinct; start a new run.');
+    if (this.isOver) {
+      const extinct = this.gameState.population.birds.length === 0;
+      throw new Error(extinct
+        ? 'The flock is extinct; start a new run.'
+        : `The preview run ended at Generation ${this.previewEndGeneration}.`);
+    }
     const s = this.gameState;
     const generation = s.generation + 1;
 

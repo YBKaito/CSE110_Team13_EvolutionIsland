@@ -9,7 +9,7 @@ import "./styles/styles.css";
 
 import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
 import { RandomScheduler, ScriptedScheduler, type EventScheduler } from "./events/EventFactory";
-import { GameController } from "./game/GameController";
+import { GAME_OVER_PREVIEW_GENERATION, GameController } from "./game/GameController";
 import { startGameSession } from "./game/startGameSession";
 import { ScreenState, type StartingSpecies } from "./models/GameState";
 import { toStartingSpecies } from "./models/Species";
@@ -106,27 +106,35 @@ async function boot(): Promise<void> {
     showTerminal();
     renderCurrentScreen();
   };
+  
+    // US10: Hatching Rhythm minigame (main menu option 3).
+    const startHatchingRhythm = (): void => {
+      terminal.hidden = true;
+      input.blur();
+      minigame.hidden = false;
+      new HatchingRhythmController(minigame, {
+        difficulty: state.minigameDifficulty,
+        onExit: () => {
+          state.goTo("minigames");
+          showTerminal();
+          renderCurrentScreen();
+        },
+      }).start();
+    };
 
-  // US10: Hatching Rhythm minigame (main menu option 3). Returns to the minigames list when done.
-  const startHatchingRhythm = (): void => {
-    terminal.hidden = true;
-    input.blur();
-    minigame.hidden = false;
-    new HatchingRhythmController(minigame, {
-      difficulty: state.minigameDifficulty,
-      onExit: () => {
-        state.goTo("minigames");
-        showTerminal();
-        renderCurrentScreen();
-      },
-    }).start();
-  };
-
-  const startRun = (species: StartingSpecies, seed: number): void => {
+    const startRun = (species: StartingSpecies, seed: number): void => {
+    
     session?.dispose();
     showApp();
+
     const screens = host ?? (host = new ScreenHost(app));
-    const game = GameController.startRun(species, seed, makeScheduler());
+    const game = GameController.startRun(
+      species,
+      seed,
+      makeScheduler(),
+      GAME_OVER_PREVIEW_GENERATION,
+    );
+
     session = startGameSession(screens, game, {
       onQuit: backToMenu,
       onRestart: () => startRun(species, randomSeed()),

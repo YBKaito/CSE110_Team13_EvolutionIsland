@@ -13,9 +13,11 @@ import type {
     EventLogEntry,
     GenerationResult,
     Population,
+    TraitName,
     Traits,
   } from "../types";
   import { Species } from "./Species";
+  import { countTraits } from "../simulation/Population";
   
   export class ScreenState {
     screen: ScreenId = "menu";
@@ -68,6 +70,9 @@ import type {
     /** Generation the most recent event started (0 if none). */
     lastStartGen: number;
     history: {
+      /** Trait distribution at generation 0, before the first flock turnover. */
+      startingTraitCounts: Record<TraitName, number[]>;
+      startingPopulation: number;
       /** Result of each generation; generations[i] is generation i + 1. */
       generations: GenerationResult[];
       /** Environment at each generation; environments[0] is the starting island. */
@@ -94,6 +99,12 @@ import type {
       environment,
       activeEvents: [],
       lastStartGen: 0,
-      history: { generations: [], environments: [environment], events: [] },
+      history: {
+        startingTraitCounts: countTraits(population.birds),
+        startingPopulation: population.birds.length,
+        generations: [],
+        environments: [environment],
+        events: [],
+      },
     };
   }

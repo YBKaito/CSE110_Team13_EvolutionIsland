@@ -82,7 +82,7 @@ body {
 }
 
 /* Hide the terminal when the US3 simulation begins. */
-body:has(#app canvas) #terminal {
+body:has(#app:not([hidden]) canvas) #terminal {
   display: none;
 }
 :root {

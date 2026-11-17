@@ -111,6 +111,12 @@ export class ScreenHost implements ScreenNavigator {
       this.current.submit(input);
       return;
     }
+    if (this.current.handleKey?.(event.key)) {
+      event.preventDefault();
+      this.typed = '';
+      this.draw();
+      return;
+    }
     if (this.current.spec().prompt.mode !== 'choice') return;
     if (event.key === 'Backspace') {
       event.preventDefault();
