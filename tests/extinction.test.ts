@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   allScenarios, CONDITIONS, conditionOf, DEFAULT_SPECIES, EXTINCTION, fastestScenario, islandFor, startingScenario,
-  pickSpecies, runScenario, SPECIES, survivalChance, type ConditionKey, type Scenario,
+  pickSpecies, runOnIsland, runScenario, SPECIES, survivalChance, type ConditionKey, type Scenario,
 } from '../src/minigames/ExtinctionPrediction/ExtinctionModel';
 import { createBaselineEnvironment } from '../src/models/Environment';
 import { buildResultView, type ResultView } from '../src/screens/ExtinctionScreen/ExtinctionExplanation';
@@ -175,7 +175,7 @@ describe('starting species', () => {
   it('lets every species survive a normal island', () => {
     for (const species of SPECIES) {
       for (let seed = 1; seed <= 8; seed++) {
-        expect(runScenario(species.traits, startingScenario(), seed).extinctAt, `${species.name} seed ${seed}`).toBeNull();
+        expect(runOnIsland(species.traits, createBaselineEnvironment(), seed).extinctAt, `${species.name} seed ${seed}`).toBeNull();
       }
     }
   });
@@ -376,7 +376,7 @@ describe('reviewing the species', () => {
   /** Intro, then Drought, Hotter, warbler, landing on the summary screen. */
   function toSummary() {
     const game = setup();
-    for (const input of ['', '3', '3', '3']) game.screen.submit(input);
+    for (const input of ['3', '2']) game.screen.submit(input);
     return game;
   }
 
