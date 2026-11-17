@@ -274,8 +274,8 @@ describe('extinction', () => {
   });
 });
 
-describe('temporary Generation 20 preview trigger', () => {
-  it('automatically opens the preview Game Over screen at Gen 20 while birds remain alive', () => {
+describe('temporary Generation 100 preview trigger', () => {
+  it('automatically opens the preview Game Over screen at Gen 100 while birds remain alive', () => {
     const { nav, game, screen } = setup([], 1, GAME_OVER_PREVIEW_GENERATION);
     for (let generation = 0; generation < GAME_OVER_PREVIEW_GENERATION - 1; generation++) game.step();
     expect(game.isOver).toBe(false);
@@ -290,6 +290,6 @@ describe('temporary Generation 20 preview trigger', () => {
     expect(screenText(spec)).toContain('Preview mode: your flock is still alive.');
     expect(screenText(spec)).toContain(`${game.state.population.birds.length} — Birds remaining`);
     const chart = spec.blocks.find(block => block.kind === 'lineChart');
-    expect(chart?.kind === 'lineChart' && chart.markers?.[0].label).toBe('PREVIEW G20');
+    expect(chart?.kind === 'lineChart' && chart.markers?.[0].label).toBe('PREVIEW G100');
   });
 });

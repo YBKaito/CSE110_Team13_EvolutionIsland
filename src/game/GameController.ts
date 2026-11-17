@@ -13,7 +13,7 @@ import { SIMULATION_TRAIT_FOR_CHOICE, TRAIT_OPTIONS } from '../simulation/traitC
 import type { EnvVariable, EventLogEntry, GenerationResult, TraitFocusChoice } from '../types';
 
 /** TEMP: end the active app run here while the Game Over screen is being reviewed. */
-export const GAME_OVER_PREVIEW_GENERATION = 20;
+export const GAME_OVER_PREVIEW_GENERATION = 100;
 
 /** A reason to stop and show the player something before simulating further. */
 export type Pause =
