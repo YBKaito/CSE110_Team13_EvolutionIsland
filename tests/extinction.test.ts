@@ -112,7 +112,7 @@ describe('runScenario', () => {
   });
 
   it('starts with the full flock and never runs past the cap', () => {
-    for (const scenario of [normalScenario(), WORST]) {
+    for (const scenario of [startingScenario(), WORST]) {
       const run = runScenario(LEMON.traits, scenario, 2);
       expect(run.populations[0]).toBe(EXTINCTION.START_POP);
       expect(run.populations.length).toBeLessThanOrEqual(EXTINCTION.MAX_GENERATIONS);
@@ -201,7 +201,7 @@ describe('what you missed', () => {
   });
 
   it('only lists swaps that really lower survival', () => {
-    for (const line of buildResultView(LEMON, normalScenario(), 3).missed) {
+    for (const line of buildResultView(LEMON, startingScenario(), 3).missed) {
       const [, from, to] = line.match(/from (\d+)% to (\d+)%/)!;
       expect(Number(to)).toBeLessThan(Number(from));
     }
