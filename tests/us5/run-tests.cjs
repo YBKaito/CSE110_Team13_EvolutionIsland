@@ -39,10 +39,11 @@ const productionFiles = [
   'src/stats.ts',
   'src/types.ts',
   'src/screens/ScreenController.ts',
+  'src/screens/ui/theme.ts',
   'src/screens/EvolutionScreen/hints.ts',
   ...[
     'EvolutionScreenController', 'EvolutionScreenModel', 'EvolutionScreenTypes',
-    'EvolutionScreenView', 'SimulationCoordinator', 'loadPixelifySans'
+    'EvolutionScreenView', 'SimulationCoordinator', 'loadGameFont'
   ].map(name => `src/screens/EvolutionScreen/${name}.ts`)
 ];
 
