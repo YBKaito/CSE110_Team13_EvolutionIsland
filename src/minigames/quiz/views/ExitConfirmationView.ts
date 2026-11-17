@@ -90,8 +90,9 @@ export class ExitConfirmationView {
     }
   }
 
+  /** Emit one action, only while the dialog is open on the page. */
   private choose(action: () => void): void {
-    if (this.locked) return;
+    if (this.locked || !this.dialog.open || !this.dialog.isConnected) return;
     this.setLocked(true);
     action();
   }

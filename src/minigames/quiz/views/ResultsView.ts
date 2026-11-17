@@ -5,7 +5,9 @@ import { el, QuizScreenElement } from './QuizScreenElement';
 /**
  * Final score with Try again and Done. Displays the supplied result and emits
  * actions; it never resets the session itself. The first press locks both
- * buttons until a new result is rendered, so a double click retries once.
+ * buttons, and ordinary re-renders keep that lock (even with a fresh copy of
+ * the same result), so a double click retries once. Call `reset()` before
+ * rendering a newly completed attempt to unlock the buttons and focus the heading.
  */
 export class ResultsView extends QuizScreenElement {
   private handlers: ResultsViewHandlers | null = null;
@@ -22,11 +24,7 @@ export class ResultsView extends QuizScreenElement {
   }
 
   render(state: ResultsViewRenderState): void {
-    // A new result object means a newly finished round.
-    if (this.state?.result !== state.result) {
-      this.locked = false;
-      this.requestHeadingFocus();
-    }
+    if (this.state === null) this.requestHeadingFocus();
     this.state = state;
     const vm = resultsViewModel(state.result);
 
@@ -42,6 +40,13 @@ export class ResultsView extends QuizScreenElement {
     ]);
   }
 
+  /** Start a newly completed attempt: unlock both buttons and focus the heading when shown. */
+  reset(): void {
+    this.locked = false;
+    for (const b of this.buttons) b.disabled = false;
+    this.requestHeadingFocus();
+  }
+
   private button(label: string, key: string, primary: boolean, action: () => void): HTMLButtonElement {
     const button = el('button', {
       className: primary ? 'quiz-button quiz-button--primary' : 'quiz-button',
@@ -49,7 +54,7 @@ export class ResultsView extends QuizScreenElement {
       attrs: { type: 'button', 'data-focus-key': key },
     });
     button.disabled = this.locked;
-    button.addEventListener('click', () => {
+    this.listen(button, 'click', () => {
       if (this.locked) return;
       this.locked = true;
       for (const b of this.buttons) b.disabled = true;

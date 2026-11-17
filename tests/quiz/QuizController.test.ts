@@ -199,6 +199,20 @@ describe('quiz controller wiring', () => {
     expect(onComplete).toHaveBeenCalledTimes(2);
   });
 
+  it('resets the results view before rendering each completed attempt, even with the same score', () => {
+    const { views } = setup(makeQuestions(1));
+    const calls: string[] = [];
+    const { reset, render } = views.results;
+    views.results.reset = () => { calls.push('reset'); reset.call(views.results); };
+    views.results.render = state => { calls.push('render'); render.call(views.results, state); };
+    views.intro.handlers.onStart();
+    completeRound(views, ['yes']);
+    views.results.handlers.onRetry();
+    completeRound(views, ['yes']);
+    expect(calls).toEqual(['reset', 'render', 'reset', 'render']);
+    expect(views.results.renders.map(state => state.result.correct)).toEqual([1, 1]);
+  });
+
   it('shows committed results before notifying a host that immediately disposes', () => {
     const { controller, views, onComplete } = setup(makeQuestions(1));
     onComplete.mockImplementation(() => {

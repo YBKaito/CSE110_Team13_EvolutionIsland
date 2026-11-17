@@ -12,7 +12,7 @@ export class UnavailableView extends QuizScreenElement {
     const back = el('button', {
       className: 'quiz-button', text: 'Back', attrs: { type: 'button', 'data-focus-key': 'back' },
     });
-    back.addEventListener('click', () => this.handlers?.onBack());
+    this.listen(back, 'click', () => this.handlers?.onBack());
     this.requestHeadingFocus();
     this.replaceContents([
       el('h2', { className: 'quiz-heading', text: 'Quiz unavailable', attrs: this.headingAttrs() }),

@@ -55,6 +55,8 @@ completed attempt. Leave quiz returns to the introduction without closing the ho
 The standalone HTML is only a launch shell; its markup does not need to be copied
 into the main game's `index.html`.
 
-Previously reviewed view edge cases are deferred to a separate change. See
-[US9_Deferred_View_Edge_Cases.txt](US9_Deferred_View_Edge_Cases.txt) for explanations,
-browser reproduction steps, and suggested fixes. PR5 connects the existing views.
+The quiz views guard their own lifecycle edge cases: copied redraws keep Next,
+Try again, and Done locked; redraws keep focus on the heading; replaced, hidden, or
+modal-blocked controls do nothing; and the exit dialog acts only while open. Real-DOM
+checks for these run in the browser at **http://localhost:5173/dev/quiz/lifecycle.html**
+(Vitest runs without a DOM). The page lists each check and should show all passing.

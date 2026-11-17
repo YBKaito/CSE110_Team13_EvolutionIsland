@@ -13,7 +13,7 @@ export interface QuizViews {
   readonly intro: Pick<IntroView, ScreenMethods>;
   readonly question: Pick<QuestionView, ScreenMethods | 'reset'>;
   readonly feedback: Pick<FeedbackView, ScreenMethods | 'reset'>;
-  readonly results: Pick<ResultsView, ScreenMethods>;
+  readonly results: Pick<ResultsView, ScreenMethods | 'reset'>;
   readonly confirmation: Pick<ExitConfirmationView, 'bind' | 'render'>;
   readonly unavailable: Pick<UnavailableView, ScreenMethods>;
 }
@@ -156,6 +156,8 @@ export class QuizController {
         onRetry: () => { if (this.roundFor(token, 'results')) this.startRound(); },
         onDone: () => { if (this.roundFor(token, 'results')) this.close(); },
       });
+      // Each completed attempt is a new results screen, even if the score repeats.
+      this.views.results.reset();
       this.views.results.render({ result });
       this.views.results.show();
       this.options.onComplete?.(result);
