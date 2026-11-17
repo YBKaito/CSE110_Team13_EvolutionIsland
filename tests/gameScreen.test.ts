@@ -112,8 +112,8 @@ describe('generation screen input', () => {
     expect(nav.current).toBe(screen);
   });
 
-  it('3 asks for confirmation before quitting', () => {
-    const { screen, options } = setup();
+  it('3 asks for confirmation, then opens Game Over and offers Main Menu', () => {
+    const { screen, nav, options } = setup();
     screen.submit('3');
     expect(lines(screen)).toEqual(expect.arrayContaining(['Leave the island?', 'Your current run will not be saved.']));
     screen.submit('7');
@@ -122,6 +122,13 @@ describe('generation screen input', () => {
     expect(lines(screen)[0]).toContain('Generation 0');
     screen.submit('3');
     screen.submit('1');
+    expect(nav.current).toBeInstanceOf(GameOverScreenController);
+    expect(screenText(nav.current!.spec())).toEqual(expect.arrayContaining([
+      'GAME OVER',
+      'You left the island while your flock was still alive.',
+    ]));
+    expect(options.onQuit).not.toHaveBeenCalled();
+    nav.current!.submit('6');
     expect(options.onQuit).toHaveBeenCalledOnce();
   });
 });
@@ -153,7 +160,7 @@ describe('extinction', () => {
       'Your flock has gone extinct.',
       '1 — Generations survived',
       '0 — Birds remaining',
-      '5. START A NEW FLOCK       6. MAIN MENU',
+      '5. Start a New Flock | 6. Main Menu',
     ]));
     const chart = nav.current!.spec().blocks.find(block => block.kind === 'lineChart');
     expect(chart?.kind === 'lineChart' && chart.markers?.[0]).toMatchObject({ x: 1, label: 'EXTINCT G1' });
@@ -227,24 +234,34 @@ describe('extinction', () => {
     const initialChart = gameOver.spec().blocks.find(block => block.kind === 'lineChart');
     expect(initialChart?.kind === 'lineChart' && initialChart.series.map(series => series.label)).toEqual(['Short', 'Medium', 'Long']);
 
-    gameOver.submit('2');
+    gameOver.submit('4');
     const changedSpec = gameOver.spec();
-    expect(screenText(changedSpec)).toContain('FIELD JOURNAL  •  Body size');
+    expect(screenText(changedSpec)).toContain('FIELD JOURNAL - Color');
     const changedChart = changedSpec.blocks.find(block => block.kind === 'lineChart');
-    expect(changedChart?.kind === 'lineChart' && changedChart.series.map(series => series.label)).toEqual(['Small', 'Medium', 'Large']);
+    expect(changedChart?.kind === 'lineChart' && changedChart.series.map(series => series.label)).toEqual(['Brown', 'Gray', 'Yellow', 'White']);
+    if (initialChart?.kind === 'lineChart' && changedChart?.kind === 'lineChart') {
+      expect(changedChart.series.flatMap(series => series.points.map(point => point.y)))
+        .not.toEqual(initialChart.series.flatMap(series => series.points.map(point => point.y)));
+    }
   });
 
   it('summarizes recorded causes and final-generation events without assigning a definitive cause', () => {
-    const { nav, screen } = setupOneBird([{ generation: 1, eventId: 'drought' }]);
+    const { nav, screen, game } = setupOneBird([{ generation: 1, eventId: 'drought' }]);
     screen.submit('2');
     nav.current!.submit('2');
     const gameOver = nav.current!;
     expect(gameOver.handleKey?.('ArrowRight')).toBe(true);
     const spec = gameOver.spec();
     const text = screenText(spec);
-    expect(text.some(line => line.includes('No deaths were recorded by cause in the last generation.'))).toBe(true);
-    expect(text.some(line => line.startsWith('Gen 1 — Drought begins.'))).toBe(true);
     const chart = spec.blocks.find(block => block.kind === 'lineChart');
+    expect(chart?.kind === 'lineChart' && chart.sidePanel?.title).toBe('Generation 1');
+    expect(chart?.kind === 'lineChart' && chart.sidePanel?.footerLines).toContain('Gen 1: Drought begins.');
+    const endingResult = game.state.history.generations.find(result => result.generation === game.state.generation)!;
+    const hasRecordedDeaths = Object.values(endingResult.deathsByCause).some(count => count > 0);
+    const footerLines = chart?.kind === 'lineChart' ? chart.sidePanel?.footerLines ?? [] : [];
+    expect(footerLines.some(line => hasRecordedDeaths
+      ? line.startsWith('Last generation deaths:')
+      : line === 'No deaths were recorded by cause in the last generation.')).toBe(true);
     expect(chart?.kind === 'lineChart' && chart.eventMarkers).toEqual([{ x: 1, label: 'Drought' }]);
     expect(text).toContain('Your flock has gone extinct.');
   });
@@ -254,15 +271,17 @@ describe('extinction', () => {
     screen.submit('1');
     const gameOver = nav.current!;
 
-    expect(gameOver.handleKey?.('ArrowLeft')).toBe(true);
-    expect(screenText(gameOver.spec()).some(line => line.startsWith('Gen 0  •'))).toBe(true);
+    const initialChart = gameOver.spec().blocks.find(block => block.kind === 'lineChart');
+    expect(initialChart?.kind === 'lineChart' && initialChart.sidePanel?.title).toBe('Generation 0');
     expect(gameOver.handleKey?.('ArrowRight')).toBe(true);
     const spec = gameOver.spec();
-    expect(screenText(spec).some(line => line.startsWith('Gen 1  •  No living birds to measure.'))).toBe(true);
     const chart = spec.blocks.find(block => block.kind === 'lineChart');
     expect(chart?.kind === 'lineChart' && chart.selectedGeneration).toBe(1);
+    expect(chart?.kind === 'lineChart' && chart.sidePanel?.title).toBe('Generation 1');
+    expect(chart?.kind === 'lineChart' && chart.sidePanel?.introLines).toContain('0 birds alive');
     expect(gameOver.handleKey?.('ArrowRight')).toBe(true);
-    expect(screenText(gameOver.spec()).some(line => line.startsWith('Gen 1  •'))).toBe(true);
+    const lastChart = gameOver.spec().blocks.find(block => block.kind === 'lineChart');
+    expect(lastChart?.kind === 'lineChart' && lastChart.selectedGeneration).toBe(1);
   });
 
   it('has no environmental event markers when the run recorded no events', () => {
@@ -287,8 +306,11 @@ describe('temporary Generation 100 preview trigger', () => {
     expect(game.state.population.birds.length).toBeGreaterThan(0);
     expect(nav.current).toBeInstanceOf(GameOverScreenController);
     const spec = nav.current!.spec();
-    expect(screenText(spec)).toContain('Preview mode: your flock is still alive.');
+    expect(screenText(spec)).toContain('GAME OVER');
+    expect(screenText(spec)).toContain('Preview complete. Your flock is still alive.');
     expect(screenText(spec)).toContain(`${game.state.population.birds.length} — Birds remaining`);
+    const heading = spec.blocks.find(block => block.kind === 'text' && block.text === 'GAME OVER');
+    expect(heading).toMatchObject({ color: 'error' });
     const chart = spec.blocks.find(block => block.kind === 'lineChart');
     expect(chart?.kind === 'lineChart' && chart.markers?.[0].label).toBe('PREVIEW G100');
   });

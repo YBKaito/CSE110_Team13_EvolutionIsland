@@ -13,12 +13,14 @@ import {
 
 const TRAIT_ORDER: TraitName[] = ['beak', 'body', 'feathers', 'color'];
 
+export type GameOverEndReason = 'extinction' | 'preview' | 'quit';
+
 export interface GameOverView {
   speciesName: string;
   generationsSurvived: number;
   endingGeneration: number;
   finalPopulation: number;
-  endedInPreview: boolean;
+  endReason: GameOverEndReason;
   recap: string;
 }
 
@@ -31,19 +33,23 @@ function summarizeDeaths(causes: Record<DeathCause, number>): string {
     : 'No deaths were recorded by cause in the last generation.';
 }
 
-export function gameOverViewFromState(state: Readonly<GameState>): GameOverView {
+export function gameOverViewFromState(
+  state: Readonly<GameState>,
+  endReason: GameOverEndReason = state.population.birds.length > 0 ? 'preview' : 'extinction',
+): GameOverView {
   const endingGeneration = state.generation;
   const finalPopulation = state.population.birds.length;
-  const endedInPreview = finalPopulation > 0;
   return {
     speciesName: state.species.name,
     generationsSurvived: endingGeneration,
     endingGeneration,
     finalPopulation,
-    endedInPreview,
-    recap: endedInPreview
-      ? 'Preview complete. Your flock is still alive.'
-      : 'Your flock has gone extinct.',
+    endReason,
+    recap: endReason === 'extinction'
+      ? 'Your flock has gone extinct.'
+      : endReason === 'quit'
+        ? 'You left the island while your flock was still alive.'
+        : 'Preview complete. Your flock is still alive.',
   };
 }
 
@@ -71,8 +77,9 @@ export function gameOverScreenSpec(
   selectedTrait: TraitName,
   selectedGeneration: number = 0,
   error?: string,
+  endReason?: GameOverEndReason,
 ): ScreenSpec {
-  const view = gameOverViewFromState(state);
+  const view = gameOverViewFromState(state, endReason);
   const startingPopulation = state.history.startingPopulation;
   const graph = buildTraitHistory(
     state.history.generations,
@@ -93,7 +100,7 @@ export function gameOverScreenSpec(
     ? `Gen ${selectedGeneration}: ${selectedEvents.join(', ')} begins.`
     : null;
   const endingResult = state.history.generations.find(item => item.generation === view.endingGeneration);
-  const deathContext = !view.endedInPreview && selectedGeneration === view.endingGeneration && endingResult
+  const deathContext = view.endReason === 'extinction' && selectedGeneration === view.endingGeneration && endingResult
     ? summarizeDeaths(endingResult.deathsByCause)
     : null;
 
@@ -122,12 +129,12 @@ export function gameOverScreenSpec(
 
   return {
     blocks: [
-      text(view.endedInPreview ? 'RUN RECAP' : 'GAME OVER', {
-        size: 'title', bold: true, color: view.endedInPreview ? 'success' : 'error', align: 'center',
+      text('GAME OVER', {
+        size: 'title', bold: true, color: 'error', align: 'center',
       }),
       gap(2),
       text(`Species: ${view.speciesName}`, { size: 'heading', align: 'center' }),
-      text(view.recap, { size: 'body', color: view.endedInPreview ? 'success' : 'normal', align: 'center' }),
+      text(view.recap, { size: 'body', color: view.endReason === 'extinction' ? 'normal' : 'success', align: 'center' }),
       {
         kind: 'statCards',
         width: 720,
@@ -154,7 +161,11 @@ export function gameOverScreenSpec(
         selectedGeneration,
         markers: [{
           x: graph.endingGeneration,
-          label: view.endedInPreview ? `PREVIEW G${graph.endingGeneration}` : `EXTINCT G${graph.endingGeneration}`,
+          label: view.endReason === 'extinction'
+            ? `EXTINCT G${graph.endingGeneration}`
+            : view.endReason === 'quit'
+              ? `QUIT G${graph.endingGeneration}`
+              : `PREVIEW G${graph.endingGeneration}`,
           color: '#ff6b6b',
         }],
         eventMarkers: traitEventMarkers(state.history.events, view.endingGeneration)

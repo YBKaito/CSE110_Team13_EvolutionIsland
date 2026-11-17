@@ -5,6 +5,7 @@ import type { GameController, StepOutcome } from '../../game/GameController';
 import type { EventLogEntry } from '../../types';
 import { EventScreenController } from '../EventScreen/EventScreenController';
 import { GameOverScreenController } from '../GameOverScreen/GameOverScreenController';
+import type { GameOverEndReason } from '../GameOverScreen/GameOverScreenView';
 import { invalidChoiceMessage, parseChoice } from '../format';
 import type { Screen, ScreenNavigator, ScreenSpec } from '../ui/screenSpec';
 import {
@@ -62,7 +63,7 @@ export class GameScreenController implements Screen {
 
   private submitQuit(input: string): void {
     const choice = parseChoice(input, QUIT_CHOICES);
-    if (choice === 1) return this.options.onQuit();
+    if (choice === 1) return this.showGameOver('quit');
     if (choice === 2) {
       this.mode = 'generation';
       this.error = undefined;
@@ -107,12 +108,14 @@ export class GameScreenController implements Screen {
     );
   }
 
-  private showGameOver(): void {
+  private showGameOver(endReason?: GameOverEndReason): void {
     if (this.gameOverShown) return;
     this.gameOverShown = true;
+    const reason = endReason ?? (this.game.state.population.birds.length === 0 ? 'extinction' : 'preview');
     this.nav.show(new GameOverScreenController(this.nav, this.game.state, {
       onRestart: this.options.onRestart,
       onReturnToMenu: this.options.onQuit,
+      endReason: reason,
     }));
   }
 

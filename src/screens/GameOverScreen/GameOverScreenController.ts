@@ -1,11 +1,12 @@
 import type { GameState } from '../../models/GameState';
 import type { Screen, ScreenNavigator, ScreenSpec } from '../ui/screenSpec';
 import type { TraitName } from '../../types';
-import { GAME_OVER_TRAITS, gameOverScreenSpec } from './GameOverScreenView';
+import { GAME_OVER_TRAITS, gameOverScreenSpec, type GameOverEndReason } from './GameOverScreenView';
 
 export interface GameOverScreenOptions {
   onRestart: () => void;
   onReturnToMenu: () => void;
+  endReason?: GameOverEndReason;
 }
 
 export class GameOverScreenController implements Screen {
@@ -23,7 +24,13 @@ export class GameOverScreenController implements Screen {
   }
 
   spec(): ScreenSpec {
-    return gameOverScreenSpec(this.state, this.selectedTrait, this.selectedGeneration, this.error);
+    return gameOverScreenSpec(
+      this.state,
+      this.selectedTrait,
+      this.selectedGeneration,
+      this.error,
+      this.options.endReason,
+    );
   }
 
   handleKey(key: string): boolean {
