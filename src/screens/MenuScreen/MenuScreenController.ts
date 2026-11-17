@@ -1,8 +1,8 @@
 // Add menu controller with input checks and navigation
 // Controller: Decides what happens when the player types
-import { CARD_ERROR, HOW_TO_PLAY_CARDS, MENU_ERROR } from "../../constants";
+import { CARD_ERROR, DIFFICULTY_ERROR, HOW_TO_PLAY_CARDS, MENU_ERROR, MINIGAME_ERROR } from "../../constants";
 import type { ScreenState } from "../../models/GameState";
-import type { InputResult } from "../../types";
+import type { InputResult, MinigameDifficulty } from "../../types";
 
 // Pure logic, no DOM. This keeps every rule testable.
 export class MenuScreenController {
@@ -48,6 +48,36 @@ export class MenuScreenController {
     return { nextScreen: "howToPlay", error: null };
   }
 
+  // US10 minigames list: 1 picks Hatching Rhythm, B returns to the menu.
+  handleMinigameInput(raw: string): InputResult {
+    const choice = raw.trim().toUpperCase();
+    if (choice === "B") {
+      this.state.goTo("menu");
+      return { nextScreen: "menu", error: null };
+    }
+    if (choice === "1") {
+      this.state.goTo("minigameDifficulty");
+      return { nextScreen: "minigameDifficulty", error: null };
+    }
+    return { nextScreen: "minigames", error: MINIGAME_ERROR };
+  }
+
+  // US10 difficulty picker: 1 = easy, 2 = hard, B returns to the minigames list.
+  handleDifficultyInput(raw: string): InputResult {
+    const choice = raw.trim().toUpperCase();
+    if (choice === "B") {
+      this.state.goTo("minigames");
+      return { nextScreen: "minigames", error: null };
+    }
+    const difficulties: Record<string, MinigameDifficulty> = { "1": "easy", "2": "hard" };
+    if (!Object.hasOwn(difficulties, choice)) {
+      return { nextScreen: "minigameDifficulty", error: DIFFICULTY_ERROR };
+    }
+    this.state.minigameDifficulty = difficulties[choice];
+    this.state.goTo("hatchingRhythm");
+    return { nextScreen: "hatchingRhythm", error: null };
+  }
+
   // Placeholder screens: any input returns to the menu.
   handlePlaceholderInput(): InputResult {
     this.state.goTo("menu");
@@ -60,9 +90,13 @@ export class MenuScreenController {
         return this.handleMenuInput(raw);
       case "howToPlay":
         return this.handleCardInput(raw);
-      case "creation":
       case "minigames":
+        return this.handleMinigameInput(raw);
+      case "minigameDifficulty":
+        return this.handleDifficultyInput(raw);
+      case "creation":
       case "simulation":
+      case "hatchingRhythm":
         return this.handlePlaceholderInput();
       case "end":
         return { nextScreen: "end", error: null };
