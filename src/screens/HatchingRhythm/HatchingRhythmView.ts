@@ -3,14 +3,24 @@
 
 import Konva from 'konva';
 import { COLORS, FONT_FAMILY, SCREEN_HEIGHT, SCREEN_WIDTH } from '../ui/theme';
+import { HARD_MESSAGE } from './difficulty';
 import type { HatchingRhythmGame } from './HatchingRhythmGame';
 import { isOnTrack, noteX, TRACK } from './noteTrack';
+import { formatPercent, type Judgment } from './timingJudge';
 
 const MARGIN_X = 30;
 const BOX_COLOR = '#ffff00';
 const TRACK_COLOR = '#5a5a5a';
 const DIFFICULTY_COLORS = { easy: '#00ff00', hard: '#a00000' } as const;
 const FLASH_MS = 120;
+const POPUP_MS = 500;
+const JUDGMENT_TEXT: Record<Judgment, { text: string; color: string }> = {
+  perfect: { text: 'Perfect!', color: '#00ff00' },
+  good: { text: 'Good', color: BOX_COLOR },
+  miss: { text: 'Miss', color: COLORS.error },
+};
+/** x position of each item in the score line, like the mockup. */
+const SCORE_COLUMNS = [MARGIN_X, 300, 600, 880] as const;
 
 export class HatchingRhythmView {
   private readonly stage: Konva.Stage;
@@ -18,6 +28,8 @@ export class HatchingRhythmView {
   private readonly notesGroup = new Konva.Group();
   private readonly box: Konva.Rect;
   private readonly footer: Konva.Text;
+  private readonly popup: Konva.Text;
+  private readonly scoreTexts: Konva.Text[];
 
   constructor(private readonly container: HTMLDivElement, game: HatchingRhythmGame) {
     this.stage = new Konva.Stage({ container, width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
@@ -63,15 +75,36 @@ export class HatchingRhythmView {
       }),
     );
 
+    // "Perfect!" / "Good" / "Miss" popup above the box.
+    this.popup = new Konva.Text({
+      x: TRACK.boxCenterX - 150,
+      y: TRACK.y - TRACK.boxHeight / 2 - 50,
+      width: 300,
+      align: 'center',
+      fontFamily: FONT_FAMILY,
+      fontStyle: 'bold',
+      fontSize: 34,
+    });
+    this.layer.add(this.popup);
+
+    // Hint in the bottom right, above the score line.
     this.footer = new Konva.Text({
       x: MARGIN_X,
-      y: SCREEN_HEIGHT - 50,
+      y: TRACK.y + TRACK.boxHeight / 2 + 20,
       width: SCREEN_WIDTH - MARGIN_X * 2,
+      align: 'right',
       fontFamily: FONT_FAMILY,
-      fontSize: 26,
-      fill: COLORS.normal,
+      fontSize: 22,
+      fill: COLORS.muted,
     });
     this.layer.add(this.footer);
+
+    // Score line: Perfect, Good, Miss, Accuracy.
+    this.scoreTexts = SCORE_COLUMNS.map((x) => {
+      const t = new Konva.Text({ x, y: SCREEN_HEIGHT - 50, fontFamily: FONT_FAMILY, fontSize: 30, fill: COLORS.normal });
+      this.layer.add(t);
+      return t;
+    });
 
     window.addEventListener('resize', this.fitToWindow);
     this.fitToWindow();
@@ -96,6 +129,20 @@ export class HatchingRhythmView {
 
     const flashing = game.time - game.lastPressTime < FLASH_MS;
     this.box.stroke(flashing ? COLORS.normal : BOX_COLOR);
+
+    const last = game.lastJudgment;
+    if (last && game.time - last.time < POPUP_MS) {
+      const style = JUDGMENT_TEXT[last.judgment];
+      this.popup.text(style.text);
+      this.popup.fill(style.color);
+      this.popup.opacity(1 - (game.time - last.time) / POPUP_MS);
+    } else {
+      this.popup.text('');
+    }
+
+    const tally = game.tally;
+    const scores = [`Perfect: ${tally.perfect}`, `Good: ${tally.good}`, `Miss: ${tally.miss}`, `Accuracy: ${formatPercent(game.accuracy)}`];
+    scores.forEach((value, i) => this.scoreTexts[i].text(value));
 
     this.footer.text(game.isFinished ? 'Song over! Press Enter to go back to the minigames.' : 'Press Esc to quit.');
     this.layer.batchDraw();
@@ -142,6 +189,22 @@ export class HatchingRhythmView {
         fill: COLORS.normal,
       }),
     );
+
+    // Hard mode explains why: the bird's poor fitness made the bars faster and the box smaller.
+    if (game.difficulty === 'hard') {
+      this.layer.add(
+        new Konva.Text({
+          x: 330,
+          y: 260,
+          width: 300,
+          text: HARD_MESSAGE,
+          fontFamily: FONT_FAMILY,
+          fontSize: 28,
+          lineHeight: 1.3,
+          fill: COLORS.normal,
+        }),
+      );
+    }
   }
 
   /** Scales the fixed-size screen to fit the browser window, keeping its shape. */
