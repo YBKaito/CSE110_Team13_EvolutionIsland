@@ -42,7 +42,7 @@ export class IntroView extends QuizScreenElement {
       text: label,
       attrs: { type: 'button', 'data-focus-key': key },
     });
-    button.addEventListener('click', () => {
+    this.listen(button, 'click', () => {
       if (this.locked) return;
       this.locked = true;
       for (const b of this.buttons) b.disabled = true;

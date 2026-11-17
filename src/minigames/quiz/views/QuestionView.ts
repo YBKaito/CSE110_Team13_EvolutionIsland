@@ -50,7 +50,7 @@ export class QuestionView extends QuizScreenElement {
         attrs: { type: 'radio', name, value: option.id, 'data-focus-key': `option:${option.id}` },
       });
       input.checked = option.checked;
-      input.addEventListener('change', () => this.onSelect(option.id));
+      this.listen(input, 'change', () => this.onSelect(option.id));
       return el('label', { className: 'quiz-option' }, [
         input, el('span', { className: 'quiz-option-text', text: option.text }),
       ]);
@@ -69,16 +69,13 @@ export class QuestionView extends QuizScreenElement {
       className: 'quiz-button', text: vm.exitLabel,
       attrs: { type: 'button', 'data-focus-key': 'exit' },
     });
-    exitButton.addEventListener('click', () => this.handlers?.onExit());
+    this.listen(exitButton, 'click', () => this.handlers?.onExit());
 
     const form = el('form', { attrs: { novalidate: '' } }, [
       this.fieldset,
       el('div', { className: 'quiz-actions' }, [this.submitButton, exitButton]),
     ]);
-    form.addEventListener('submit', event => {
-      event.preventDefault();
-      this.onSubmit();
-    });
+    this.listen(form, 'submit', () => this.onSubmit());
 
     this.replaceContents([
       el('h2', { className: 'quiz-heading', text: vm.heading, attrs: this.headingAttrs() }),

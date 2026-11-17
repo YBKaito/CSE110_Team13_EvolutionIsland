@@ -20,12 +20,35 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
+/** The open modal dialog, if any. Everything outside it is blocked. */
+function openModal(doc: Document): Element | null {
+  try {
+    return doc.querySelector('dialog:modal');
+  } catch {
+    return null; // :modal unsupported; fall back to the other checks.
+  }
+}
+
+/**
+ * Whether a control may still act for its screen: it belongs to the current
+ * contents of a connected root, nothing above it is hidden or inert, and no
+ * modal dialog outside it is open. A replaced control fails the membership check.
+ */
+export function isControlActive(root: HTMLElement, control: Element): boolean {
+  if (!root.isConnected || !root.contains(control)) return false;
+  if (control.closest('[hidden], [inert]')) return false;
+  const modal = openModal(root.ownerDocument);
+  return modal === null || modal.contains(control);
+}
+
 /**
  * Shared shell for quiz screens: one <section> the runner attaches wherever it
  * likes, plus show/hide and heading focus. Starts hidden, like the Konva views.
  *
- * Elements marked `data-focus-key` get focus back after a same-screen re-render.
+ * Elements marked `data-focus-key` get focus back after a same-screen re-render;
+ * the heading has one too, so a redraw keeps focus on it.
  * The element marked `data-quiz-heading` gets focus when a new screen appears.
+ * Controls wired with `listen()` stop acting once replaced, hidden, or blocked.
  */
 export abstract class QuizScreenElement {
   protected readonly root: HTMLElement;
@@ -73,7 +96,24 @@ export abstract class QuizScreenElement {
   }
 
   protected headingAttrs(): Record<string, string> {
-    return { id: `${this.screenId}-heading`, tabindex: '-1', 'data-quiz-heading': '' };
+    return {
+      id: `${this.screenId}-heading`, tabindex: '-1', 'data-quiz-heading': '', 'data-focus-key': 'heading',
+    };
+  }
+
+  /**
+   * Add a listener that runs only while `control` is active (see isControlActive).
+   * The check uses the control captured here, so an old control cannot reach
+   * handlers that were rebound for a newer screen. Submit events are always
+   * prevented so a stale form never navigates the page.
+   */
+  protected listen<K extends keyof HTMLElementEventMap>(
+    control: HTMLElement, type: K, listener: (event: HTMLElementEventMap[K]) => void,
+  ): void {
+    control.addEventListener(type, event => {
+      if (type === 'submit') event.preventDefault();
+      if (isControlActive(this.root, control)) listener(event);
+    });
   }
 
   private flushHeadingFocus(): void {

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz View Lifecycle Checks</title>
+    <style>
+      body { flex-direction: column; justify-content: flex-start; gap: 16px; padding: 16px; overflow: auto; box-sizing: border-box; }
+      .checks { width: min(760px, calc(100vw - 32px)); margin: 0; padding: 0; list-style: none; font-size: 17px; }
+      .checks li { padding: 4px 0; border-bottom: 1px dashed var(--line); overflow-wrap: anywhere; }
+      .pass { color: #7fcf7a; }
+      .fail { color: var(--miss); }
+      #mount { position: absolute; left: -10000px; top: 0; }
+    </style>
+  </head>
+  <body>
+    <h1 id="summary">Running…</h1>
+    <ul class="checks" aria-label="Check results"></ul>
+    <div id="mount"></div>
+    <script type="module" src="./lifecycle.ts"></script>
+  </body>
+</html>
