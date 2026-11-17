@@ -1,24 +1,44 @@
-// Owns the Konva stage: scales the screen to the window, collects typed input, and shows one Screen at a time.
+/**
+ * This handles showing and switching between the game's screens.
+ * The generation and event screens give us a ScreenSpec to draw, while the
+ * Evolution Choice screen already has its own Konva view.
+ * Both can use the same stage, so we only need one place to manage navigation.
+ */
 
 import Konva from 'konva';
+import { STAGE_HEIGHT, STAGE_WIDTH } from '../../constants';
+import type { ScreenController } from '../ScreenController';
 import type { Screen, ScreenNavigator } from './screenSpec';
 import { TerminalRenderer } from './TerminalRenderer';
 import { COLORS, SCREEN_HEIGHT, SCREEN_WIDTH } from './theme';
 
 const MAX_INPUT_LENGTH = 12;
 
+// Both types of screens can be passed into show(), even though they draw differently.
+type HostedScreen = Screen | ScreenController;
+
+/** Check if the screen has its own view instead of a ScreenSpec we need to render. */
+function isVisualScreen(screen: HostedScreen): screen is ScreenController {
+  return 'getView' in screen;
+}
+
 export class ScreenHost implements ScreenNavigator {
   private readonly stage: Konva.Stage;
   private readonly layer = new Konva.Layer();
   private readonly background = new Konva.Rect({ x: 0, y: 0, width: SCREEN_WIDTH, height: SCREEN_HEIGHT, fill: COLORS.background });
+  // Keep custom views on a separate layer so they don't replace the text screen's objects.
+  private readonly visualLayer = new Konva.Layer();
   private readonly renderer: TerminalRenderer;
-  private current: Screen | null = null;
+  private current: HostedScreen | null = null;
   private typed = '';
 
   constructor(private readonly container: HTMLDivElement) {
     this.stage = new Konva.Stage({ container, width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
     this.layer.add(this.background);
     this.stage.add(this.layer);
+    this.stage.add(this.visualLayer);
+    // There isn't a custom view on screen when the game first starts.
+    this.visualLayer.hide();
     this.renderer = new TerminalRenderer(this.layer);
 
     window.addEventListener('resize', () => this.fitToWindow());
@@ -27,23 +47,63 @@ export class ScreenHost implements ScreenNavigator {
     this.fitToWindow();
   }
 
-  show(screen: Screen): void {
+  /**
+   * Switch to the requested screen using the same method for both screen types.
+   * If the previous screen had its own Konva view, we hide and detach it first.
+   * We don't destroy that view because the player might need it again at a later checkpoint.
+   */
+  show(screen: HostedScreen): void {
+    if (this.current && isVisualScreen(this.current)) {
+      this.current.hide();
+      // Remove it from the layer without deleting the view or its saved state.
+      this.current.getView().getGroup().remove();
+    }
+    // Clear anything left from the previous visual screen before showing the next one.
+    this.visualLayer.destroyChildren();
+    this.visualLayer.hide();
     this.current = screen;
     this.typed = '';
-    this.draw();
+    if (isVisualScreen(screen)) {
+      // The two screen layouts use different dimensions, so scale and center
+      // the custom view to fit the same stage as the generation and event screens.
+      const scale = Math.min(SCREEN_WIDTH / STAGE_WIDTH, SCREEN_HEIGHT / STAGE_HEIGHT);
+      const group = new Konva.Group({
+        x: (SCREEN_WIDTH - STAGE_WIDTH * scale) / 2,
+        y: (SCREEN_HEIGHT - STAGE_HEIGHT * scale) / 2,
+        scaleX: scale,
+        scaleY: scale,
+      });
+      group.add(screen.getView().getGroup());
+      this.visualLayer.add(
+        new Konva.Rect({ x: 0, y: 0, width: SCREEN_WIDTH, height: SCREEN_HEIGHT, fill: COLORS.background }),
+        group,
+      );
+      this.visualLayer.show();
+      screen.show();
+    } else {
+      // Text-style screens are drawn from their ScreenSpec by the existing renderer.
+      this.draw();
+    }
   }
 
+  /** Clear the typed input and redraw the current text screen after it changes. */
   refresh(): void {
     this.typed = '';
     this.draw();
   }
 
   private draw(): void {
-    if (this.current) this.renderer.render(this.current.spec(), this.typed);
+    if (this.current && !isVisualScreen(this.current)) {
+      this.renderer.render(this.current.spec(), this.typed);
+    }
   }
 
   private onKey(event: KeyboardEvent): void {
-    if (!this.current || event.metaKey || event.ctrlKey || event.altKey) return;
+    // The Evolution Choice controller already handles its own keyboard input.
+    // We also ignore keys when the game is hidden so typing in the main menu
+    // doesn't accidentally send input to the previous game screen.
+    if (this.container.hidden || !this.current || isVisualScreen(this.current) ||
+      event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.key === 'Enter') {
       event.preventDefault();
       const input = this.typed.trim();
@@ -63,7 +123,10 @@ export class ScreenHost implements ScreenNavigator {
     }
   }
 
-  /** Scales the fixed-size screen to fit the browser window, keeping its shape. */
+  /**
+   * The game uses a fixed coordinate system, but the browser window can be any size.
+   * Scale the stage evenly so the whole screen fits without getting stretched.
+   */
   private fitToWindow(): void {
     const width = this.container.clientWidth || window.innerWidth;
     const height = this.container.clientHeight || window.innerHeight;
