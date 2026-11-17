@@ -10,7 +10,8 @@ import type {
   EvolutionScreenRenderState,
   EvolutionScreenViewHandlers,
 } from './EvolutionScreenTypes';
-import { loadPixelifySans } from './loadPixelifySans';
+import { loadGameFont } from './loadGameFont';
+import { FONT_FAMILY } from '../ui/theme';
 
 /**
  * Draws the three evolution choice pages:
@@ -21,7 +22,7 @@ import { loadPixelifySans } from './loadPixelifySans';
  */
 const UI_WIDTH = 1200;
 const UI_HEIGHT = 820;
-const FONT = 'Pixelify Sans, monospace';
+const FONT = FONT_FAMILY;
 const COLOR = {
   bg: '#1d1d1d',
   white: '#f7f7f7',
@@ -184,10 +185,13 @@ export class EvolutionScreenView implements View {
   private handlers: EvolutionScreenViewHandlers | null = null;
   private lastState: EvolutionScreenRenderState | null = null;
 
-  /** Load the pixel font, then redraw once the browser has it. */
+  /** Load the arcade font, then redraw once the browser has it. */
   constructor() {
-    const redraw = () => { if (this.lastState) this.render(this.lastState); };
-    void loadPixelifySans().then(redraw);
+    const redraw = () => {
+      if (this.lastState) this.render(this.lastState);
+    };
+
+    void loadGameFont().then(redraw);
     void loadHintSprite().then(redraw);
   }
 

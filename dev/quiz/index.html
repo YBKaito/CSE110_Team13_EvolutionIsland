@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz View Demo</title>
+    <style>
+      /* Demo-only layout; the real app's body styles center one screen with no scrolling. */
+      body { flex-direction: column; justify-content: flex-start; gap: 16px; padding: 16px; overflow: auto; box-sizing: border-box; }
+      .demo-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; }
+      .demo-bar button { font: inherit; font-size: 15px; padding: 6px 10px; background: transparent; color: var(--fg); border: 1px solid var(--line); cursor: pointer; }
+      .demo-bar button[aria-pressed="true"] { border-color: var(--box); color: var(--box); }
+      .demo-log { width: min(760px, calc(100vw - 32px)); min-height: 3em; font-size: 15px; color: var(--muted); border: 1px dashed var(--line); padding: 8px 12px; box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <nav class="demo-bar" aria-label="Demo states"></nav>
+    <div id="quiz-root"></div>
+    <div class="demo-log" role="log" aria-live="polite" aria-label="Emitted actions"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
