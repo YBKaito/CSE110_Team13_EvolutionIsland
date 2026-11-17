@@ -45,10 +45,20 @@ export const HOW_TO_PLAY_CARDS: HowToPlayCard[] = [
   },
 ];
 
-export const PLACEHOLDER_TEXT: Record<"creation" | "minigames", string> = {
+export const PLACEHOLDER_TEXT: Record<"creation", string> = {
   creation: "Species creation is coming in US2.",
-  minigames: "Minigames are coming in a later sprint.",
 };
+
+// US10: minigames menu (main menu option 3) and the Hatching Rhythm difficulty picker.
+export const MINIGAME_OPTIONS: string[] = ["Hatching Rhythm"];
+
+export const MINIGAME_ERROR =
+  "Please type 1 to play, or B to go back to the menu.";
+
+export const DIFFICULTY_OPTIONS: string[] = ["Easy", "Hard"];
+
+export const DIFFICULTY_ERROR =
+  "Please type 1 or 2, or B to go back to the minigames.";
 
 const COLOR_DESCRIPTIONS: Record<BirdColor, {
   label: string;

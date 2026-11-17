@@ -167,7 +167,8 @@ body:has(#app canvas) #terminal {
   /* ---------- US3 to US6: Konva game screens ---------- */
   
   /* The Konva stage keeps the game's shape and is centered in the window. */
-  #app {
+  #app,
+  #minigame {
     width: 100vw;
     height: 100vh;
     display: flex;
