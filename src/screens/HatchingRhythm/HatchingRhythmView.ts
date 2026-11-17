@@ -4,6 +4,7 @@
 import Konva from 'konva';
 import { COLORS, FONT_FAMILY, SCREEN_HEIGHT, SCREEN_WIDTH } from '../ui/theme';
 import { HARD_MESSAGE } from './difficulty';
+import { EGG_SPRITES, eggStage, type EggStage } from './eggSprite';
 import type { HatchingRhythmGame } from './HatchingRhythmGame';
 import { isOnTrack, noteX, TRACK } from './noteTrack';
 import { formatPercent, type Judgment } from './timingJudge';
@@ -21,6 +22,17 @@ const JUDGMENT_TEXT: Record<Judgment, { text: string; color: string }> = {
 };
 /** x position of each item in the score line, like the mockup. */
 const SCORE_COLUMNS = [MARGIN_X, 300, 600, 880] as const;
+/** The egg sprites are 304 px wide; this draws them about 128 px wide, centered above the track. */
+const EGG_SCALE = 0.42;
+const EGG_CENTER_X = SCREEN_WIDTH / 2;
+const EGG_BOTTOM_Y = 450;
+const WOBBLE_MS = 300;
+
+function loadImage(src: string): HTMLImageElement {
+  const image = new Image();
+  image.src = src;
+  return image;
+}
 
 export class HatchingRhythmView {
   private readonly stage: Konva.Stage;
@@ -30,13 +42,32 @@ export class HatchingRhythmView {
   private readonly footer: Konva.Text;
   private readonly popup: Konva.Text;
   private readonly scoreTexts: Konva.Text[];
+  private readonly results = new Konva.Text({
+    x: EGG_CENTER_X + 110,
+    y: 250,
+    width: 500,
+    fontFamily: FONT_FAMILY,
+    fontSize: 28,
+    lineHeight: 1.35,
+    fill: COLORS.normal,
+  });
+  private readonly egg = new Konva.Image({ image: undefined, x: EGG_CENTER_X, y: EGG_BOTTOM_Y });
+  private readonly eggImages: Record<EggStage, HTMLImageElement> = {
+    egg: loadImage(EGG_SPRITES.egg),
+    cracked: loadImage(EGG_SPRITES.cracked),
+    hatched: loadImage(EGG_SPRITES.hatched),
+  };
 
   constructor(private readonly container: HTMLDivElement, game: HatchingRhythmGame) {
     this.stage = new Konva.Stage({ container, width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
     this.stage.add(this.layer);
+    this.layer.imageSmoothingEnabled(false); // keep the pixel art crisp when scaled
     this.layer.add(new Konva.Rect({ x: 0, y: 0, width: SCREEN_WIDTH, height: SCREEN_HEIGHT, fill: COLORS.background }));
 
     this.drawHeader(game);
+    this.egg.scale({ x: EGG_SCALE, y: EGG_SCALE });
+    this.layer.add(this.egg);
+    this.layer.add(this.results);
 
     // Note track: a grey line the bars slide along.
     this.layer.add(
@@ -127,11 +158,12 @@ export class HatchingRhythmView {
       );
     }
 
-    const flashing = game.time - game.lastPressTime < FLASH_MS;
+    // The song clock stops when the song ends, so flashes and popups end with it.
+    const flashing = !game.isFinished && game.time - game.lastPressTime < FLASH_MS;
     this.box.stroke(flashing ? COLORS.normal : BOX_COLOR);
 
     const last = game.lastJudgment;
-    if (last && game.time - last.time < POPUP_MS) {
+    if (last && !game.isFinished && game.time - last.time < POPUP_MS) {
       const style = JUDGMENT_TEXT[last.judgment];
       this.popup.text(style.text);
       this.popup.fill(style.color);
@@ -141,8 +173,22 @@ export class HatchingRhythmView {
     }
 
     const tally = game.tally;
+    this.drawEgg(eggStage(tally, game.isFinished), game);
+
     const scores = [`Perfect: ${tally.perfect}`, `Good: ${tally.good}`, `Miss: ${tally.miss}`, `Accuracy: ${formatPercent(game.accuracy)}`];
     scores.forEach((value, i) => this.scoreTexts[i].text(value));
+
+    // Song over: show how many eggs hatched (the offspring count).
+    if (game.isFinished) {
+      const result = game.result;
+      this.results.text(
+        `${result.hatched} of ${result.eggs} eggs hatched!\n` +
+          `Hatch rate: ${formatPercent(result.hatchRate)}\n` +
+          `Offspring bonus: x${result.birthMultiplier.toFixed(2)}`,
+      );
+    } else {
+      this.results.text('');
+    }
 
     this.footer.text(game.isFinished ? 'Song over! Press Enter to go back to the minigames.' : 'Press Esc to quit.');
     this.layer.batchDraw();
@@ -151,6 +197,20 @@ export class HatchingRhythmView {
   destroy(): void {
     window.removeEventListener('resize', this.fitToWindow);
     this.stage.destroy();
+  }
+
+  /** Shows the sprite for this stage, anchored at its bottom center, with a small wobble after each hit. */
+  private drawEgg(stage: EggStage, game: HatchingRhythmGame): void {
+    const image = this.eggImages[stage];
+    if (!image.complete || image.naturalWidth === 0) return; // still loading
+    if (this.egg.image() !== image) {
+      this.egg.image(image);
+      this.egg.offset({ x: image.naturalWidth / 2, y: image.naturalHeight });
+    }
+    const last = game.lastJudgment;
+    const sinceHit = last && last.judgment !== 'miss' ? game.time - last.time : Number.POSITIVE_INFINITY;
+    const wobble = sinceHit < WOBBLE_MS ? Math.sin((sinceHit / WOBBLE_MS) * Math.PI * 4) * 6 * (1 - sinceHit / WOBBLE_MS) : 0;
+    this.egg.rotation(game.isFinished ? 0 : wobble);
   }
 
   private drawHeader(game: HatchingRhythmGame): void {
