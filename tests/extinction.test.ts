@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  allScenarios, CONDITIONS, conditionOf, DEFAULT_SPECIES, EXTINCTION, fastestScenario, islandFor, normalScenario,
+  allScenarios, CONDITIONS, conditionOf, DEFAULT_SPECIES, EXTINCTION, fastestScenario, islandFor, startingScenario,
   pickSpecies, runScenario, SPECIES, survivalChance, type ConditionKey, type Scenario,
 } from '../src/minigames/ExtinctionPrediction/ExtinctionModel';
 import { createBaselineEnvironment } from '../src/models/Environment';
