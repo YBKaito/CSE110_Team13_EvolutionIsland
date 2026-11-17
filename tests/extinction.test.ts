@@ -15,7 +15,7 @@ const LEMON = DEFAULT_SPECIES;
 
 /** Normal everywhere except the named options, e.g. pick({ rainfall: 'Drought' }). */
 function pick(labels: Partial<Record<ConditionKey, string>>): Scenario {
-  const scenario = normalScenario();
+  const scenario = startingScenario();
   for (const condition of CONDITIONS) {
     const label = labels[condition.key];
     if (!label) continue;
@@ -29,8 +29,11 @@ function pick(labels: Partial<Record<ConditionKey, string>>): Scenario {
 const WORST = pick({ rainfall: 'Drought', temperature: 'Hotter', arrival: 'Hawks' });
 
 describe('islands', () => {
-  it('a normal island is the main game baseline', () => {
-    expect(islandFor(normalScenario())).toEqual(createBaselineEnvironment());
+  it('with Normal weather, the only change from the main game baseline is the newcomer', () => {
+    const island = islandFor(pick({}));
+    expect(island.rainfall).toBe(createBaselineEnvironment().rainfall);
+    expect(island.temperature).toBe(createBaselineEnvironment().temperature);
+    expect(island.food).toEqual(createBaselineEnvironment().food);
   });
 
   it('drought lowers rain-fed food and cover but never hard seeds', () => {
@@ -72,8 +75,8 @@ describe('islands', () => {
     }
   });
 
-  it('offers 36 distinct scenarios', () => {
-    expect(new Set(allScenarios().map((s) => JSON.stringify(s))).size).toBe(36);
+  it('offers 26 distinct scenarios', () => {
+    expect(new Set(allScenarios().map((s) => JSON.stringify(s))).size).toBe(27);
   });
 });
 
@@ -93,6 +96,15 @@ describe('new arrival', () => {
     expect(island.competitorDiet).toBeNull();
   });
 });
+
+it('every option changes the island: there is no "no newcomer" choice', () => {
+    expect(conditionOf('arrival').choices.map((c) => c.label)).toEqual(['Hawks', 'Insect-eating warbler', 'Seed-eating finch']);
+    for (const choice of conditionOf('arrival').choices) {
+      const env = createBaselineEnvironment();
+      choice.apply(env);
+      expect(env.predation !== 50 || env.competition > 0, choice.label).toBe(true);
+    }
+  });
 
 describe('runScenario', () => {
   it('is repeatable for a seed', () => {
@@ -164,7 +176,7 @@ describe('starting species', () => {
   it('lets every species survive a normal island', () => {
     for (const species of SPECIES) {
       for (let seed = 1; seed <= 8; seed++) {
-        expect(runScenario(species.traits, normalScenario(), seed).extinctAt, `${species.name} seed ${seed}`).toBeNull();
+        expect(runScenario(species.traits, startingScenario(), seed).extinctAt, `${species.name} seed ${seed}`).toBeNull();
       }
     }
   });
@@ -180,7 +192,7 @@ describe('starting species', () => {
 
 describe('what you missed', () => {
   it('lists each choice that differed from the fastest island and was easier on the species', () => {
-    const view = buildResultView(LEMON, normalScenario(), 3);
+    const view = buildResultView(LEMON, pick({ arrival: 'Seed-eating finch' }), 3);
     expect(view.matchedFastest).toBe(false);
     expect(view.missed.length).toBeGreaterThan(0);
     for (const line of view.missed) {
@@ -246,7 +258,7 @@ describe('minigame screens', () => {
   /** Intro, then Drought, Hotter, warbler, landing on the summary screen. */
   function toSummary() {
     const game = setup();
-    for (const input of ['', '3', '3', '3']) game.screen.submit(input);
+    for (const input of ['', '3', '3', '2']) game.screen.submit(input);
     return game;
   }
 
@@ -278,15 +290,15 @@ describe('minigame screens', () => {
     expect(screenText(screen.spec())[0]).toBe('Condition 2 of 3: Temperature');
   });
 
-  it('offers four newcomers, then the review option, and rejects anything else', () => {
+  it('offers three newcomers, then the review option, and rejects anything else', () => {
     const { screen } = setup();
     for (const input of ['', '3', '3']) screen.submit(input);
     expect(screenText(screen.spec())).toEqual(expect.arrayContaining([
-      'Condition 3 of 3: New arrival', '1. No new arrival', '2. Hawks', '3. Insect-eating warbler', '4. Seed-eating finch',
+      'Condition 3 of 3: New arrival', '1. Hawks', '2. Insect-eating warbler', '3. Seed-eating finch',
       '5. Review species and traits',
     ]));
-    screen.submit('6');
-    expect(screen.spec().prompt.error).toBe('Invalid. Type 1, 2, 3, 4, or 5.');
+    screen.submit('5');
+    expect(screen.spec().prompt.error).toBe('Invalid. Type 1, 2, 3, or 4.');
   });
 
   it('rejects invalid input and stays on the question', () => {
@@ -391,10 +403,10 @@ describe('reviewing the species', () => {
     expect(screenText(screen.spec())[0]).toBe('Condition 2 of 3: Temperature');
   });
 
-  it('works on the last question too, where it is option 5', () => {
+  it('works on the last question too, where it is option 4', () => {
     const { screen } = setup();
     for (const input of ['', '3', '3']) screen.submit(input);
-    screen.submit('5');
+    screen.submit('4');
     expect(screenText(screen.spec())).toContain('Species: | Lemon');
     screen.submit('');
     expect(screenText(screen.spec())[0]).toBe('Condition 3 of 3: New arrival');
