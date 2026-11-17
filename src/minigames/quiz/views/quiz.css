@@ -1,7 +1,8 @@
 /* US9 quiz screens. Matches the terminal look in src/styles/styles.css;
    fallbacks keep it readable if that file is not loaded. */
 
-.quiz-screen {
+.quiz-screen,
+.quiz-dialog {
   --quiz-bg: var(--bg, #1d1e1c);
   --quiz-line: var(--line, #3b3c38);
   --quiz-fg: var(--fg, #f2f0e8);
@@ -9,7 +10,9 @@
   --quiz-accent: var(--box, #e8c547);
   --quiz-wrong: var(--miss, #e0685a);
   --quiz-right: #7fcf7a;
+}
 
+.quiz-screen {
   box-sizing: border-box;
   width: min(760px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
@@ -25,11 +28,13 @@
 
 .quiz-screen *,
 .quiz-screen *::before,
-.quiz-screen *::after {
+.quiz-screen *::after,
+.quiz-dialog * {
   box-sizing: inherit;
 }
 
-.quiz-screen :focus-visible {
+.quiz-screen :focus-visible,
+.quiz-dialog :focus-visible {
   outline: 3px solid var(--quiz-accent);
   outline-offset: 3px;
 }
@@ -208,8 +213,42 @@ label.quiz-option:hover {
   opacity: 0.45;
 }
 
+/* ---------- PR4: introduction, results, exit confirmation ---------- */
+
+.quiz-intro-text,
+.quiz-results-message {
+  margin: 0 0 24px;
+}
+
+.quiz-score {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 4.5vw, 30px);
+  color: var(--quiz-accent);
+}
+
+.quiz-dialog {
+  box-sizing: border-box;
+  width: min(520px, calc(100vw - 32px));
+  padding: 24px;
+  border: 2px solid var(--quiz-accent);
+  background: var(--quiz-bg);
+  color: var(--quiz-fg);
+  font-family: var(--display, "VT323", "Courier New", monospace);
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.quiz-dialog p {
+  margin: 0 0 20px;
+}
+
+.quiz-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
 @media (max-width: 480px) {
-  .quiz-screen {
+  .quiz-screen,
+  .quiz-dialog {
     padding: 16px;
     font-size: 18px;
   }
