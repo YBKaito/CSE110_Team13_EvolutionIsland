@@ -27,6 +27,22 @@ function pick(labels: Partial<Record<ConditionKey, string>>): Scenario {
 
 const WORST = pick({ rainfall: 'Drought', temperature: 'Hotter', arrival: 'Hawks' });
 
+/** A fresh minigame screen for the default species, plus the spies its callbacks report to. */
+function setup(seed = 7) {
+  const nav = new FakeNavigator();
+  const onRestart = vi.fn();
+  const onExit = vi.fn();
+  const screen = new ExtinctionScreenController(nav, { seed, species: LEMON, onRestart, onExit });
+  return { nav, screen, onRestart, onExit };
+}
+
+/** Intro, then Drought, Hotter, warbler, landing on the summary screen. */
+function toSummary() {
+  const game = setup();
+  for (const input of ['', '3', '3', '2']) game.screen.submit(input);
+  return game;
+}
+
 describe('islands', () => {
   it('with Normal weather, the only change from the main game baseline is the newcomer', () => {
     const island = islandFor(pick({}));
@@ -254,13 +270,6 @@ describe('minigame screens', () => {
     return { nav, screen, onRestart, onExit };
   }
 
-  /** Intro, then Drought, Hotter, warbler, landing on the summary screen. */
-  function toSummary() {
-    const game = setup();
-    for (const input of ['', '3', '3', '2']) game.screen.submit(input);
-    return game;
-  }
-
   it('introduces the species and its traits (mockup)', () => {
     const text = screenText(setup().screen.spec());
     expect(text[0]).toBe('Extinction Prediction');
@@ -367,19 +376,6 @@ describe('minigame screens', () => {
 });
 
 describe('reviewing the species', () => {
-  function setup(seed = 7) {
-    const nav = new FakeNavigator();
-    const screen = new ExtinctionScreenController(nav, { seed, species: LEMON, onRestart: vi.fn(), onExit: vi.fn() });
-    return { nav, screen };
-  }
-
-  /** Intro, then Drought, Hotter, warbler, landing on the summary screen. */
-  function toSummary() {
-    const game = setup();
-    for (const input of ['3', '2']) game.screen.submit(input);
-    return game;
-  }
-
   it('shows the intro screen again from a question, and Enter returns to the same question', () => {
     const { screen } = setup();
     screen.submit('');
