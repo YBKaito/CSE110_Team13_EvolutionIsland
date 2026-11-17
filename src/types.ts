@@ -4,9 +4,14 @@ export type ScreenId =
   | "menu"
   | "howToPlay"
   | "minigames"
+  | "minigameDifficulty"
+  | "hatchingRhythm"
   | "end"
   | "creation"
   | "simulation";
+
+// US10: difficulty the player picks before the Hatching Rhythm minigame.
+export type MinigameDifficulty = "easy" | "hard";
 
 // What the controller returns after the player types something.
 export interface InputResult {

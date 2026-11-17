@@ -3,7 +3,9 @@
 import {
     GAME_TITLE,
     HOW_TO_PLAY_CARDS,
+    DIFFICULTY_OPTIONS,
     MENU_OPTIONS,
+    MINIGAME_OPTIONS,
     PLACEHOLDER_TEXT,
   } from "../../constants";
   import type { ScreenState } from "../../models/GameState";
@@ -33,11 +35,29 @@ import {
         ];
       }
       case "creation":
-      case "minigames":
         return [PLACEHOLDER_TEXT[state.screen], "", "Press Enter to return to the menu."];
+      case "minigames":
+        return [
+          "MINIGAMES",
+          "",
+          "You may play:",
+          ...MINIGAME_OPTIONS.map((opt, i) => `  ${i + 1}. ${opt}`),
+          "",
+          "Type a number, or B to go back to the menu.",
+        ];
+      case "minigameDifficulty":
+        return [
+          "HATCHING RHYTHM",
+          "",
+          "Pick a difficulty:",
+          ...DIFFICULTY_OPTIONS.map((opt, i) => `  ${i + 1}. ${opt}`),
+          "",
+          "Type a number, or B to go back to the minigames.",
+        ];
       case "end":
         return ["Thanks for playing!", "", "Refresh the page to play again."];
       case "simulation":
+      case "hatchingRhythm":
         return [];
     }
   }

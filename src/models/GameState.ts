@@ -5,6 +5,7 @@
 // ================================================================
 
 import type {
+    MinigameDifficulty,
     ScreenId,
     SpeciesTraits,
     ActiveEvent,
@@ -23,7 +24,9 @@ import type {
     birdName = "";
     selectedTraits: Partial<SpeciesTraits> = {};
     species: Species | null = null;
-  
+    /** US10: difficulty picked for the Hatching Rhythm minigame. */
+    minigameDifficulty: MinigameDifficulty = "easy";
+
     goTo(screen: ScreenId): void {
       this.screen = screen;
       if (screen === "howToPlay") {

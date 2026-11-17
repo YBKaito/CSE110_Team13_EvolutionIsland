@@ -22,6 +22,7 @@ import { renderCreationScreen } from "./screens/CreationScreen/CreationScreenVie
 import { ExtinctionScreenController } from './screens/ExtinctionScreen/ExtinctionScreenController';
 
 import { GameScreenController } from "./screens/GameScreen/GameScreenController";
+import { HatchingRhythmController } from "./screens/HatchingRhythm/HatchingRhythmController";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
 
@@ -62,6 +63,7 @@ async function boot(): Promise<void> {
   const input = getEl<HTMLInputElement>("terminal-input");
   const form = getEl<HTMLFormElement>("terminal-form");
   const app = getEl<HTMLDivElement>("app");
+  const minigame = getEl<HTMLDivElement>("minigame");
 
   // US1 and US2: text terminal
   const state = new ScreenState();
@@ -86,6 +88,7 @@ async function boot(): Promise<void> {
 
   const showTerminal = (): void => {
     app.hidden = true;
+    minigame.hidden = true;
     terminal.hidden = false;
     input.disabled = false;
     input.focus();
@@ -102,6 +105,21 @@ async function boot(): Promise<void> {
     state.goTo("menu");
     showTerminal();
     renderCurrentScreen();
+  };
+
+  // US10: Hatching Rhythm minigame (main menu option 3). Returns to the minigames list when done.
+  const startHatchingRhythm = (): void => {
+    terminal.hidden = true;
+    input.blur();
+    minigame.hidden = false;
+    new HatchingRhythmController(minigame, {
+      difficulty: state.minigameDifficulty,
+      onExit: () => {
+        state.goTo("minigames");
+        showTerminal();
+        renderCurrentScreen();
+      },
+    }).start();
   };
 
   const startRun = (species: StartingSpecies, seed: number): void => {
@@ -149,6 +167,10 @@ async function boot(): Promise<void> {
       error = result.error;
       if (result.nextScreen === "creation") {
         state.resetCreation();
+      }
+      if (result.nextScreen === "hatchingRhythm") {
+        startHatchingRhythm();
+        return;
       }
     }
 
