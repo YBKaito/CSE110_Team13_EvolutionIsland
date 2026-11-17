@@ -17,8 +17,7 @@ const LEMON = DEFAULT_SPECIES;
 function pick(labels: Partial<Record<ConditionKey, string>>): Scenario {
   const scenario = startingScenario();
   for (const condition of CONDITIONS) {
-    const label = labels[condition.key];
-    if (!label) continue;
+    const label = labels[condition.key] ?? (condition.choices.some((c) => c.label === 'Normal') ? 'Normal' : condition.choices[0].label);
     const index = condition.choices.findIndex((c) => c.label === label);
     if (index < 0) throw new Error(`No ${condition.key} option called ${label}`);
     scenario[condition.key] = index;
@@ -295,7 +294,7 @@ describe('minigame screens', () => {
     for (const input of ['', '3', '3']) screen.submit(input);
     expect(screenText(screen.spec())).toEqual(expect.arrayContaining([
       'Condition 3 of 3: New arrival', '1. Hawks', '2. Insect-eating warbler', '3. Seed-eating finch',
-      '5. Review species and traits',
+      '4. Review species and traits',
     ]));
     screen.submit('5');
     expect(screen.spec().prompt.error).toBe('Invalid. Type 1, 2, 3, or 4.');
