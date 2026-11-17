@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SIM } from '../src/constants';
 import { createStartingPopulation, countTraits } from '../src/simulation/Population';
 import { RandomSource } from '../src/simulation/Random';
-import { applyDisaster, runGeneration } from '../src/simulation/SimulationEngine';
+import { applyDisaster, inheritTraits, runGeneration } from '../src/simulation/SimulationEngine';
 import { TRAIT_NAMES } from '../src/simulation/traitContent';
 import type { EnvironmentState, GenerationResult, Population } from '../src/types';
 import { droughtEnv, envWith, MEDIUM_BIRD, populationOf } from './helpers/fixtures';
@@ -78,6 +78,19 @@ describe('reproducibility', () => {
 });
 
 describe('inheritance', () => {
+  it('increases the chance of long beaks even when neither parent has one', () => {
+    const parents = { beak: 0, body: 1, feathers: 1, color: 0 };
+    const rng = new RandomSource(17);
+    const offspring = Array.from({ length: 1000 }, () =>
+      inheritTraits(parents, parents, rng, 0, { beak: 2 }),
+    );
+    const longBeaks = offspring.filter(chick => chick.beak === 2).length;
+    expect(longBeaks).toBeGreaterThan(50);
+    expect(longBeaks).toBeLessThan(150);
+    expect(offspring.every(chick => chick.body === 1 && chick.feathers === 1 && chick.color === 0)).toBe(true);
+    expect(parents.beak).toBe(0);
+  });
+
   it('only passes on traits the parents carry when there is no mutation', () => {
     const parents = populationOf(Array.from({ length: 40 }, (_, i) => ({ beak: 0, body: 2, feathers: i % 2 === 0 ? 0 : 2, color: 3 })));
     const { population } = runGeneration(parents, envWith(), new RandomSource(4), { mutationRate: 0 });
