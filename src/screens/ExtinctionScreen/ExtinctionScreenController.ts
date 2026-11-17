@@ -1,4 +1,4 @@
-import { CONDITIONS, normalScenario, pickSpecies, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
+import { CONDITIONS, startingScenario, pickSpecies, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
 import type { StartingSpecies } from '../../models/GameState';
 import { invalidChoiceMessage, parseChoice } from '../format';
 import type { Screen, ScreenNavigator, ScreenSpec } from '../ui/screenSpec';
@@ -20,7 +20,7 @@ type Step = 'intro' | 'condition' | 'species' | 'summary' | 'result' | 'why';
 export class ExtinctionScreenController implements Screen {
   private step: Step = 'intro';
   private conditionIndex = 0;
-  private readonly scenario: Scenario = normalScenario();
+  private readonly scenario: Scenario = startingScenario();
   private readonly species: StartingSpecies;
   private reviewReturn: Step = 'condition';
   private result: ResultView | null = null;
