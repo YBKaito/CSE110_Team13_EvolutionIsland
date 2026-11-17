@@ -20,6 +20,10 @@ export interface GameScreenOptions {
   onQuit: () => void;
   /** Player wants a fresh run after extinction. */
   onRestart: () => void;
+  /** Runs generations and publishes updates to the evolution screen. */
+  simulation?: Pick<GameController, 'step' | 'advance'>;
+  /** Opens the evolution choice after any event cards have been shown. */
+  onCheckpoint?: () => boolean;
 }
 
 export class GameScreenController implements Screen {
@@ -44,8 +48,9 @@ export class GameScreenController implements Screen {
     if (this.shouldShowGameOver()) return this.showGameOver();
 
     const choice = parseChoice(input, GENERATION_CHOICES);
-    if (choice === 1) return this.afterSimulating([this.game.step()]);
-    if (choice === 2) return this.afterSimulating(this.game.advance(5));
+    const simulation = this.options.simulation ?? this.game;
+    if (choice === 1) return this.afterSimulating([simulation.step()]);
+    if (choice === 2) return this.afterSimulating(simulation.advance(5));
     if (choice === 3) {
       this.mode = 'confirmQuit';
       this.error = undefined;
@@ -76,12 +81,30 @@ export class GameScreenController implements Screen {
 
   private showEvents(queue: EventLogEntry[]): void {
     const [next, ...rest] = queue;
+
     if (!next) {
-      if (this.shouldShowGameOver()) this.showGameOver();
-      else this.nav.show(this);
+      // US6: Show Game Over if the flock is extinct.
+      if (this.shouldShowGameOver()) {
+        this.showGameOver();
+        return;
+      }
+
+      // US5: Show evolution choice after all event cards.
+      if (this.options.onCheckpoint?.()) return;
+
+      // Otherwise return to the generation screen.
+      this.nav.show(this);
       return;
     }
-    this.nav.show(new EventScreenController(this.nav, this.game.state, next, () => this.showEvents(rest)));
+
+    this.nav.show(
+      new EventScreenController(
+        this.nav,
+        this.game.state,
+        next,
+        () => this.showEvents(rest),
+      ),
+    );
   }
 
   private showGameOver(): void {

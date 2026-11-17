@@ -4,6 +4,6 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["src", "tests"],
+  "include": ["src", "tests", "dev"],
   "exclude": ["tests/us5"]
 }

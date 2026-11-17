@@ -23,8 +23,8 @@ body {
   --muted: #a3a197;
   --box: #e8c547;
   --miss: #e0685a;
-  --display: "Jersey 10", "Courier New", monospace;
-  --label: "Jersey 10", "Courier New", monospace;
+  --display: "VT323", "Courier New", monospace;
+  --label: "VT323", "Courier New", monospace;
 
   position: absolute;
   top: 50%;
@@ -92,8 +92,8 @@ body:has(#app:not([hidden]) canvas) #terminal {
     --muted: #a3a197;
     --box: #e8c547;
     --miss: #e0685a;
-    --display: "Jersey 10", "Courier New", monospace;
-    --label: "Jersey 10", "Courier New", monospace;
+    --display: "VT323", "Courier New", monospace;
+    --label: "VT323", "Courier New", monospace;
   }
   
   html,
