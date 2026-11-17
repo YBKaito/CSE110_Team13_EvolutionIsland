@@ -114,7 +114,7 @@ describe('runScenario', () => {
     expect(run.extinctAt).toBe(run.populations.length);
   });
 
-  it('wipes Pip out on its worst island', () => {
+  it('wipes Lemon out on its worst island', () => {
     for (let seed = 1; seed <= 8; seed++) {
       expect(runScenario(LEMON.traits, WORST, seed).extinctAt, `seed ${seed}`).not.toBeNull();
     }
@@ -322,7 +322,7 @@ describe('minigame screens', () => {
     const { screen } = toSummary();
     screen.submit('1');
     const result = screenText(screen.spec());
-    expect(result[0]).toMatch(/^Pip (went extinct in \d+|survived all \d+) generations\.$/);
+    expect(result[0]).toMatch(/^Lemon (went extinct in \d+|survived all \d+) generations\.$/);
     expect(result.some((l) => new RegExp(`^Gen 1: +${EXTINCTION.START_POP}$`).test(l))).toBe(true);
     expect(result).toContain('Press Enter to see why.');
 
