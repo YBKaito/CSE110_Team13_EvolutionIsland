@@ -103,11 +103,11 @@ export function conditionOf(key: ConditionKey): Condition {
   return condition;
 }
 
-export const normalScenario = (): Scenario =>
-  Object.fromEntries(CONDITIONS.map((c) => [c.key, c.normalIndex])) as Scenario;
+export const startingScenario = (): Scenario =>
+  Object.fromEntries(CONDITIONS.map((c) => [c.key, 0])) as Scenario;
 
 export function allScenarios(): Scenario[] {
-  let scenarios: Scenario[] = [normalScenario()];
+  let scenarios: Scenario[] = [startingScenario()];
   for (const condition of CONDITIONS) {
     scenarios = scenarios.flatMap((s) => condition.choices.map((_, i) => ({ ...s, [condition.key]: i })));
   }
@@ -141,8 +141,8 @@ export interface RunResult {
   extinctAt: number | null;	
 }
 
-export function runScenario(traits: Traits, scenario: Scenario, seed: number): RunResult {
-  const env = islandFor(scenario);
+// Runs the real generation engine on an island
+export function runOnIsland(traits: Traits, env: EnvironmentState, seed: number): RunResult {
   const rng = new RandomSource(seed);
   let flock = createFlock(traits);
   const populations = [flock.birds.length];
@@ -153,6 +153,12 @@ export function runScenario(traits: Traits, scenario: Scenario, seed: number): R
   }
   return { populations, extinctAt: flock.birds.length === 0 ? populations.length : null };
 }
+
+// Runs the island these choices make
+export const runScenario = (traits: Traits, scenario: Scenario, seed: number): RunResult =>
+  runOnIsland(traits, islandFor(scenario), seed);
+
+
 
 export interface RankedScenario {
   scenario: Scenario;
