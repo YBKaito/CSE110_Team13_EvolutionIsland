@@ -4,6 +4,7 @@ import { GameController } from '../src/game/GameController';
 import { startGameSession } from '../src/game/startGameSession';
 import type { ScreenController } from '../src/screens/ScreenController';
 import { EventScreenController } from '../src/screens/EventScreen/EventScreenController';
+import { GameOverScreenController } from '../src/screens/GameOverScreen/GameOverScreenController';
 import type { ScreenHost } from '../src/screens/ui/ScreenHost';
 import type { Screen } from '../src/screens/ui/screenSpec';
 import { MEDIUM_BIRD } from './helpers/fixtures';
@@ -121,8 +122,9 @@ describe('playable game checkpoints', () => {
       (host.current as Screen).submit('1');
       expect(game.isOver).toBe(true);
       expect(host.evolutionView).toBeNull();
+      expect(host.current).toBeInstanceOf(GameOverScreenController);
       expect((host.current as Screen).spec().blocks.some(block =>
-        block.kind === 'text' && block.text.includes('died out'))).toBe(true);
+        block.kind === 'text' && block.text === 'GAME OVER')).toBe(true);
     } finally {
       session.dispose();
     }

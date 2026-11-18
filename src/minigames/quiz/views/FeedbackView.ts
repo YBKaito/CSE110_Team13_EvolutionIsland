@@ -39,11 +39,14 @@ export class FeedbackView extends QuizScreenElement {
     if (state) this.render(state);
   }
 
-  /** A new response record or question means a new feedback screen. */
+  /**
+   * A different question or position means a new feedback screen. Redrawing the
+   * same question, even with a copied response, keeps Next locked; a new attempt
+   * that repeats a question must call reset() first.
+   */
   private isNewFeedback(state: FeedbackViewRenderState): boolean {
     const previous = this.state;
     return previous === null
-      || previous.response !== state.response
       || previous.question.id !== state.question.id
       || previous.questionNumber !== state.questionNumber;
   }
@@ -67,13 +70,13 @@ export class FeedbackView extends QuizScreenElement {
       attrs: { type: 'button', 'data-focus-key': 'next' },
     });
     this.nextButton.disabled = this.nextLocked;
-    this.nextButton.addEventListener('click', () => this.onNext());
+    this.listen(this.nextButton, 'click', () => this.onNext());
 
     const exitButton = el('button', {
       className: 'quiz-button', text: vm.exitLabel,
       attrs: { type: 'button', 'data-focus-key': 'exit' },
     });
-    exitButton.addEventListener('click', () => this.handlers?.onExit());
+    this.listen(exitButton, 'click', () => this.handlers?.onExit());
 
     const heading = el('h2', {
       className: `quiz-heading quiz-result ${vm.isCorrect ? 'quiz-result--correct' : 'quiz-result--incorrect'}`,

@@ -69,13 +69,16 @@ function showQuestion(index: number): void {
 }
 
 function showFeedback(session: QuizSession): void {
+  // Each fixture is shown as a fresh feedback screen, so Next unlocks.
+  feedback.reset();
   feedback.render(feedbackState(session));
   only(feedback);
 }
 
 function showResults(result: QuizResult): void {
-  // A fresh copy acts like a newly finished round, so the buttons unlock.
-  results.render({ result: structuredClone(result) });
+  // Each fixture is shown as a newly finished round, so the buttons unlock.
+  results.reset();
+  results.render({ result });
   only(results);
 }
 

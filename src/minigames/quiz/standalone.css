@@ -1,0 +1,21 @@
+html:has(body.quiz-page),
+body.quiz-page {
+  min-height: 100%;
+  height: auto;
+  overflow: auto;
+}
+
+body.quiz-page {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+.quiz-page #quiz-root,
+.quiz-page .quiz-mount {
+  max-width: 100%;
+}
+
+.quiz-page .quiz-screen {
+  max-height: calc(100dvh - 32px);
+}

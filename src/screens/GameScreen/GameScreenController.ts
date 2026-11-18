@@ -4,10 +4,11 @@
 import type { GameController, StepOutcome } from '../../game/GameController';
 import type { EventLogEntry } from '../../types';
 import { EventScreenController } from '../EventScreen/EventScreenController';
+import { GameOverScreenController } from '../GameOverScreen/GameOverScreenController';
+import type { GameOverEndReason } from '../GameOverScreen/GameOverScreenView';
 import { invalidChoiceMessage, parseChoice } from '../format';
 import type { Screen, ScreenNavigator, ScreenSpec } from '../ui/screenSpec';
 import {
-  EXTINCT_CHOICES,
   GENERATION_CHOICES,
   generationScreenSpec,
   generationViewFromState,
@@ -29,6 +30,7 @@ export interface GameScreenOptions {
 export class GameScreenController implements Screen {
   private mode: 'generation' | 'confirmQuit' = 'generation';
   private error: string | undefined;
+  private gameOverShown = false;
 
   constructor(
     private readonly nav: ScreenNavigator,
@@ -42,8 +44,9 @@ export class GameScreenController implements Screen {
   }
 
   submit(input: string): void {
+    if (this.gameOverShown) return;
     if (this.mode === 'confirmQuit') return this.submitQuit(input);
-    if (this.game.isOver) return this.submitExtinct(input);
+    if (this.shouldShowGameOver()) return this.showGameOver();
 
     const choice = parseChoice(input, GENERATION_CHOICES);
     const simulation = this.options.simulation ?? this.game;
@@ -60,19 +63,13 @@ export class GameScreenController implements Screen {
 
   private submitQuit(input: string): void {
     const choice = parseChoice(input, QUIT_CHOICES);
-    if (choice === 1) return this.options.onQuit();
+    if (choice === 1) return this.showGameOver('quit');
     if (choice === 2) {
       this.mode = 'generation';
       this.error = undefined;
     } else {
       this.error = invalidChoiceMessage(QUIT_CHOICES);
     }
-    this.nav.refresh();
-  }
-
-  private submitExtinct(input: string): void {
-    if (parseChoice(input, EXTINCT_CHOICES) === 1) return this.options.onRestart();
-    this.error = 'Invalid. Type 1.';
     this.nav.refresh();
   }
 
@@ -85,12 +82,44 @@ export class GameScreenController implements Screen {
 
   private showEvents(queue: EventLogEntry[]): void {
     const [next, ...rest] = queue;
+
     if (!next) {
-      // Event cards come first; a checkpoint choice opens only after the last card.
+      // US6: Show Game Over if the flock is extinct.
+      if (this.shouldShowGameOver()) {
+        this.showGameOver();
+        return;
+      }
+
+      // US5: Show evolution choice after all event cards.
       if (this.options.onCheckpoint?.()) return;
+
+      // Otherwise return to the generation screen.
       this.nav.show(this);
       return;
     }
-    this.nav.show(new EventScreenController(this.nav, this.game.state, next, () => this.showEvents(rest)));
+
+    this.nav.show(
+      new EventScreenController(
+        this.nav,
+        this.game.state,
+        next,
+        () => this.showEvents(rest),
+      ),
+    );
+  }
+
+  private showGameOver(endReason?: GameOverEndReason): void {
+    if (this.gameOverShown) return;
+    this.gameOverShown = true;
+    const reason = endReason ?? (this.game.state.population.birds.length === 0 ? 'extinction' : 'preview');
+    this.nav.show(new GameOverScreenController(this.nav, this.game.state, {
+      onRestart: this.options.onRestart,
+      onReturnToMenu: this.options.onQuit,
+      endReason: reason,
+    }));
+  }
+
+  private shouldShowGameOver(): boolean {
+    return this.game.isOver;
   }
 }

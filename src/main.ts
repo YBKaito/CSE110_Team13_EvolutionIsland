@@ -9,7 +9,7 @@ import "./styles/styles.css";
 
 import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
 import { RandomScheduler, ScriptedScheduler, type EventScheduler } from "./events/EventFactory";
-import { GameController } from "./game/GameController";
+import { GAME_OVER_PREVIEW_GENERATION, GameController } from "./game/GameController";
 import { startGameSession } from "./game/startGameSession";
 import { ScreenState, type StartingSpecies } from "./models/GameState";
 import { toStartingSpecies } from "./models/Species";
@@ -19,6 +19,10 @@ import { MenuScreenView, renderScreen } from "./screens/MenuScreen/MenuScreenVie
 import { CreationScreenController } from "./screens/CreationScreen/CreationScreenController";
 import { renderCreationScreen } from "./screens/CreationScreen/CreationScreenView";
 
+import { ExtinctionScreenController } from './screens/ExtinctionScreen/ExtinctionScreenController';
+
+import { GameScreenController } from "./screens/GameScreen/GameScreenController";
+import { HatchingRhythmController } from "./screens/HatchingRhythm/HatchingRhythmController";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
 
@@ -59,6 +63,7 @@ async function boot(): Promise<void> {
   const input = getEl<HTMLInputElement>("terminal-input");
   const form = getEl<HTMLFormElement>("terminal-form");
   const app = getEl<HTMLDivElement>("app");
+  const minigame = getEl<HTMLDivElement>("minigame");
 
   // US1 and US2: text terminal
   const state = new ScreenState();
@@ -83,6 +88,7 @@ async function boot(): Promise<void> {
 
   const showTerminal = (): void => {
     app.hidden = true;
+    minigame.hidden = true;
     terminal.hidden = false;
     input.disabled = false;
     input.focus();
@@ -100,16 +106,52 @@ async function boot(): Promise<void> {
     showTerminal();
     renderCurrentScreen();
   };
+  
+    // US10: Hatching Rhythm minigame (main menu option 3).
+    const startHatchingRhythm = (): void => {
+      terminal.hidden = true;
+      input.blur();
+      minigame.hidden = false;
+      new HatchingRhythmController(minigame, {
+        difficulty: state.minigameDifficulty,
+        onExit: () => {
+          state.goTo("minigames");
+          showTerminal();
+          renderCurrentScreen();
+        },
+      }).start();
+    };
 
-  const startRun = (species: StartingSpecies, seed: number): void => {
+    const startRun = (species: StartingSpecies, seed: number): void => {
+    
     session?.dispose();
     showApp();
+
     const screens = host ?? (host = new ScreenHost(app));
-    const game = GameController.startRun(species, seed, makeScheduler());
+    const game = GameController.startRun(
+      species,
+      seed,
+      makeScheduler(),
+      GAME_OVER_PREVIEW_GENERATION,
+    );
+
     session = startGameSession(screens, game, {
       onQuit: backToMenu,
       onRestart: () => startRun(species, randomSeed()),
     });
+  };
+
+  const startExtinction = (seed: number, avoidSpecies?: string): void => {
+    showApp();
+    const screens = host ?? (host = new ScreenHost(app));
+    screens.show(
+      new ExtinctionScreenController(screens, {
+        seed,
+        avoidSpecies,
+        onRestart: (played) => startExtinction(randomSeed(), played.name),
+        onExit: backToMenu, // no minigames menu yet, so "Back to minigames" returns to the main menu
+      }),
+    );
   };
 
   form.addEventListener("submit", (e) => {
@@ -134,19 +176,31 @@ async function boot(): Promise<void> {
       if (result.nextScreen === "creation") {
         state.resetCreation();
       }
+      if (result.nextScreen === "hatchingRhythm") {
+        startHatchingRhythm();
+        return;
+      }
     }
 
     renderCurrentScreen(error);
   });
 
   // Dev shortcut: a seed or script in the URL skips the menu.
-  if (params.has("seed") || useScript) {
+  console.log("minigame param:", params.get("minigame"), "seed param:", params.get("seed"));
+  
+  if (params.get("minigame") === "extinction") {
+    startExtinction(params.has("seed") ? Number(params.get("seed")) : randomSeed());
+  }
+  else if (params.has("seed") || useScript) {
     const seed = params.has("seed") ? Number(params.get("seed")) : randomSeed();
     startRun(DEFAULT_SPECIES, seed);
-  } else {
+  }
+  else {
     showTerminal();
     renderCurrentScreen();
   }
+
+
 }
 
 void boot();
