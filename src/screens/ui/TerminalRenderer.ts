@@ -1,7 +1,8 @@
 // Draws a ScreenSpec with Konva: text lines, tables, trait bars, and the typed-input prompt.
 
 import Konva from 'konva';
-import type { Block, PromptSpec, ScreenSpec, TextColor, TextSize } from './screenSpec';
+import { renderBird } from '../../birds/birdImage';
+import type { Block, BirdArt, PromptSpec, ScreenSpec, TextColor, TextSize } from './screenSpec';
 import {
   BAR,
   COLORS,
@@ -36,13 +37,18 @@ function makeText(value: string, x: number, y: number, size: TextSize, color: Te
 export class TerminalRenderer {
   private readonly content = new Konva.Group();
   private cursor: Konva.Text | null = null;
+  private readonly art = new Konva.Group();
+  private artKey = ''; // what is currently drawn, so typing a letter doesn't rebuild the picture
+  private artRequest = 0; // ignores a slow image load that a newer screen has replaced
 
   constructor(private readonly layer: Konva.Layer) {
+    layer.add(this.art); // added first, so text draws over it
     layer.add(this.content);
   }
 
   /** Redraws the whole screen. `typed` is what the player has typed so far at the prompt. */
   render(spec: ScreenSpec, typed: string): void {
+    this.drawArt(spec.art);
     this.content.destroyChildren();
     this.content.scale({ x: 1, y: 1 });
     let y = MARGIN_TOP;
@@ -467,5 +473,29 @@ export class TerminalRenderer {
       this.cursor = null;
     }
     return y + label.height();
+  }
+
+  /** Draws (or clears) the bird picture. Only rebuilds when the picture actually changed. */
+  private drawArt(art: BirdArt | undefined): void {
+    const key = art ? JSON.stringify(art) : '';
+    if (key === this.artKey) return;
+    this.artKey = key;
+    const request = ++this.artRequest;
+    this.art.destroyChildren();
+    if (!art) return;
+
+    void renderBird(art.look).then((canvas) => {
+      if (!canvas || request !== this.artRequest) return;
+      const scale = art.height / canvas.height;
+      this.art.add(new Konva.Image({
+        image: canvas,
+        x: art.x,
+        y: art.y,
+        width: canvas.width * scale,
+        height: art.height,
+        imageSmoothingEnabled: false, // crisp pixel art when scaled
+      }));
+      this.layer.batchDraw();
+    });
   }
 }

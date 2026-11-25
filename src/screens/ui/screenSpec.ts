@@ -1,5 +1,6 @@
 // A plain description of what a text-style screen shows. Views build these; the Konva renderer draws them.
 // Keeping this free of Konva lets views and controllers be unit-tested without a canvas.
+import type { BirdLook } from '../../birds/birdLook';
 
 export type TextSize = 'title' | 'heading' | 'body' | 'small';
 export type TextColor = 'normal' | 'error' | 'success' | 'muted';
@@ -59,6 +60,14 @@ export type Block =
       sidePanel?: LineChartSidePanel;
     };
 
+/** A bird picture drawn at a fixed spot behind the text, in screen coordinates (not part of the text flow). */
+export interface BirdArt {
+  look: BirdLook;
+  x: number;
+  y: number;
+  height: number; // width follows from the cropped picture's proportions
+}
+
 export interface PromptSpec {
   /** 'choice' shows "What is your choice? __" and accepts typed text; 'enter' just waits for Enter. */
   mode: 'choice' | 'enter';
@@ -72,6 +81,7 @@ export interface PromptSpec {
 export interface ScreenSpec {
   blocks: Block[];
   prompt: PromptSpec;
+  art?: BirdArt;
 }
 
 /** Anything the screen host can display. */
