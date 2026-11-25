@@ -3,6 +3,13 @@ import { CREATION_STEPS, TRAIT_OPTIONS } from "../../constants";
 import type { ScreenState } from "../../models/GameState";
 import type { SpeciesTraits } from "../../types";
 
+const TRAIT_LABELS: Record<keyof SpeciesTraits, string> = {
+  beakLength: "Beak Length",
+  bodySize: "Body Size",
+  featherDensity: "Feather Density",
+  color: "Color",
+}
+
 export function renderCreationScreen(state: ScreenState): string[] {
   const step = CREATION_STEPS[state.creationStep];
 
@@ -28,7 +35,7 @@ export function renderCreationScreen(state: ScreenState): string[] {
 
     lines.push(`Species: ${state.birdName}`);
     lines.push("");
-    lines.push(`Choose your ${trait}:`);
+    lines.push(`Choose your ${TRAIT_LABELS[trait]}:`);
     lines.push("");
 
     options.forEach((option, index) => {

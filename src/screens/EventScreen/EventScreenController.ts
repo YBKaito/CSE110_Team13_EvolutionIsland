@@ -21,7 +21,10 @@ export class EventScreenController implements Screen {
   }
 
   spec(): ScreenSpec {
-    return this.mode === 'changes' ? islandChangesSpec(this.view) : eventCardSpec(this.view, this.error);
+    return {
+      ...(this.mode === 'changes' ? islandChangesSpec(this.view) : eventCardSpec(this.view, this.error)),
+      outerBorder: true,
+    };
   }
 
   submit(input: string): void {
