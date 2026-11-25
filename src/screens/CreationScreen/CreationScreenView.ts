@@ -2,13 +2,7 @@
 import { CREATION_STEPS, TRAIT_OPTIONS } from "../../constants";
 import type { ScreenState } from "../../models/GameState";
 import type { SpeciesTraits } from "../../types";
-
-const TRAIT_LABELS: Record<keyof SpeciesTraits, string> = {
-  beakLength: "Beak Length",
-  bodySize: "Body Size",
-  featherDensity: "Feather Density",
-  color: "Color",
-}
+import { TRAITS } from "../../traits";
 
 export function renderCreationScreen(state: ScreenState): string[] {
   const step = CREATION_STEPS[state.creationStep];
@@ -35,7 +29,7 @@ export function renderCreationScreen(state: ScreenState): string[] {
 
     lines.push(`Species: ${state.birdName}`);
     lines.push("");
-    lines.push(`Choose your ${TRAIT_LABELS[trait]}:`);
+    lines.push(`Choose your ${TRAITS[trait].creationLabel}:`);
     lines.push("");
 
     options.forEach((option, index) => {
@@ -59,10 +53,10 @@ export function renderCreationScreen(state: ScreenState): string[] {
     "REVIEW YOUR SPECIES",
     "",
     `Name: ${state.birdName}`,
-    `Beak Length: ${traits.beakLength}`,
-    `Body Size: ${traits.bodySize}`,
-    `Feather Density: ${traits.featherDensity}`,
-    `Color: ${traits.color}`,
+    `${TRAITS.beakLength.creationLabel}: ${traits.beakLength}`,
+    `${TRAITS.bodySize.creationLabel}: ${traits.bodySize}`,
+    `${TRAITS.featherDensity.creationLabel}: ${traits.featherDensity}`,
+    `${TRAITS.color.creationLabel}: ${traits.color}`,
     "",
     "Are you ready to begin?",
     "",

@@ -66,6 +66,44 @@ describe('generation screen content', () => {
     }
   });
 
+  it('colors trait bars with the Game Over palette without changing counts or totals', () => {
+    const { screen, game } = setup();
+    screen.submit('1');
+    const view = generationViewFromState(game.state);
+    const bars = generationScreenSpec(view).blocks.filter(block => block.kind === 'bars');
+    const ordinalPalette = ['#55d6be', '#ffd166', '#ef476f'];
+    const colorPalette = ['#d18b45', '#aeb8c4', '#ffdf4d', '#f5f5f0'];
+
+    expect(bars).toHaveLength(TRAIT_NAMES.length);
+    bars.forEach((bar, traitIndex) => {
+      if (bar.kind !== 'bars') return;
+      const trait = TRAIT_NAMES[traitIndex];
+      expect(bar.segments.map(segment => segment.count)).toEqual(view.traitCounts[trait]);
+      expect(bar.segments.map(segment => segment.total)).toEqual(view.traitCounts[trait].map(() => view.flock));
+      expect(bar.segments.map(segment => segment.color)).toEqual(
+        trait === 'color' ? colorPalette : ordinalPalette,
+      );
+    });
+  });
+
+  it('colors positive, negative, and zero population changes green, red, and white', () => {
+    const { game } = setup();
+    game.step();
+    const baseView = generationViewFromState(game.state);
+
+    for (const [change, expectedColor] of [[5, 'success'], [-5, 'error'], [0, 'normal']] as const) {
+      const view = {
+        ...baseView,
+        stats: { ...baseView.stats!, change },
+      };
+      const table = generationScreenSpec(view).blocks.find(
+        block => block.kind === 'table' && block.columns[0] === 'Adults',
+      );
+      expect(table?.kind).toBe('table');
+      if (table?.kind === 'table') expect(table.cellColors?.[0]?.[3]).toBe(expectedColor);
+    }
+  });
+
   it('warns when the flock is close to extinction', () => {
     const { game } = setup();
     game.step();
