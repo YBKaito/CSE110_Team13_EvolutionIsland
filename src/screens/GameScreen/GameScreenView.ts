@@ -3,6 +3,8 @@ import type { GameState } from '../../models/GameState';
 import { countTraits } from '../../simulation/Population';
 import { TRAIT_NAMES, TRAIT_OPTIONS } from '../../simulation/traitContent';
 import { DEATH_CAUSES, type TraitName, type Traits } from '../../types';
+import { dominantLook } from '../../bird-visual/birdLook';
+
 import {
   amountLabel,
   capitalize,
@@ -24,6 +26,9 @@ const TRAIT_LABELS: Record<TraitName, string> = {
   feathers: 'Feathers',
   color: 'Color',
 };
+
+/** Top-right corner, above the island rows, so it doesn't cover the text. */
+const GAME_BIRD = { x: 1120, y: 6, height: 115 };
 
 export interface GenerationView {
   generation: number;
@@ -248,6 +253,7 @@ export function generationScreenSpec(
       label: CHOICE_PROMPT,
       error,
     },
+    art: { look: dominantLook(view.traitCounts), ...GAME_BIRD },
   };
 }
 
