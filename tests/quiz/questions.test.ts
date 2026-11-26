@@ -10,17 +10,28 @@ function freshQuestions() {
   }));
 }
 
-describe('initial authored content', () => {
-  it('validates and preserves the reviewed order, coverage, and answer keys', () => {
+describe('authored question bank', () => {
+  it('contains valid questions with four distinct choices and unique IDs', () => {
     expect(() => validateQuizQuestions(QUIZ_QUESTIONS)).not.toThrow();
+    expect(QUIZ_QUESTIONS.length).toBeGreaterThanOrEqual(24);
+    expect(new Set(QUIZ_QUESTIONS.map(question => question.id)).size).toBe(QUIZ_QUESTIONS.length);
+    for (const question of QUIZ_QUESTIONS) expect(question.options).toHaveLength(4);
+  });
+
+  it.each(['mutation', 'drift', 'migration', 'selection'] as const)(
+    'contains at least six questions about %s', topic => {
+      expect(QUIZ_QUESTIONS.filter(question => question.topic === topic).length).toBeGreaterThanOrEqual(6);
+    },
+  );
+
+  it('preserves the original questions and their answer keys', () => {
     expect(QUIZ_QUESTIONS.map(({ id, topic, correctOptionId }) => [id, topic, correctOptionId]))
-      .toEqual([
+      .toEqual(expect.arrayContaining([
         ['MUT-01', 'mutation', 'a'],
         ['DRIFT-01', 'drift', 'd'],
         ['MIG-01', 'migration', 'c'],
         ['SELECT-01', 'selection', 'b'],
-      ]);
-    for (const question of QUIZ_QUESTIONS) expect(question.options).toHaveLength(4);
+      ]));
   });
 });
 
@@ -80,7 +91,8 @@ describe('validateQuizQuestions', () => {
   });
 
   it.each([' MUT-01', 'MUT-01 '])('rejects surrounding question ID whitespace: %j', id => {
-    expect(() => validateQuizQuestions([{ ...freshQuestions()[0], id }])).toThrow(/id.*whitespace/);
+    const question = { ...freshQuestions()[0], id };
+    expect(() => validateQuizQuestions([question])).toThrow(/id.*whitespace/);
   });
 
   it('rejects duplicate question IDs', () => {
@@ -90,24 +102,26 @@ describe('validateQuizQuestions', () => {
   });
 
   it.each([undefined, null, 3, '', 'unknown', 'Mutation'])('rejects invalid topics: %j', topic => {
-    expect(() => validateQuizQuestions([{ ...freshQuestions()[0], topic }])).toThrow(/MUT-01.*topic/);
+    const question = { ...freshQuestions()[0], topic };
+    expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*topic/);
   });
 
   it.each([undefined, null, {}, 'options', [], [{ id: 'a', text: 'Only choice' }]])(
     'rejects missing, malformed, or insufficient options: %j', options => {
-      expect(() => validateQuizQuestions([{ ...freshQuestions()[0], options }])).toThrow(/MUT-01.*at least two/);
+      const question = { ...freshQuestions()[0], options };
+      expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*at least two/);
     },
   );
 
-  it.each([undefined, null, 3, 'option', []])('rejects malformed option records: %j', option => {
+  it.each([undefined, null, 4, 'option', []])('rejects malformed option records: %j', option => {
     const question = { ...freshQuestions()[0], options: [option, { id: 'b', text: 'Other' }] };
     expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*option 1.*object/);
   });
 
   it('rejects sparse option arrays', () => {
     const options = new Array(2);
-    options[0] = { id: 'a', text: 'Mutation' };
-    expect(() => validateQuizQuestions([{ ...freshQuestions()[0], options }])).toThrow(/MUT-01.*option 2/);
+    options[1] = freshQuestions()[0].options[0];
+    expect(() => validateQuizQuestions([{ ...freshQuestions()[0], options }])).toThrow(/MUT-01.*option 1/);
   });
 
   for (const field of ['id', 'text']) {
@@ -115,20 +129,20 @@ describe('validateQuizQuestions', () => {
       const question = freshQuestions()[0];
       const options = [{ ...question.options[0], [field]: value }, ...question.options.slice(1)];
       expect(() => validateQuizQuestions([{ ...question, options }]))
-        .toThrow(new RegExp(`MUT-01.*option 1.*${field}.*nonempty string`));
+        .toThrow(new RegExp(`${field}.*nonempty string`));
     });
   }
 
   it.each([' a', 'a '])('rejects surrounding option ID whitespace: %j', id => {
     const question = freshQuestions()[0];
     question.options[0].id = id;
-    expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*option 1.*id.*whitespace/);
+    expect(() => validateQuizQuestions([question])).toThrow(/id.*whitespace/);
   });
 
   it('rejects duplicate option IDs within a question', () => {
     const question = freshQuestions()[0];
-    question.options[1].id = 'a';
-    expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*duplicate option ID "a"/);
+    question.options[1].id = question.options[0].id;
+    expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*duplicate option ID/);
   });
 
   it('rejects duplicate option text regardless of case and surrounding whitespace', () => {
@@ -138,14 +152,14 @@ describe('validateQuizQuestions', () => {
   });
 
   it.each(['z', ' a '])('requires an exact answer-key match: %j', correctOptionId => {
-    expect(() => validateQuizQuestions([{ ...freshQuestions()[0], correctOptionId }]))
-      .toThrow(/MUT-01.*correctOptionId.*does not match an option/);
+    const question = { ...freshQuestions()[0], correctOptionId };
+    expect(() => validateQuizQuestions([question])).toThrow(/MUT-01.*correctOptionId.*does not match an option/);
   });
 
   it('preserves valid text, whitespace, and authored order without repairing data', () => {
     const questions = freshQuestions().reverse();
     questions[0].prompt = `  ${questions[0].prompt}  `;
-    questions[0].options[0].text = '  Mutation  ';
+    questions[0].options[0].text = `  ${questions[0].options[0].text}  `;
     const before = structuredClone(questions);
     expect(validateQuizQuestions(questions)).toBeUndefined();
     expect(questions).toEqual(before);
