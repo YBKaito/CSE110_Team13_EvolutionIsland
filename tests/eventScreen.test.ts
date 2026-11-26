@@ -83,8 +83,8 @@ describe('island changes table (mockup p.42)', () => {
     const text = screenText(spec);
     expect(text[0]).toBe('Island changes at Gen 6');
     expect(text).toContain('Island measure | Before (Gen 5) | After (Gen 6)');
-    expect(text.some((l) => l.startsWith('Rainfall | 50 | '))).toBe(true);
-    expect(text.some((l) => l.startsWith('Hard seeds | 50 | 50'))).toBe(true);
+    expect(text.some((l) => l.startsWith('Rainfall | Normal | '))).toBe(true);
+    expect(text).toContain('Hard seeds | Normal | Normal');
     expect(spec.prompt).toMatchObject({ mode: 'enter', label: 'Press Enter to return to the event.' });
 
     screen.submit('');
@@ -98,6 +98,6 @@ describe('island changes table (mockup p.42)', () => {
     for (let i = 0; i < 20 && !entry; i++) entry = game.step().events.find((e) => e.kind === 'stageChanged');
     const screen = new EventScreenController(new FakeNavigator(), game.state, entry!, () => {});
     screen.submit('1');
-    expect(screenText(screen.spec()).some((l) => l.startsWith('Competing birds | 0 | '))).toBe(true);
+    expect(screenText(screen.spec()).some((l) => l.startsWith('Competing birds | None | '))).toBe(true);
   });
 });

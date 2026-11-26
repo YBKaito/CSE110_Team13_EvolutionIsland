@@ -6,7 +6,7 @@ import { EVENT_DEFS } from '../../events/eventDefinitions';
 import { diffEnvironment, getValue } from '../../models/Environment';
 import type { GameState } from '../../models/GameState';
 import type { EnvironmentState, EnvVariable, EventDef, EventLogEntry } from '../../types';
-import { ENV_LABELS } from '../format';
+import { ENV_LABELS, envLevelLabel } from '../format';
 import { CHOICE_PROMPT, gap, text, type ScreenSpec } from '../ui/screenSpec';
 
 export const EVENT_CARD_CHOICES = 2;
@@ -85,7 +85,8 @@ export function eventCardSpec(view: EventCardView, error?: string): ScreenSpec {
 export function islandChangesSpec(view: EventCardView): ScreenSpec {
   const variables = [...TABLE_VARIABLES];
   if (view.before.competition >= 1 || view.after.competition >= 1) variables.push('competition');
-  const rows = variables.map((v) => [ENV_LABELS[v], String(Math.round(getValue(view.before, v))), String(Math.round(getValue(view.after, v)))]);
+  // Words instead of 0-100 numbers, e.g. "Low" instead of "20".
+  const rows = variables.map((v) => [ENV_LABELS[v], envLevelLabel(v, getValue(view.before, v)), envLevelLabel(v, getValue(view.after, v))]);
 
   return {
     blocks: [

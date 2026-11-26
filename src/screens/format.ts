@@ -49,6 +49,14 @@ export function competitionLabel(value: number): string {
   return 'High';
 }
 
+/** The word for an island measure, e.g. rainfall 20 -> "Scarce". Same wording as the game screen. */
+export function envLevelLabel(variable: EnvVariable, value: number): string {
+  if (variable === 'temperature') return temperatureLabel(value);
+  if (variable === 'predation') return predatorLabel(value);
+  if (variable === 'competition') return competitionLabel(value);
+  return amountLabel(value);
+}
+
 export const ENV_LABELS: Record<EnvVariable, string> = {
   temperature: 'Temperature',
   rainfall: 'Rainfall',
