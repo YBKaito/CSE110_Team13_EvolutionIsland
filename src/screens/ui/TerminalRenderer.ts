@@ -1,7 +1,7 @@
 // Draws a ScreenSpec with Konva: text lines, tables, trait bars, and the typed-input prompt.
 
 import Konva from 'konva';
-import { renderBird } from '../../birds/birdImage';
+import { renderBird } from '../../bird-visual/birdImage';
 import type { Block, BirdArt, PromptSpec, ScreenSpec, TextColor, TextSize } from './screenSpec';
 import {
   BAR,
@@ -487,14 +487,36 @@ export class TerminalRenderer {
     void renderBird(art.look).then((canvas) => {
       if (!canvas || request !== this.artRequest) return;
       const scale = art.height / canvas.height;
+      const pictureWidth = canvas.width * scale;
+
       this.art.add(new Konva.Image({
         image: canvas,
         x: art.x,
         y: art.y,
-        width: canvas.width * scale,
+        width: pictureWidth,
         height: art.height,
         imageSmoothingEnabled: false, // crisp pixel art when scaled
       }));
+
+      if (art.caption) {
+        const width = 260;
+        const x = Math.min(
+          Math.max(art.x + pictureWidth / 2 - width / 2, 0),
+          SCREEN_WIDTH - width,
+        ); // centered under the bird, kept on screen
+        this.art.add(new Konva.Text({
+          x,
+          y: art.y + art.height + 4,
+          width,
+          align: 'center',
+          text: art.caption,
+          fontFamily: FONT_FAMILY,
+          fontSize: FONT_SIZES.small,
+          fill: COLORS.muted,
+          lineHeight: 1.15,
+        }));
+      }
+
       this.layer.batchDraw();
     });
   }

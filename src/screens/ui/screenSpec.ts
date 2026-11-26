@@ -1,6 +1,6 @@
 // A plain description of what a text-style screen shows. Views build these; the Konva renderer draws them.
 // Keeping this free of Konva lets views and controllers be unit-tested without a canvas.
-import type { BirdLook } from '../../birds/birdLook';
+import type { BirdLook } from '../../bird-visual/birdLook';
 
 export type TextSize = 'title' | 'heading' | 'body' | 'small';
 export type TextColor = 'normal' | 'error' | 'success' | 'muted';
@@ -66,6 +66,7 @@ export interface BirdArt {
   x: number;
   y: number;
   height: number; // width follows from the cropped picture's proportions
+  caption?: string;
 }
 
 export interface PromptSpec {

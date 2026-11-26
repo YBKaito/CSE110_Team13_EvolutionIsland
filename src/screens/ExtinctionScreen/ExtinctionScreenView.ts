@@ -5,9 +5,11 @@ import type { TraitName } from '../../types';
 import { capitalize } from '../format';
 import { CHOICE_PROMPT, gap, text, type Block, type ScreenSpec } from '../ui/screenSpec';
 import type { ResultView } from './ExtinctionExplanation';
+import { lookFromChoices } from '../../bird-visual/birdLook';
 
 export const SUMMARY_CHOICES = 3;
 export const WHY_CHOICES = 2;
+const MINIGAME_BIRD = { x: 860, y: 150, height: 320 }; // right-hand side, clear of the shorter lines of text
 
 const TRAIT_LABELS: Record<TraitName, string> = { beak: 'Beak', body: 'Body', feathers: 'Feathers', color: 'Color' };
 
@@ -28,12 +30,13 @@ export function introSpec(species: StartingSpecies): ScreenSpec {
       text(`Think about how each change to the island affects ${species.name}.`),
     ],
     prompt: { mode: 'enter', label: 'Press Enter to continue.' },
+    art: { look: lookFromChoices(species.traits), ...MINIGAME_BIRD },
   };
 }
 
 export const reviewChoiceNumber = (condition: Condition): number => condition.choices.length + 1;
 
-export function conditionSpec(index: number, error?: string): ScreenSpec {
+export function conditionSpec(index: number, error?: string, species?: StartingSpecies): ScreenSpec {
   const condition = CONDITIONS[index];
   return {
     blocks: [
@@ -43,6 +46,7 @@ export function conditionSpec(index: number, error?: string): ScreenSpec {
       text(`${reviewChoiceNumber(condition)}. Review species and traits`, { indent: 16 }),
     ],
     prompt: { mode: 'choice', label: CHOICE_PROMPT, error },
+    art: species ? { look: lookFromChoices(species.traits), ...MINIGAME_BIRD } : undefined,
   };
 }
 

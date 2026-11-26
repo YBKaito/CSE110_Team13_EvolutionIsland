@@ -1,7 +1,7 @@
 // Turns a BirdLook into a drawable canvas: the right body sprite, recolored, with a beak overlay on top, then cropped.
 
 import {
-  COLOR_PALETTES, hasBeakOverlay, SPRITE_CROP, SPRITE_PALETTE, type BirdLook, type BirdPalette,
+  COLOR_PALETTES, hasBeakOverlay, SPRITE_CROP, SPRITE_PALETTE, type BirdLook, type BirdPalette, feetShifts
 } from './birdLook';
 
 const BODY_URLS = [
@@ -69,8 +69,52 @@ function recolored(sprite: HTMLImageElement, palette: BirdPalette): HTMLCanvasEl
   return canvas;
 }
 
+/**
+ * The y of the lowest pixel of the feet. Only the right half of the bird is scanned,
+ * because the tail tip hangs lower than the feet on the bigger birds.
+ */
+function feetBottom(sprite: HTMLImageElement): number {
+  const { naturalWidth: w, naturalHeight: h } = sprite;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(sprite, 0, 0);
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const opaque = (x: number, y: number) => data[(y * w + x) * 4 + 3] > 0;
+
+  let left = w;
+  let right = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (opaque(x, y)) {
+        if (x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+  }
+  if (right < 0) return h - 1; // empty sprite: nothing to measure
+  const middle = left + Math.floor((right - left) / 2);
+  for (let y = h - 1; y >= 0; y--) {
+    for (let x = middle; x <= right; x++) if (opaque(x, y)) return y;
+  }
+  return h - 1;
+}
+
+let shifts: Promise<number[]> | null = null;
+
+/** How far each body sprite moves down so all three stand on the same ground line. Measured once. */
+function groundShifts(): Promise<number[]> {
+  shifts ??= Promise.all(BODY_URLS.map(loadImage)).then((sprites) => {
+    const loaded = sprites.filter((s): s is HTMLImageElement => s !== null);
+    return loaded.length === sprites.length ? feetShifts(loaded.map(feetBottom)) : sprites.map(() => 0); // a missing file: no alignment
+  });
+  return shifts;
+}
+
 async function compose(look: BirdLook): Promise<HTMLCanvasElement | null> {
   const body = await loadImage(BODY_URLS[look.body]);
+  const shift = (await groundShifts())[look.body];
   if (!body) return null;
   const canvas = recolored(body, COLOR_PALETTES[look.color]);
 
@@ -85,7 +129,7 @@ async function compose(look: BirdLook): Promise<HTMLCanvasElement | null> {
   const out = document.createElement('canvas');
   out.width = SPRITE_CROP.width;
   out.height = SPRITE_CROP.height;
-  out.getContext('2d')!.drawImage(canvas, -SPRITE_CROP.x, -SPRITE_CROP.y);
+  out.getContext('2d')!.drawImage(canvas, -SPRITE_CROP.x, -SPRITE_CROP.y + shift);
   return out;
 }
 
