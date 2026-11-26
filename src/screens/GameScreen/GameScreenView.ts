@@ -3,6 +3,8 @@ import type { GameState } from '../../models/GameState';
 import { countTraits } from '../../simulation/Population';
 import { TRAIT_NAMES, TRAIT_OPTIONS } from '../../simulation/traitContent';
 import { DEATH_CAUSES, type TraitName, type Traits } from '../../types';
+import { dominantLook} from '../../bird-visual/birdLook';
+
 import {
   amountLabel,
   capitalize,
@@ -19,6 +21,9 @@ import { traitOptionColor } from '../GameOverScreen/traitHistory';
 export const GENERATION_CHOICES = 3;
 export const QUIT_CHOICES = 2;
 export const EXTINCT_CHOICES = 1;
+
+/** Top-right corner, above the island rows, so it doesn't cover the text. */
+const GAME_BIRD = { x: 1050, y: 185, height: 190 };    //{ x: 1105, y: 16, height: 175 };
 
 export interface GenerationView {
   generation: number;
@@ -250,6 +255,7 @@ export function generationScreenSpec(
       label: CHOICE_PROMPT,
       error,
     },
+    art: { look: dominantLook(view.traitCounts),caption: "Current most common bird", ...GAME_BIRD },
   };
 }
 
