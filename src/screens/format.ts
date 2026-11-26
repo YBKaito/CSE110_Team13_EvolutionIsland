@@ -1,6 +1,7 @@
 // Turning simulation numbers into words a 12-year-old can read, and parsing typed menu choices.
 
 import type { DeathCause, EnvVariable } from '../types';
+import type { TextColor } from './ui/screenSpec';
 
 /** Returns the chosen option (1..count) or null if the input isn't one of them. */
 export function parseChoice(input: string, count: number): number | null {
@@ -55,6 +56,27 @@ export function envLevelLabel(variable: EnvVariable, value: number): string {
   if (variable === 'predation') return predatorLabel(value);
   if (variable === 'competition') return competitionLabel(value);
   return amountLabel(value);
+}
+
+/**
+ * Color for an island measure's word: green when it helps the flock (plenty of food, few predators),
+ * red when it hurts (scarce food, many predators, too hot or cold), white when normal.
+ */
+export function envLevelColor(variable: EnvVariable, value: number): TextColor {
+  const label = envLevelLabel(variable, value);
+  if (variable === 'temperature') return label === 'Normal' ? 'normal' : 'error';
+  if (variable === 'predation') return label === 'Low' ? 'success' : label === 'High' ? 'error' : 'normal';
+  if (variable === 'competition') return label === 'None' ? 'success' : label === 'Low' ? 'normal' : 'error';
+  if (label === 'High') return 'success';
+  return label === 'Normal' ? 'normal' : 'error';
+}
+
+/** " (+)" if the measure went up, " (-)" if it went down, "" if it stayed the same (after rounding). */
+export function changeMarker(before: number, after: number): string {
+  const diff = Math.round(after) - Math.round(before);
+  if (diff > 0) return ' (+)';
+  if (diff < 0) return ' (-)';
+  return '';
 }
 
 export const ENV_LABELS: Record<EnvVariable, string> = {

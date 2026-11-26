@@ -101,3 +101,35 @@ describe('island changes table (mockup p.42)', () => {
     expect(screenText(screen.spec()).some((l) => l.startsWith('Competing birds | None | '))).toBe(true);
   });
 });
+
+describe('island changes words and colors (issues #106, #107)', () => {
+  function islandTable() {
+    const { screen } = cardFor(droughtStart);
+    screen.submit('1');
+    const table = screen.spec().blocks.find((b) => b.kind === 'table');
+    if (table?.kind !== 'table') throw new Error('no table');
+    return table;
+  }
+
+  it('shows words instead of 0-100 numbers', () => {
+    const table = islandTable();
+    for (const row of table.rows) {
+      expect(row[1]).not.toMatch(/\d/);
+      expect(row[2]).not.toMatch(/\d/);
+    }
+  });
+
+  it('marks a drop with (-) and colors the After cell to match its level', () => {
+    const table = islandTable();
+    const r = table.rows.findIndex((row) => row[0] === 'Rainfall');
+    expect(table.rows[r][2]).toMatch(/\(-\)$/);
+    const word = table.rows[r][2].replace(' (-)', '');
+    expect(table.cellColors?.[r][2]).toBe(word === 'Normal' ? 'normal' : word === 'High' ? 'success' : 'error');
+  });
+
+  it('gives one color per cell', () => {
+    const table = islandTable();
+    expect(table.cellColors).toHaveLength(table.rows.length);
+    table.cellColors!.forEach((colors) => expect(colors).toHaveLength(3));
+  });
+});
