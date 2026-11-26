@@ -19,6 +19,8 @@ export interface HatchingRhythmOptions {
   onExit: (result: HatchResult | null) => void;
   /** Seed for the bar pattern; random by default. */
   seed?: number;
+  /** Footer shown once the song is over; defaults to going back to the minigames menu. */
+  finishedHint?: string;
 }
 
 export class HatchingRhythmController {
@@ -33,7 +35,7 @@ export class HatchingRhythmController {
     const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
     const fitness = options.fitness ?? DIFFICULTY_FITNESS[options.difficulty];
     this.game = new HatchingRhythmGame(difficultyForFitness(fitness), trackForFitness(fitness), seed);
-    this.view = new HatchingRhythmView(container, this.game);
+    this.view = new HatchingRhythmView(container, this.game, options.finishedHint);
   }
 
   start(): void {

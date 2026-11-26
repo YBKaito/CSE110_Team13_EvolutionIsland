@@ -13,6 +13,8 @@ export interface ExtinctionScreenOptions {
   avoidSpecies?: string;	//So retry doesn't choose the same species again
   onRestart: (played: StartingSpecies) => void;
   onExit: () => void;
+  /** Wording for choice 2 on the last screen; defaults to "Back to minigames". */
+  exitLabel?: string;
 }
 
 type Step = 'intro' | 'condition' | 'species' | 'summary' | 'result' | 'why';
@@ -40,7 +42,7 @@ export class ExtinctionScreenController implements Screen {
       case 'species': return introSpec(this.species); // reviewing the species
       case 'summary': return summarySpec(this.scenario, this.error);
       case 'result': return resultSpec(this.requireResult());
-      case 'why': return whySpec(this.requireResult(), this.error);
+      case 'why': return whySpec(this.requireResult(), this.error, this.options.exitLabel);
     }
   }
 

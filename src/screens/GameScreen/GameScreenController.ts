@@ -25,12 +25,24 @@ export interface GameScreenOptions {
   simulation?: Pick<GameController, 'step' | 'advance'>;
   /** Opens the evolution choice after any event cards have been shown. */
   onCheckpoint?: () => boolean;
+  /**
+   * Back between generations with nothing else to show. Return true after
+   * opening a minigame; call `resume` once it closes to come back here.
+   */
+  onBetweenGenerations?: (resume: () => void) => boolean;
+  /**
+   * The run ended (generation limit or extinction). Return true after opening
+   * an end-of-run minigame; call `finish` once it closes to show Game Over.
+   * Not called when the player quits.
+   */
+  onRunEnd?: (finish: () => void) => boolean;
 }
 
 export class GameScreenController implements Screen {
   private mode: 'generation' | 'confirmQuit' = 'generation';
   private error: string | undefined;
   private gameOverShown = false;
+  private endingRun = false;
 
   constructor(
     private readonly nav: ScreenNavigator,
@@ -44,9 +56,9 @@ export class GameScreenController implements Screen {
   }
 
   submit(input: string): void {
-    if (this.gameOverShown) return;
+    if (this.gameOverShown || this.endingRun) return;
     if (this.mode === 'confirmQuit') return this.submitQuit(input);
-    if (this.shouldShowGameOver()) return this.showGameOver();
+    if (this.shouldShowGameOver()) return this.endRun();
 
     const choice = parseChoice(input, GENERATION_CHOICES);
     const simulation = this.options.simulation ?? this.game;
@@ -86,12 +98,15 @@ export class GameScreenController implements Screen {
     if (!next) {
       // US6: Show Game Over if the flock is extinct.
       if (this.shouldShowGameOver()) {
-        this.showGameOver();
+        this.endRun();
         return;
       }
 
       // US5: Show evolution choice after all event cards.
       if (this.options.onCheckpoint?.()) return;
+
+      // Minigames (US8, US10) may appear between generations.
+      if (this.options.onBetweenGenerations?.(() => this.nav.show(this))) return;
 
       // Otherwise return to the generation screen.
       this.nav.show(this);
@@ -106,6 +121,14 @@ export class GameScreenController implements Screen {
         () => this.showEvents(rest),
       ),
     );
+  }
+
+  /** The run is over: let the end-of-run minigame (US9 quiz) play first, then show Game Over. */
+  private endRun(): void {
+    if (this.gameOverShown || this.endingRun) return;
+    this.endingRun = true;
+    if (this.options.onRunEnd?.(() => this.showGameOver())) return;
+    this.showGameOver();
   }
 
   private showGameOver(endReason?: GameOverEndReason): void {

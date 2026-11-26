@@ -58,7 +58,11 @@ export class HatchingRhythmView {
     hatched: loadImage(EGG_SPRITES.hatched),
   };
 
-  constructor(private readonly container: HTMLDivElement, game: HatchingRhythmGame) {
+  constructor(
+    private readonly container: HTMLDivElement,
+    game: HatchingRhythmGame,
+    private readonly finishedHint = 'Song over! Press Enter to go back to the minigames.',
+  ) {
     this.stage = new Konva.Stage({ container, width: SCREEN_WIDTH, height: SCREEN_HEIGHT });
     this.stage.add(this.layer);
     this.layer.imageSmoothingEnabled(false); // keep the pixel art crisp when scaled
@@ -190,7 +194,7 @@ export class HatchingRhythmView {
       this.results.text('');
     }
 
-    this.footer.text(game.isFinished ? 'Song over! Press Enter to go back to the minigames.' : 'Press Esc to quit.');
+    this.footer.text(game.isFinished ? this.finishedHint : 'Press Esc to quit.');
     this.layer.batchDraw();
   }
 
