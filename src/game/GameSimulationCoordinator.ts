@@ -15,6 +15,8 @@ export class GameSimulationCoordinator implements SimulationCoordinator {
 
   private paused = false;
   private ended = false;
+  /** Hatching Rhythm (US10) result waiting to be used by the next generation only. */
+  private pendingBirthMultiplier: number | undefined;
 
   constructor(readonly game: GameController) {}
 
@@ -27,12 +29,18 @@ export class GameSimulationCoordinator implements SimulationCoordinator {
   pause(): void { this.paused = true; }
   endRun(): void { this.ended = true; this.paused = false; }
 
+  /** Scale births in the next simulated generation only (Hatching Rhythm result, US10). */
+  setNextBirthMultiplier(multiplier: number): void { this.pendingBirthMultiplier = multiplier; }
+  getNextBirthMultiplier(): number | undefined { return this.pendingBirthMultiplier; }
+
   /** Advance one generation, sending the matching environment update first. */
   step(options: StepOptions = {}): StepOutcome {
     if (this.isEnded()) throw new Error('The simulation has ended.');
     if (this.paused) throw new Error('Finish the evolution choice before continuing.');
 
-    const outcome = this.game.step(options);
+    const birthMultiplier = options.birthMultiplier ?? this.pendingBirthMultiplier;
+    const outcome = this.game.step({ ...options, birthMultiplier });
+    this.pendingBirthMultiplier = undefined;
     const generation = outcome.result.generation;
     if (outcome.result.extinct) this.endRun();
     else if (this.isCheckpoint(generation)) this.pause();

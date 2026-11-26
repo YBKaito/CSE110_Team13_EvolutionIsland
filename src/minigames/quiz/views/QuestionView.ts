@@ -65,15 +65,19 @@ export class QuestionView extends QuizScreenElement {
       className: 'quiz-button quiz-button--primary',
       attrs: { type: 'submit', 'data-focus-key': 'submit' },
     });
-    const exitButton = el('button', {
-      className: 'quiz-button', text: vm.exitLabel,
-      attrs: { type: 'button', 'data-focus-key': 'exit' },
-    });
-    this.listen(exitButton, 'click', () => this.handlers?.onExit());
+    const actions: HTMLElement[] = [this.submitButton];
+    if (this.state.canExit !== false) {
+      const exitButton = el('button', {
+        className: 'quiz-button', text: vm.exitLabel,
+        attrs: { type: 'button', 'data-focus-key': 'exit' },
+      });
+      this.listen(exitButton, 'click', () => this.handlers?.onExit());
+      actions.push(exitButton);
+    }
 
     const form = el('form', { attrs: { novalidate: '' } }, [
       this.fieldset,
-      el('div', { className: 'quiz-actions' }, [this.submitButton, exitButton]),
+      el('div', { className: 'quiz-actions' }, actions),
     ]);
     this.listen(form, 'submit', () => this.onSubmit());
 

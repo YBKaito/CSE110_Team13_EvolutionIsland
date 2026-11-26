@@ -3,7 +3,7 @@ import { QuizController } from '../../src/minigames/quiz/QuizController';
 import { QUIZ_QUESTIONS } from '../../src/minigames/quiz/questions';
 import type {
   ExitConfirmationHandlers, ExitConfirmationRenderState, FeedbackViewHandlers,
-  FeedbackViewRenderState, IntroViewHandlers, QuestionViewHandlers, QuestionViewRenderState,
+  FeedbackViewRenderState, IntroViewHandlers, IntroViewRenderState, QuestionViewHandlers, QuestionViewRenderState,
   QuizQuestion, ResultsViewHandlers, ResultsViewRenderState,
 } from '../../src/minigames/quiz/quizTypes';
 import { FIXTURE_QUESTIONS, mixedResult } from '../helpers/quizFixtures';
@@ -21,9 +21,9 @@ class FakeView<State, Handlers> {
   reset() { this.resets++; }
 }
 
-function setup(questions: readonly QuizQuestion[] = QUIZ_QUESTIONS) {
+function setup(questions: readonly QuizQuestion[] = QUIZ_QUESTIONS, extra: { required?: boolean } = {}) {
   const views = {
-    intro: new FakeView<void, IntroViewHandlers>(),
+    intro: new FakeView<IntroViewRenderState | undefined, IntroViewHandlers>(),
     question: new FakeView<QuestionViewRenderState, QuestionViewHandlers>(),
     feedback: new FakeView<FeedbackViewRenderState, FeedbackViewHandlers>(),
     results: new FakeView<ResultsViewRenderState, ResultsViewHandlers>(),
@@ -32,7 +32,7 @@ function setup(questions: readonly QuizQuestion[] = QUIZ_QUESTIONS) {
   };
   const onExit = vi.fn();
   const onComplete = vi.fn();
-  const controller = new QuizController(views, { questions, onExit, onComplete });
+  const controller = new QuizController(views, { questions, onExit, onComplete, ...extra });
   controller.show();
   return { controller, views, onExit, onComplete };
 }
@@ -312,5 +312,69 @@ describe('quiz controller wiring', () => {
     }
     expect(views.results.current.result).toMatchObject({ correct: Math.ceil(count / 2), total: count });
     expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('required quiz (end of a run)', () => {
+  const required = (questions: readonly QuizQuestion[] = makeQuestions(2)) => setup(questions, { required: true });
+
+  it('hides Back on the intro and Exit on question and feedback screens', () => {
+    const { views } = required();
+    expect(views.intro.renders).toEqual([{ canGoBack: false }]);
+    views.intro.handlers.onStart();
+    expect(views.question.current.canExit).toBe(false);
+    views.question.handlers.onSubmit('yes');
+    expect(views.feedback.current.canExit).toBe(false);
+  });
+
+  it('cannot be skipped from the intro or left mid-round', () => {
+    const { views, onExit } = required();
+    views.intro.handlers.onBack();
+    expect(onExit).not.toHaveBeenCalled();
+    expect(views.intro.visible).toBe(true);
+
+    views.intro.handlers.onStart();
+    views.question.handlers.onExit();
+    expect(views.confirmation.renders.some(state => state.open)).toBe(false);
+    views.question.handlers.onSubmit('yes');
+    views.feedback.handlers.onExit();
+    expect(views.confirmation.renders.some(state => state.open)).toBe(false);
+    expect(views.feedback.visible).toBe(true);
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('only exits after the player finishes and presses Done', () => {
+    const { views, onExit, onComplete } = required();
+    views.intro.handlers.onStart();
+    completeRound(views, ['yes', 'no']);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onExit).not.toHaveBeenCalled();
+    views.results.handlers.onDone();
+    expect(onExit).toHaveBeenCalledTimes(1);
+  });
+
+  it('still allows Try again before Done', () => {
+    const { views, onExit } = required();
+    views.intro.handlers.onStart();
+    completeRound(views, ['yes', 'yes']);
+    views.results.handlers.onRetry();
+    expect(views.question.visible).toBe(true);
+    expect(views.question.current.canExit).toBe(false);
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('lets the player leave when the quiz cannot be set up, instead of trapping them', () => {
+    const { views, onExit } = required([]);
+    views.intro.handlers.onStart();
+    expect(views.unavailable.visible).toBe(true);
+    views.unavailable.handlers.onBack();
+    expect(onExit).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps Back and Exit when not required', () => {
+    const { views } = setup(makeQuestions(1));
+    expect(views.intro.renders).toEqual([undefined]);
+    views.intro.handlers.onStart();
+    expect(views.question.current).not.toHaveProperty('canExit');
   });
 });

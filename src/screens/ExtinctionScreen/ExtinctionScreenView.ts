@@ -84,7 +84,7 @@ export function resultSpec(view: ResultView): ScreenSpec {
 }
 
 //How the player's choices differ from the fastest extinction choices
-export function whySpec(view: ResultView, error?: string): ScreenSpec {
+export function whySpec(view: ResultView, error?: string, exitLabel = 'Back to minigames'): ScreenSpec {
   const lines = view.missed.length > 0
     ? view.missed
     : [view.matchedFastest || view.fastestAt === null
@@ -97,7 +97,7 @@ export function whySpec(view: ResultView, error?: string): ScreenSpec {
       gap(16),
       text('You may:'),
       text('1. Try again', { indent: 16 }),
-      text('2. Back to minigames', { indent: 16 }),
+      text(`2. ${exitLabel}`, { indent: 16 }),
     ],
     prompt: { mode: 'choice', label: CHOICE_PROMPT, error },
   };

@@ -6,6 +6,7 @@ import {
   difficultyForFitness,
   EASY_TRACK,
   HARD_TRACK,
+  randomFlockBirdFitness,
   trackForFitness,
 } from '../../src/screens/HatchingRhythm/difficulty';
 import { droughtEnv, envWith, MEDIUM_BIRD } from '../helpers/fixtures';
@@ -63,5 +64,20 @@ describe('bird fitness', () => {
     const drought = birdFitness(MEDIUM_BIRD, droughtEnv());
     expect(drought).toBeLessThan(normal);
     expect(trackForFitness(drought).boxWidth).toBeLessThan(trackForFitness(normal).boxWidth);
+  });
+});
+
+describe('fitness of a bird from the current flock', () => {
+  const weak = { beak: 0, body: 2, feathers: 1, color: 3 };
+  const flock = [{ traits: MEDIUM_BIRD }, { traits: weak }];
+
+  it('uses the fitness of the bird the random pick lands on', () => {
+    const env = droughtEnv();
+    expect(randomFlockBirdFitness(flock, env, () => 0)).toBe(birdFitness(MEDIUM_BIRD, env));
+    expect(randomFlockBirdFitness(flock, env, () => 0.99)).toBe(birdFitness(weak, env));
+  });
+
+  it('returns null for an empty flock', () => {
+    expect(randomFlockBirdFitness([], envWith())).toBeNull();
   });
 });

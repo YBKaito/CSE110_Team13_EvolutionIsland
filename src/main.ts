@@ -3,6 +3,7 @@
 // Dev URL options skip the menu and start a run with a default species:
 //   ?seed=42        repeatable run
 //   ?script=mockup  drought at Gen 6, predator at Gen 24
+//   &minigames=always  a minigame every 5 generations (no random chance), for testing
 
 import "@fontsource/vt323/400.css";
 import "./styles/styles.css";
@@ -10,7 +11,9 @@ import "./styles/styles.css";
 import { MOCKUP_SCRIPT } from "./events/eventDefinitions";
 import { RandomScheduler, ScriptedScheduler, type EventScheduler } from "./events/EventFactory";
 import { GAME_OVER_PREVIEW_GENERATION, GameController } from "./game/GameController";
-import { startGameSession } from "./game/startGameSession";
+import { BACK_TO_ISLAND, startGameSession, type RunMinigameLaunchers } from "./game/startGameSession";
+import { startQuizSession } from "./minigames/quiz/startQuizSession";
+import { MinigameManager } from "./minigames/MinigameManager";
 import { ScreenState, type StartingSpecies } from "./models/GameState";
 import { toStartingSpecies } from "./models/Species";
 
@@ -23,6 +26,7 @@ import { ExtinctionScreenController } from './screens/ExtinctionScreen/Extinctio
 
 import { GameScreenController } from "./screens/GameScreen/GameScreenController";
 import { HatchingRhythmController } from "./screens/HatchingRhythm/HatchingRhythmController";
+import { difficultyForFitness } from "./screens/HatchingRhythm/difficulty";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
 
@@ -38,6 +42,8 @@ const useScript = params.get("script") === "mockup";
 const makeScheduler = (): EventScheduler =>
   useScript ? new ScriptedScheduler(MOCKUP_SCRIPT) : new RandomScheduler();
 const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
+const makeMinigameManager = (): MinigameManager =>
+  new MinigameManager(params.get("minigames") === "always" ? { chance: 1 } : {});
 
 function getEl<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -123,6 +129,45 @@ async function boot(): Promise<void> {
       }).start();
     };
 
+    // US8/US9/US10 during a run: the Konva game screens hide while a DOM minigame
+    // is up, so ScreenHost ignores the keys meant for the minigame.
+    const showRunMinigame = (): void => {
+      app.hidden = true;
+      minigame.hidden = false;
+    };
+    const backToRun = (): void => {
+      minigame.hidden = true;
+      app.hidden = false;
+    };
+    const runMinigames: RunMinigameLaunchers = {
+      playHatching(fitness, done) {
+        showRunMinigame();
+        // The flock's own fitness sets the song, not the minigames menu's difficulty.
+        new HatchingRhythmController(minigame, {
+          fitness,
+          difficulty: difficultyForFitness(fitness),
+          finishedHint: `Song over! Press Enter to go ${BACK_TO_ISLAND.toLowerCase()}.`,
+          onExit: (result) => {
+            backToRun();
+            done(result);
+          },
+        }).start();
+      },
+      playQuiz(done) {
+        showRunMinigame();
+        const finish = (): void => {
+          backToRun();
+          done();
+        };
+        try {
+          // Required: no Back or Exit; the run ends once the player presses Done.
+          startQuizSession(minigame, { onExit: finish, required: true });
+        } catch {
+          finish(); // No quiz available: go straight to Game Over.
+        }
+      },
+    };
+
     const startRun = (species: StartingSpecies, seed: number): void => {
     
     session?.dispose();
@@ -139,6 +184,8 @@ async function boot(): Promise<void> {
     session = startGameSession(screens, game, {
       onQuit: backToMenu,
       onRestart: () => startRun(species, randomSeed()),
+      minigames: runMinigames,
+      manager: makeMinigameManager(),
     });
   };
 

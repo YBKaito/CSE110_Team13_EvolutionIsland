@@ -52,3 +52,19 @@ export function birdFitness(traits: Traits, env: EnvironmentState): number {
   const raw = reproductiveFitness(traits, env);
   return clamp((raw - SIM.REP_FIT_MIN) / (SIM.REP_FIT_MAX - SIM.REP_FIT_MIN), 0, 1);
 }
+
+/**
+ * Fitness of one bird picked at random from the current flock, so a run's
+ * Hatching Rhythm difficulty reflects how well the flock suits the island now.
+ * Uses its own random source so the seeded simulation is not touched.
+ * Returns null for an empty flock.
+ */
+export function randomFlockBirdFitness(
+  birds: readonly { traits: Traits }[],
+  env: EnvironmentState,
+  random: () => number = Math.random,
+): number | null {
+  if (birds.length === 0) return null;
+  const bird = birds[Math.min(birds.length - 1, Math.floor(random() * birds.length))];
+  return birdFitness(bird.traits, env);
+}
