@@ -1,17 +1,16 @@
 import { CONDITIONS, type Condition, type Scenario } from '../../minigames/ExtinctionPrediction/ExtinctionModel';
 import type { StartingSpecies } from '../../models/GameState';
 import { TRAIT_NAMES, TRAIT_OPTIONS } from '../../simulation/traitContent';
-import type { TraitName } from '../../types';
 import { capitalize } from '../format';
 import { CHOICE_PROMPT, gap, text, type Block, type ScreenSpec } from '../ui/screenSpec';
 import type { ResultView } from './ExtinctionExplanation';
 import { lookFromChoices } from '../../bird-visual/birdLook';
+import { simulationTraitLabel } from '../../traits';
+
 
 export const SUMMARY_CHOICES = 3;
 export const WHY_CHOICES = 2;
 const MINIGAME_BIRD = { x: 860, y: 150, height: 320 }; // right-hand side, clear of the shorter lines of text
-
-const TRAIT_LABELS: Record<TraitName, string> = { beak: 'Beak', body: 'Body', feathers: 'Feathers', color: 'Color' };
 
 export function introSpec(species: StartingSpecies): ScreenSpec {
   return {
@@ -23,7 +22,7 @@ export function introSpec(species: StartingSpecies): ScreenSpec {
       {
         kind: 'table',
         columns: ['Species:', species.name],
-        rows: TRAIT_NAMES.map((t) => [`${TRAIT_LABELS[t]}:`, capitalize(TRAIT_OPTIONS[t][species.traits[t]])]),
+        rows: TRAIT_NAMES.map((t) => [`${simulationTraitLabel(t, 'shortLabel')}:`, capitalize(TRAIT_OPTIONS[t][species.traits[t]])]),
         columnWidths: [220, 300],
       },
       gap(10),

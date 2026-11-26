@@ -83,8 +83,8 @@ describe('island changes table (mockup p.42)', () => {
     const text = screenText(spec);
     expect(text[0]).toBe('Island changes at Gen 6');
     expect(text).toContain('Island measure | Before (Gen 5) | After (Gen 6)');
-    expect(text.some((l) => l.startsWith('Rainfall | 50 | '))).toBe(true);
-    expect(text.some((l) => l.startsWith('Hard seeds | 50 | 50'))).toBe(true);
+    expect(text.some((l) => l.startsWith('Rainfall | Normal | '))).toBe(true);
+    expect(text).toContain('Hard seeds | Normal | Normal');
     expect(spec.prompt).toMatchObject({ mode: 'enter', label: 'Press Enter to return to the event.' });
 
     screen.submit('');
@@ -98,6 +98,38 @@ describe('island changes table (mockup p.42)', () => {
     for (let i = 0; i < 20 && !entry; i++) entry = game.step().events.find((e) => e.kind === 'stageChanged');
     const screen = new EventScreenController(new FakeNavigator(), game.state, entry!, () => {});
     screen.submit('1');
-    expect(screenText(screen.spec()).some((l) => l.startsWith('Competing birds | 0 | '))).toBe(true);
+    expect(screenText(screen.spec()).some((l) => l.startsWith('Competing birds | None | '))).toBe(true);
+  });
+});
+
+describe('island changes words and colors (issues #106, #107)', () => {
+  function islandTable() {
+    const { screen } = cardFor(droughtStart);
+    screen.submit('1');
+    const table = screen.spec().blocks.find((b) => b.kind === 'table');
+    if (table?.kind !== 'table') throw new Error('no table');
+    return table;
+  }
+
+  it('shows words instead of 0-100 numbers', () => {
+    const table = islandTable();
+    for (const row of table.rows) {
+      expect(row[1]).not.toMatch(/\d/);
+      expect(row[2]).not.toMatch(/\d/);
+    }
+  });
+
+  it('marks a drop with (-) and colors the After cell to match its level', () => {
+    const table = islandTable();
+    const r = table.rows.findIndex((row) => row[0] === 'Rainfall');
+    expect(table.rows[r][2]).toMatch(/\(-\)$/);
+    const word = table.rows[r][2].replace(' (-)', '');
+    expect(table.cellColors?.[r][2]).toBe(word === 'Normal' ? 'normal' : word === 'High' ? 'success' : 'error');
+  });
+
+  it('gives one color per cell', () => {
+    const table = islandTable();
+    expect(table.cellColors).toHaveLength(table.rows.length);
+    table.cellColors!.forEach((colors) => expect(colors).toHaveLength(3));
   });
 });

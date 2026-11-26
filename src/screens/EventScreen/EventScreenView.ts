@@ -1,13 +1,12 @@
 // What the event card (mockup p.41/43/44) and the island-changes table (p.42) show.
 // Pure functions: game state + event log entry in, ScreenSpec out.
 
-import { ENV } from '../../constants';
 import { EVENT_DEFS } from '../../events/eventDefinitions';
 import { diffEnvironment, getValue } from '../../models/Environment';
 import type { GameState } from '../../models/GameState';
 import type { EnvironmentState, EnvVariable, EventDef, EventLogEntry } from '../../types';
-import { ENV_LABELS } from '../format';
-import { CHOICE_PROMPT, gap, text, type ScreenSpec } from '../ui/screenSpec';
+import { changeMarker, ENV_LABELS, envLevelColor, envLevelLabel } from '../format';
+import { CHOICE_PROMPT, gap, text, type ScreenSpec, type TextColor } from '../ui/screenSpec';
 
 export const EVENT_CARD_CHOICES = 2;
 
@@ -85,7 +84,15 @@ export function eventCardSpec(view: EventCardView, error?: string): ScreenSpec {
 export function islandChangesSpec(view: EventCardView): ScreenSpec {
   const variables = [...TABLE_VARIABLES];
   if (view.before.competition >= 1 || view.after.competition >= 1) variables.push('competition');
-  const rows = variables.map((v) => [ENV_LABELS[v], String(Math.round(getValue(view.before, v))), String(Math.round(getValue(view.after, v)))]);
+  // Words instead of 0-100 numbers (e.g. "Low"), colored green/red, with (+)/(-) on the After column.
+  const rows: string[][] = [];
+  const cellColors: TextColor[][] = [];
+  for (const v of variables) {
+    const before = getValue(view.before, v);
+    const after = getValue(view.after, v);
+    rows.push([ENV_LABELS[v], envLevelLabel(v, before), envLevelLabel(v, after) + changeMarker(before, after)]);
+    cellColors.push(['normal', envLevelColor(v, before), envLevelColor(v, after)]);
+  }
 
   return {
     blocks: [
@@ -97,9 +104,10 @@ export function islandChangesSpec(view: EventCardView): ScreenSpec {
         size: 'body',
         columns: ['Island measure', `Before (Gen ${view.beforeGeneration})`, `After (Gen ${view.generation})`],
         rows,
+        cellColors,
         columnWidths: [500, 280, 260],
       },
-      text(`Island measures start at ${ENV.NORMAL} (normal) when your flock arrives, on a scale of 0 to ${ENV.MAX}.`, { size: 'small' }),
+      text('Green helps your flock, red makes life harder. (+) went up, (-) went down.', { size: 'small' }),
     ],
     prompt: { mode: 'enter', label: 'Press Enter to return to the event.' },
   };

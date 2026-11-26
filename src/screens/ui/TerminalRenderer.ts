@@ -420,7 +420,7 @@ export class TerminalRenderer {
           x,
           y + pad / 2,
           size,
-          'normal',
+          r === 0 ? 'normal' : block.cellColors?.[r - 1]?.[c] ?? 'normal',
           r === 0 && boldHeader,
           block.columnWidths[c],
           block.align === 'center' ? 'center' : 'left',
@@ -447,7 +447,7 @@ export class TerminalRenderer {
       x += BAR.optionWidth;
       const share = segment.total > 0 ? segment.count / segment.total : 0;
       this.content.add(new Konva.Rect({ x, y: barY, width: BAR.barWidth, height: BAR.barHeight, fill: COLORS.barEmpty }));
-      this.content.add(new Konva.Rect({ x, y: barY, width: BAR.barWidth * share, height: BAR.barHeight, fill: COLORS.barFilled }));
+      this.content.add(new Konva.Rect({ x, y: barY, width: BAR.barWidth * share, height: BAR.barHeight, fill: segment.color ?? COLORS.barFilled }));
       x += BAR.barWidth + 8;
       this.content.add(makeText(String(segment.count), x, textY, size));
       x += BAR.countWidth;

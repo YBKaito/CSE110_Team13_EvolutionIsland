@@ -8,8 +8,8 @@ import {
   traitEventsAtGeneration,
   traitSnapshotAt,
   traitTrendSummary,
-  TRAIT_LABELS,
 } from './traitHistory';
+import { simulationTraitLabel } from '../../traits';
 
 const TRAIT_ORDER: TraitName[] = ['beak', 'body', 'feathers', 'color'];
 
@@ -125,7 +125,7 @@ export function gameOverScreenSpec(
       : ['No comparison available for this generation.']),
   ];
 
-  const traitChoices = '1 Beak   2 Body   3 Feathers   4 Color   |   LEFT/RIGHT: Explore generations';
+  const traitChoices = `1 ${simulationTraitLabel('beak', 'shortLabel')}   2 ${simulationTraitLabel('body', 'shortLabel')}   3 ${simulationTraitLabel('feathers', 'shortLabel')}   4 ${simulationTraitLabel('color', 'shortLabel')}   |   LEFT/RIGHT: Explore generations`;
 
   return {
     blocks: [
@@ -145,7 +145,7 @@ export function gameOverScreenSpec(
         ],
       },
       gap(3),
-      text(`FIELD JOURNAL - ${TRAIT_LABELS[selectedTrait]}`, { size: 'heading', align: 'center' }),
+      text(`FIELD JOURNAL - ${simulationTraitLabel(selectedTrait)}`, { size: 'heading', align: 'center' }),
       text(traitChoices, {
         size: 'small', color: 'muted', align: 'center',
       }),
@@ -178,7 +178,7 @@ export function gameOverScreenSpec(
         sidePanel: {
           title: `Generation ${selectedGeneration}`,
           introLines: [selected ? `${selected.population} birds alive` : 'No recorded data for this generation.'],
-          countHeading: countBars.length > 0 ? `${TRAIT_LABELS[selectedTrait]} counts` : 'No trait counts to show',
+          countHeading: countBars.length > 0 ? `${simulationTraitLabel(selectedTrait)} counts` : 'No trait counts to show',
           counts: countBars,
           footerLines: [...eventLines, ...footerLines],
           footerDividerAfter: eventLines.length > 0 ? eventLines.length : undefined,

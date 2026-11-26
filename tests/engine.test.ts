@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { SIM } from '../src/constants';
 import { createStartingPopulation, countTraits } from '../src/simulation/Population';
 import { RandomSource } from '../src/simulation/Random';
-import { applyDisaster, inheritTraits, runGeneration } from '../src/simulation/SimulationEngine';
+import { applyDisaster, hatchChance, inheritTraits, runGeneration } from '../src/simulation/SimulationEngine';
+import { exposureRisk, predationRisk, reproductiveFitness, starvationRisk } from '../src/simulation/Fitness';
 import { TRAIT_NAMES } from '../src/simulation/traitContent';
 import type { EnvironmentState, GenerationResult, Population } from '../src/types';
 import { droughtEnv, envWith, MEDIUM_BIRD, populationOf } from './helpers/fixtures';
@@ -146,6 +147,32 @@ describe('disasters', () => {
 });
 
 describe('balance', () => {
+  it('allows recovery in suitable conditions without rescuing a poorly matched flock from sustained drought', () => {
+    const drought = droughtEnv();
+    const matched = { beak: 2, body: 0, feathers: 1, color: 0 };
+    const mismatched = { beak: 0, body: 2, feathers: 1, color: 3 };
+    const replacement = (traits: typeof MEDIUM_BIRD, env: EnvironmentState) => {
+      const survival = (1 - starvationRisk(traits, env)) * (1 - exposureRisk(traits, env)) *
+        (1 - predationRisk(traits, env));
+      // Low-density reproductive ceiling, even ignoring the loss of an odd parent.
+      return survival * SIM.EGGS_PER_PAIR / 2 * hatchChance(reproductiveFitness(traits, env), 0, 1);
+    };
+    expect(replacement(MEDIUM_BIRD, envWith())).toBeGreaterThan(1);
+    expect(replacement(matched, drought)).toBeGreaterThan(1);
+    expect(replacement(mismatched, drought)).toBeLessThan(1);
+  });
+
+  it('leaves food stress visible in hatching even when very few parents survive', () => {
+    const normal = reproductiveFitness(MEDIUM_BIRD, envWith());
+    const hungry = reproductiveFitness(MEDIUM_BIRD, droughtEnv());
+    expect(hatchChance(hungry, 2, 1)).toBeLessThan(hatchChance(normal, 2, 1));
+    expect(hatchChance(normal, 2, 1)).toBeLessThan(SIM.MAX_HATCH);
+    expect(hatchChance(normal, 20, 1)).toBeGreaterThan(hatchChance(normal, 80, 1));
+    // The rhythm minigame's existing multiplier remains functional and capped.
+    expect(hatchChance(normal, 20, 1.2)).toBeGreaterThan(hatchChance(normal, 20, 1));
+    expect(hatchChance(normal, 2, 100)).toBe(SIM.MAX_HATCH);
+  });
+
   it('keeps a flock in a normal environment alive and below the cap for 50 generations', () => {
     for (let seed = 1; seed <= 5; seed++) {
       const { results } = runMany(seed, envWith(), 50);

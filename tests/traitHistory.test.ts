@@ -36,6 +36,19 @@ const counts = (beak: number[], color: number[], population: number): Record<Tra
 });
 
 describe('trait history data', () => {
+  it('keeps the graph palette consistent for ordinal traits and bird colors', () => {
+    const palettes: Record<TraitName, string[]> = {
+      beak: ['#55d6be', '#ffd166', '#ef476f'],
+      body: ['#55d6be', '#ffd166', '#ef476f'],
+      feathers: ['#55d6be', '#ffd166', '#ef476f'],
+      color: ['#d18b45', '#aeb8c4', '#ffdf4d', '#f5f5f0'],
+    };
+
+    for (const trait of Object.keys(palettes) as TraitName[]) {
+      expect(buildTraitHistory([], {}, 0, 1, trait).series.map(series => series.color)).toEqual(palettes[trait]);
+    }
+  });
+
   it('uses recorded counts and computes percentages, including the actual starting flock', () => {
     const graph = buildTraitHistory(
       [result(1, 4, counts([1, 2, 1], [0, 1, 2, 1], 4))],

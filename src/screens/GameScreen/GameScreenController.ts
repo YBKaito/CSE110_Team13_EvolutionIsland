@@ -39,8 +39,12 @@ export class GameScreenController implements Screen {
   ) {}
 
   spec(): ScreenSpec {
-    if (this.mode === 'confirmQuit') return quitConfirmSpec(this.error);
-    return generationScreenSpec(generationViewFromState(this.game.state), this.error);
+    return {
+      ...(this.mode === 'confirmQuit'
+        ? quitConfirmSpec(this.error)
+        : generationScreenSpec(generationViewFromState(this.game.state), this.error)),
+      outerBorder: true,
+    };
   }
 
   submit(input: string): void {

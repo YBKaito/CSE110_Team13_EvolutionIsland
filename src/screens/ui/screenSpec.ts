@@ -41,8 +41,8 @@ export interface LineChartSidePanel {
 export type Block =
   | { kind: 'text'; text: string; size?: TextSize; color?: TextColor; bold?: boolean; indent?: number; align?: TextAlign }
   | { kind: 'gap'; size?: number }
-  | { kind: 'table'; columns: string[]; rows: string[][]; columnWidths: number[]; bordered?: boolean; size?: TextSize; align?: TextAlign; headerBold?: boolean }
-  | { kind: 'bars'; label: string; segments: { option: string; count: number; total: number }[] }
+  | { kind: 'table'; columns: string[]; rows: string[][]; columnWidths: number[]; bordered?: boolean; size?: TextSize; align?: TextAlign; headerBold?: boolean; cellColors?: (TextColor | undefined)[][] }
+  | { kind: 'bars'; label: string; segments: { option: string; count: number; total: number; color?: string }[] }
   | { kind: 'statCards'; items: StatCardItem[]; width: number; height: number }
   | {
       kind: 'lineChart';
@@ -83,6 +83,8 @@ export interface ScreenSpec {
   blocks: Block[];
   prompt: PromptSpec;
   art?: BirdArt;
+  /** Draw the shared terminal-style frame around this screen. */
+  outerBorder?: boolean;
 }
 
 /** Anything the screen host can display. */
