@@ -23,6 +23,9 @@ export type Screen =
   | { type: 'result'; score: number };
 
 export abstract class ScreenController {
+	/** Visual screens can opt in to the shared terminal-style frame. */
+	outerBorder = false;
+
 	abstract getView(): View;
 
 	show(): void {

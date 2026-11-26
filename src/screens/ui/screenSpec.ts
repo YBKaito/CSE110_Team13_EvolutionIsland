@@ -72,6 +72,8 @@ export interface PromptSpec {
 export interface ScreenSpec {
   blocks: Block[];
   prompt: PromptSpec;
+  /** Draw the shared terminal-style frame around this screen. */
+  outerBorder?: boolean;
 }
 
 /** Anything the screen host can display. */

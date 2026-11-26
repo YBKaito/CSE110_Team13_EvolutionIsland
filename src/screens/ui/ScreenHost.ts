@@ -28,6 +28,12 @@ export class ScreenHost implements ScreenNavigator {
   private readonly background = new Konva.Rect({ x: 0, y: 0, width: SCREEN_WIDTH, height: SCREEN_HEIGHT, fill: COLORS.background });
   // Keep custom views on a separate layer so they don't replace the text screen's objects.
   private readonly visualLayer = new Konva.Layer();
+  // Shared frame layer stays above both ScreenSpec and custom visual screens.
+  private readonly frameLayer = new Konva.Layer();
+  private readonly frame = new Konva.Rect({
+    x: 16, y: 16, width: SCREEN_WIDTH - 32, height: SCREEN_HEIGHT - 32,
+    stroke: '#3b3c38', strokeWidth: 2, listening: false,
+  });
   private readonly renderer: TerminalRenderer;
   private current: HostedScreen | null = null;
   private typed = '';
@@ -37,6 +43,9 @@ export class ScreenHost implements ScreenNavigator {
     this.layer.add(this.background);
     this.stage.add(this.layer);
     this.stage.add(this.visualLayer);
+    this.frameLayer.add(this.frame);
+    this.frameLayer.hide();
+    this.stage.add(this.frameLayer);
     // There isn't a custom view on screen when the game first starts.
     this.visualLayer.hide();
     this.renderer = new TerminalRenderer(this.layer);
@@ -63,6 +72,11 @@ export class ScreenHost implements ScreenNavigator {
     this.visualLayer.hide();
     this.current = screen;
     this.typed = '';
+    const showFrame = isVisualScreen(screen)
+      ? screen.outerBorder
+      : screen.spec().outerBorder === true;
+    if (showFrame) this.frameLayer.show();
+    else this.frameLayer.hide();
     if (isVisualScreen(screen)) {
       // The two screen layouts use different dimensions, so scale and center
       // the custom view to fit the same stage as the generation and event screens.

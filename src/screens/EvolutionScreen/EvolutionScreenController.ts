@@ -14,6 +14,8 @@ import { EvolutionScreenView } from './EvolutionScreenView';
  * observation checkpoint, and handles what the player clicks or types.
  */
 export class EvolutionScreenController extends ScreenController {
+  override readonly outerBorder = true;
+
   // Each subscribe() call gives us a function to unsubscribe later. These are saved here.
   private readonly disposers: Array<() => void> = [];
 
