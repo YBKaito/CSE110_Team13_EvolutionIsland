@@ -78,18 +78,29 @@ export class GameController {
       (this.previewEndGeneration !== null && this.gameState.generation >= this.previewEndGeneration);
   }
 
-  /** Apply one adjacent preference change at the current observation checkpoint. */
-  applyEvolutionChoice(choice: TraitFocusChoice): void {
+  /** Both changing a trait and keeping preferences resolve the same checkpoint. */
+  private validateEvolutionCheckpoint(generation: number): void {
     const s = this.gameState;
     if (this.isOver) throw new Error('Cannot choose a trait after extinction.');
-    if (choice.generation !== s.generation || s.generation === 0 ||
+    if (generation !== s.generation || s.generation === 0 ||
       s.generation % EVENTS.MILESTONE_EVERY !== 0) {
       throw new Error('Evolution choices are only allowed at the current checkpoint.');
     }
-    if (s.lastEvolutionChoiceGeneration === choice.generation) {
+    if (s.lastEvolutionChoiceGeneration === generation) {
       throw new Error('An evolution choice was already made at this checkpoint.');
     }
+  }
 
+  /** Resolve the checkpoint without adding or changing any breeding preferences. */
+  keepEvolutionPreferences(generation: number): void {
+    this.validateEvolutionCheckpoint(generation);
+    this.gameState.lastEvolutionChoiceGeneration = generation;
+  }
+
+  /** Apply one adjacent preference change at the current observation checkpoint. */
+  applyEvolutionChoice(choice: TraitFocusChoice): void {
+    this.validateEvolutionCheckpoint(choice.generation);
+    const s = this.gameState;
     const trait = SIMULATION_TRAIT_FOR_CHOICE[choice.traitKey];
     if (!trait) throw new Error('Unknown trait.');
     const options = TRAIT_OPTIONS[trait];

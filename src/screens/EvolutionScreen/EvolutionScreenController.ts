@@ -76,6 +76,7 @@ export class EvolutionScreenController extends ScreenController {
       selectTarget: target => this.selectTarget(target),
       toggleHint: hintId => this.toggleHint(hintId),
       submit: () => { void this.submitChoice(); },
+      keepPreferences: () => { void this.submitChoice(true); },
     });
     /**
      * We still need environment and generation updates while this screen is hidden, otherwise we'd miss the next checkpoint. 
@@ -211,19 +212,21 @@ export class EvolutionScreenController extends ScreenController {
   /** 
    * Validate the choice, submit it for future offspring, and return to the game. 
    */
-  async submitChoice(): Promise<void> {
+  async submitChoice(keepCurrent = false): Promise<void> {
     if (this.disposed || this.submitting || this.shownCheckpoint === null ||
       !this.coordinator.isPaused() || this.page !== 'choice') return;
 
     // Build a single object describing what changed and at which checkpoint.
-    // An empty target will fail validation and show an error to the player.
+    // An empty target is still invalid unless the player explicitly chooses to keep preferences.
     const choice: TraitFocusChoice = {
       generation: this.shownCheckpoint,
       traitKey: this.selectedTrait,
       fromValue: this.model.getPreferences()[this.selectedTrait],
       targetValue: this.selectedTarget ?? '',
     };
-    const error = this.model.validateChoice(choice, this.coordinator.getGeneration());
+    const error = keepCurrent
+      ? this.model.validateCheckpoint(choice.generation, this.coordinator.getGeneration())
+      : this.model.validateChoice(choice, this.coordinator.getGeneration());
     if (error) {
       this.model.error = error;
       this.render();
@@ -237,8 +240,12 @@ export class EvolutionScreenController extends ScreenController {
     try {
       // Make a new preference object with only this trait changed.
       // We don't update the Model yet because the simulation might reject it.
-      const profile = { ...this.model.getPreferences(), [choice.traitKey]: choice.targetValue };
-      const result = await this.coordinator.submitTraitFocus(choice, profile);
+      const profile = this.model.getPreferences();
+      const result = keepCurrent
+        ? await this.coordinator.keepPreferences(choice.generation)
+        : await this.coordinator.submitTraitFocus(choice, {
+            ...profile, [choice.traitKey]: choice.targetValue,
+          });
       // The request might finish after the player leaves or the run ends.
       // In that case, don't touch the old Model or View.
       if (this.disposed) return;
@@ -247,7 +254,8 @@ export class EvolutionScreenController extends ScreenController {
         return;
       }
       // Only save the choice locally after the simulation confirms it.
-      this.model.recordAcceptedChoice(choice);
+      if (keepCurrent) this.model.recordKeptPreferences(choice.generation);
+      else this.model.recordAcceptedChoice(choice);
       // There is no longer a pending choice for this generation.
       // Clear temporary selections before going back to gameplay.
       this.shownCheckpoint = null;
@@ -314,6 +322,11 @@ export class EvolutionScreenController extends ScreenController {
       if (next) this.selectTarget(next);
       return;
     }
+    if (key === 'k') {
+      event.preventDefault();
+      void this.submitChoice(true);
+      return;
+    }
     if (key === 's' || key === 'enter') {
       event.preventDefault();
       void this.submitChoice();
@@ -359,7 +372,7 @@ export class EvolutionScreenController extends ScreenController {
     // Replace callbacks with no-ops so a leftover click can't reach this controller after the screen has been disposed.
     this.view.bind({
       openPage: () => { }, back: () => { }, selectTrait: () => { },
-      selectTarget: () => { }, submit: () => { },
+      selectTarget: () => { }, submit: () => { }, keepPreferences: () => { },
       toggleHint: () => { },
     });
     this.view.getGroup().destroy();
