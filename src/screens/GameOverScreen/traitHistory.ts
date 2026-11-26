@@ -1,12 +1,6 @@
 import type { EventLogEntry, GenerationResult, TraitName } from '../../types';
 import { TRAIT_OPTIONS } from '../../simulation/traitContent';
-
-export const TRAIT_LABELS: Record<TraitName, string> = {
-  beak: 'Beak length',
-  body: 'Body size',
-  feathers: 'Feather density',
-  color: 'Color',
-};
+import { simulationTraitLabel } from '../../traits';
 
 const SERIES_COLORS = ['#55d6be', '#ffd166', '#ef476f', '#7aa2ff'] as const;
 const COLOR_SERIES_COLORS: Record<string, string> = {
@@ -15,6 +9,13 @@ const COLOR_SERIES_COLORS: Record<string, string> = {
   yellow: '#ffdf4d',
   white: '#f5f5f0',
 };
+
+/** Use the same option colors for every trait distribution display. */
+export function traitOptionColor(trait: TraitName, option: string, optionIndex: number): string {
+  return trait === 'color'
+    ? COLOR_SERIES_COLORS[option] ?? SERIES_COLORS[optionIndex % SERIES_COLORS.length]
+    : SERIES_COLORS[optionIndex % SERIES_COLORS.length];
+}
 
 export interface TraitHistoryPoint {
   generation: number;
@@ -88,9 +89,7 @@ export function buildTraitHistory(
   const options = TRAIT_OPTIONS[trait];
   const series = options.map((option, optionIndex): TraitHistorySeries => ({
     option,
-    color: trait === 'color'
-      ? COLOR_SERIES_COLORS[option] ?? SERIES_COLORS[optionIndex % SERIES_COLORS.length]
-      : SERIES_COLORS[optionIndex % SERIES_COLORS.length],
+    color: traitOptionColor(trait, option, optionIndex),
     points: [],
   }));
 
@@ -116,7 +115,7 @@ export function buildTraitHistory(
   const xMax = Math.max(1, endingGeneration, generations.at(-1)?.generation ?? 0);
   return {
     trait,
-    traitLabel: TRAIT_LABELS[trait],
+    traitLabel: simulationTraitLabel(trait),
     xMax,
     xTicks: generationTicks(xMax),
     endingGeneration,
