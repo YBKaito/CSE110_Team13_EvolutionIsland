@@ -59,6 +59,28 @@ function setup(eventAtTen = false) {
 }
 
 describe('playable game checkpoints', () => {
+  it('keeps preferences and returns to gameplay, then opens the next checkpoint', async () => {
+    const { host, game, session, screen } = setup();
+    try {
+      screen.submit('2');
+      screen.submit('2');
+      expect(game.state.generation).toBe(10);
+      const view = host.evolutionView!;
+      view.handlers.keepPreferences();
+      await vi.waitFor(() => expect(host.current).toBe(screen));
+      expect(game.state.favoredTraits).toEqual({});
+      expect(game.state.lastEvolutionChoiceGeneration).toBe(10);
+      screen.submit('2');
+      screen.submit('2');
+      expect(game.state.generation).toBe(20);
+      expect(host.evolutionView!.rendered.model.getDecisions()).toEqual([
+        { generation: 10, kind: 'unchanged', populationAtDecision: game.state.history.generations[9].population },
+      ]);
+    } finally {
+      session.dispose();
+    }
+  });
+
   it('returns to gameplay after a trait choice and opens the same picker at generation 20', async () => {
     const { host, game, session, screen } = setup();
     try {

@@ -143,6 +143,8 @@ class Coordinator {
   pauseCalls = 0;
   endCalls = 0;
   submissionCalls: Array<{ choice: any; profile: any }> = [];
+  keepCalls: number[] = [];
+  keepBehavior: ((generation: number) => Promise<any>) | null = null;
   observationInterval;
   submitBehavior: ((choice: any, profile: any) => Promise<any>) | null = null;
   constructor(interval = 10) { this.observationInterval = interval; }
@@ -155,6 +157,12 @@ class Coordinator {
   async submitTraitFocus(choice: any, profile: any): Promise<any> {
     this.submissionCalls.push({ choice, profile });
     const result = this.submitBehavior ? await this.submitBehavior(choice, profile) : { ok: true };
+    if (result.ok) this.paused = false;
+    return result;
+  }
+  async keepPreferences(generation: number): Promise<any> {
+    this.keepCalls.push(generation);
+    const result = this.keepBehavior ? await this.keepBehavior(generation) : { ok: true };
     if (result.ok) this.paused = false;
     return result;
   }
