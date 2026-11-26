@@ -15,6 +15,7 @@ export interface EvolutionScreenViewHandlers {
   selectTarget(target: string): void;
   toggleHint(hintId: string): void;
   submit(): void;
+  keepPreferences(): void;
 }
 
 /** All of the information the Controller passes to the View for rendering. */
