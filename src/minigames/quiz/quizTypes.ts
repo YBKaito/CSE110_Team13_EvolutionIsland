@@ -43,6 +43,8 @@ export interface QuestionViewRenderState {
   /** One-based display progress supplied by the runner. */
   readonly questionNumber: number;
   readonly totalQuestions: number;
+  /** False hides the Exit button (a required quiz). Defaults to true. */
+  readonly canExit?: boolean;
 }
 
 /** Actions for bind(handlers). The view owns only its unsubmitted selection. */
@@ -56,6 +58,8 @@ export interface FeedbackViewRenderState {
   readonly response: QuizResponse;
   readonly questionNumber: number;
   readonly totalQuestions: number;
+  /** False hides the Exit button (a required quiz). Defaults to true. */
+  readonly canExit?: boolean;
 }
 
 export interface FeedbackViewHandlers {
@@ -64,6 +68,11 @@ export interface FeedbackViewHandlers {
 }
 
 /** Introduction copy is fixed and needs no render-data interface. */
+export interface IntroViewRenderState {
+  /** False hides the Back button (a required quiz). Defaults to true. */
+  readonly canGoBack?: boolean;
+}
+
 export interface IntroViewHandlers {
   onStart(): void;
   onBack(): void;

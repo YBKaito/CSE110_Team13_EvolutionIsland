@@ -72,11 +72,15 @@ export class FeedbackView extends QuizScreenElement {
     this.nextButton.disabled = this.nextLocked;
     this.listen(this.nextButton, 'click', () => this.onNext());
 
-    const exitButton = el('button', {
-      className: 'quiz-button', text: vm.exitLabel,
-      attrs: { type: 'button', 'data-focus-key': 'exit' },
-    });
-    this.listen(exitButton, 'click', () => this.handlers?.onExit());
+    const actions: HTMLElement[] = [this.nextButton];
+    if (this.state.canExit !== false) {
+      const exitButton = el('button', {
+        className: 'quiz-button', text: vm.exitLabel,
+        attrs: { type: 'button', 'data-focus-key': 'exit' },
+      });
+      this.listen(exitButton, 'click', () => this.handlers?.onExit());
+      actions.push(exitButton);
+    }
 
     const heading = el('h2', {
       className: `quiz-heading quiz-result ${vm.isCorrect ? 'quiz-result--correct' : 'quiz-result--incorrect'}`,
@@ -96,7 +100,7 @@ export class FeedbackView extends QuizScreenElement {
         el('h3', { text: 'Explanation' }),
         el('p', { text: vm.explanation }),
       ]),
-      el('div', { className: 'quiz-actions' }, [this.nextButton, exitButton]),
+      el('div', { className: 'quiz-actions' }, actions),
     ]);
   }
 

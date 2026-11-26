@@ -12,6 +12,8 @@ export interface QuizSessionOptions {
   readonly questions?: readonly QuizQuestion[];
   readonly onExit: () => void;
   readonly onComplete?: (result: QuizResult) => void;
+  /** The player must finish the quiz: Back and Exit are hidden. */
+  readonly required?: boolean;
 }
 
 /** Mount one independent quiz. The host owns navigation and the supplied container. */
@@ -28,6 +30,7 @@ export function startQuizSession(container: HTMLElement, options: QuizSessionOpt
   const controller = new QuizController(views, {
     questions: options.questions ?? QUIZ_QUESTIONS,
     onComplete: options.onComplete,
+    required: options.required,
     onExit: () => { dispose(); options.onExit(); },
   });
 

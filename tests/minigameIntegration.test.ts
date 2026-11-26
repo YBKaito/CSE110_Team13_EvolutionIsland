@@ -6,6 +6,7 @@ import { MinigameManager, type MidRunMinigameId } from '../src/minigames/Minigam
 import { ExtinctionScreenController } from '../src/screens/ExtinctionScreen/ExtinctionScreenController';
 import { GameOverScreenController } from '../src/screens/GameOverScreen/GameOverScreenController';
 import { GameScreenController } from '../src/screens/GameScreen/GameScreenController';
+import { birdFitness } from '../src/screens/HatchingRhythm/difficulty';
 import type { HatchResult } from '../src/screens/HatchingRhythm/hatchResult';
 import type { ScreenController } from '../src/screens/ScreenController';
 import type { ScreenHost } from '../src/screens/ui/ScreenHost';
@@ -50,9 +51,14 @@ class FakeLaunchers implements RunMinigameLaunchers {
   hatchingDone: ((result: HatchResult | null) => void) | null = null;
   quizDone: (() => void) | null = null;
   hatchingRuns = 0;
+  hatchingFitness: number[] = [];
   quizRuns = 0;
 
-  playHatching(done: (result: HatchResult | null) => void) { this.hatchingRuns++; this.hatchingDone = done; }
+  playHatching(fitness: number, done: (result: HatchResult | null) => void) {
+    this.hatchingRuns++;
+    this.hatchingFitness.push(fitness);
+    this.hatchingDone = done;
+  }
   playQuiz(done: () => void) { this.quizRuns++; this.quizDone = done; }
 }
 
@@ -65,6 +71,7 @@ function setup(options: {
   endAt?: number | null;
   seed?: number;
   withMinigames?: boolean;
+  random?: () => number;
 } = {}) {
   const host = new FakeHost();
   const game = GameController.startRun(species, options.seed ?? 2, new ScriptedScheduler([]), options.endAt ?? null);
@@ -76,7 +83,7 @@ function setup(options: {
   const callbacks = { onQuit: vi.fn(), onRestart: vi.fn() };
   const session = startGameSession(host as unknown as ScreenHost, game, {
     ...callbacks,
-    ...(options.withMinigames === false ? {} : { minigames: launchers, manager }),
+    ...(options.withMinigames === false ? {} : { minigames: launchers, manager, random: options.random }),
   });
   const gameScreen = host.current as GameScreenController;
   return { host, game, launchers, manager, session, gameScreen, callbacks };
@@ -169,6 +176,17 @@ describe('US10 Hatching Rhythm during a run', () => {
       gameScreen.submit('1');
       gameScreen.submit('1');
       expect(step.mock.calls.map(([options]) => options?.birthMultiplier)).toEqual([1.5, undefined]);
+    } finally {
+      session.dispose();
+    }
+  });
+
+  it('sets the song difficulty from the fitness of a bird in the current flock', () => {
+    const { game, gameScreen, launchers, session } = setup({ only: 'hatching', random: () => 0 });
+    try {
+      gameScreen.submit('2');
+      const [first] = game.state.population.birds; // random() = 0 picks the first bird
+      expect(launchers.hatchingFitness).toEqual([birdFitness(first.traits, game.state.environment)]);
     } finally {
       session.dispose();
     }

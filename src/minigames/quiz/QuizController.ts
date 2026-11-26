@@ -22,6 +22,11 @@ export interface QuizControllerOptions {
   readonly questions: readonly QuizQuestion[];
   readonly onExit: () => void;
   readonly onComplete?: (result: QuizResult) => void;
+  /**
+   * The player must finish: no Back on the intro and no Exit during a round,
+   * so onExit only follows Done on the results screen (or Back when the quiz is unavailable).
+   */
+  readonly required?: boolean;
 }
 
 type ControllerState =
@@ -86,9 +91,10 @@ export class QuizController {
     this.views.feedback.reset();
     this.views.intro.bind({
       onStart: () => { if (this.isCurrent(token)) this.startRound(); },
-      onBack: () => { if (this.isCurrent(token)) this.close(); },
+      onBack: () => { if (this.isCurrent(token) && !this.options.required) this.close(); },
     });
-    this.views.intro.render();
+    if (this.options.required) this.views.intro.render({ canGoBack: false });
+    else this.views.intro.render();
     this.views.intro.show();
   }
 
@@ -112,7 +118,14 @@ export class QuizController {
     const token = ++this.context;
     this.state = { screen: 'unavailable' };
     this.hideScreens();
-    this.views.unavailable.bind({ onBack: () => { if (this.isCurrent(token)) this.enterIntro(); } });
+    // A required quiz that cannot run must still let the player leave instead of looping back to Start.
+    this.views.unavailable.bind({
+      onBack: () => {
+        if (!this.isCurrent(token)) return;
+        if (this.options.required) this.close();
+        else this.enterIntro();
+      },
+    });
     this.views.unavailable.render();
     this.views.unavailable.show();
   }
@@ -122,7 +135,11 @@ export class QuizController {
     this.state = { screen: 'round', session, confirmationOpen: false };
     this.hideScreens();
     const question = session.questions[session.currentIndex];
-    const progress = { questionNumber: session.currentIndex + 1, totalQuestions: session.questions.length };
+    const progress = {
+      questionNumber: session.currentIndex + 1,
+      totalQuestions: session.questions.length,
+      ...(this.options.required ? { canExit: false } : {}),
+    };
 
     if (session.phase === 'question') {
       const { id, prompt, options } = question;
@@ -165,7 +182,7 @@ export class QuizController {
   }
 
   private openConfirmation(token: number): void {
-    if (this.state.screen !== 'round') return;
+    if (this.state.screen !== 'round' || this.options.required) return;
     this.state.confirmationOpen = true;
     const dialogToken = ++this.dialogContext;
     const active = () => this.isCurrent(token) && dialogToken === this.dialogContext

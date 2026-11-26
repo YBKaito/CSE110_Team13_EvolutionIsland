@@ -10,6 +10,7 @@ import type { ScreenHost } from '../screens/ui/ScreenHost';
 import { ExtinctionScreenController } from '../screens/ExtinctionScreen/ExtinctionScreenController';
 import type { HatchResult } from '../screens/HatchingRhythm/hatchResult';
 import { MinigameManager, type MidRunMinigameId } from '../minigames/MinigameManager';
+import { randomFlockBirdFitness } from '../screens/HatchingRhythm/difficulty';
 
 /** Wording for leaving a minigame that was opened during a run. */
 export const BACK_TO_ISLAND = 'Back to your island';
@@ -19,8 +20,11 @@ export const BACK_TO_ISLAND = 'Back to your island';
  * container, starts the game, and calls `done` once the player leaves it.
  */
 export interface RunMinigameLaunchers {
-  /** US10. `done` gets the hatch result, or null when the player quit early. */
-  playHatching(done: (result: HatchResult | null) => void): void;
+  /**
+   * US10. `fitness` (0 to 1) comes from a bird in the current flock and sets the
+   * song's speed and box size. `done` gets the hatch result, or null when the player quit early.
+   */
+  playHatching(fitness: number, done: (result: HatchResult | null) => void): void;
   /** US9, at the end of the run. */
   playQuiz(done: () => void): void;
 }
@@ -30,6 +34,8 @@ export interface GameSessionOptions extends Pick<GameScreenOptions, 'onQuit' | '
   minigames?: RunMinigameLaunchers;
   /** Scheduling rules; a default manager is made when minigames are given. */
   manager?: MinigameManager;
+  /** Picks the bird whose fitness sets Hatching Rhythm's difficulty. Defaults to Math.random. */
+  random?: () => number;
 }
 
 /** Set up one playable run and connect the generation, event, and evolution screens. */
@@ -38,7 +44,7 @@ export function startGameSession(
   game: GameController,
   options: GameSessionOptions,
 ): { dispose(): void } {
-  const { minigames, manager = new MinigameManager(), ...screenOptions } = options;
+  const { minigames, manager = new MinigameManager(), random = Math.random, ...screenOptions } = options;
   const simulation = new GameSimulationCoordinator(game);
   const initial = toEvolutionInitialData(game.state);
   const model = new EvolutionScreenModel(
@@ -66,8 +72,9 @@ export function startGameSession(
       round();
     },
     hatching(done) {
-      if (!minigames) return done();
-      minigames.playHatching((result) => {
+      const fitness = randomFlockBirdFitness(game.state.population.birds, game.state.environment, random);
+      if (!minigames || fitness === null) return done();
+      minigames.playHatching(fitness, (result) => {
         // A finished song boosts or cuts hatching in the next generation only.
         if (result && !disposed) simulation.setNextBirthMultiplier(result.birthMultiplier);
         done();

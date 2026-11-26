@@ -26,6 +26,7 @@ import { ExtinctionScreenController } from './screens/ExtinctionScreen/Extinctio
 
 import { GameScreenController } from "./screens/GameScreen/GameScreenController";
 import { HatchingRhythmController } from "./screens/HatchingRhythm/HatchingRhythmController";
+import { difficultyForFitness } from "./screens/HatchingRhythm/difficulty";
 import { ScreenHost } from "./screens/ui/ScreenHost";
 import { FONT_FAMILY } from "./screens/ui/theme";
 
@@ -138,10 +139,12 @@ async function boot(): Promise<void> {
       app.hidden = false;
     };
     const runMinigames: RunMinigameLaunchers = {
-      playHatching(done) {
+      playHatching(fitness, done) {
         showRunMinigame();
+        // The flock's own fitness sets the song, not the minigames menu's difficulty.
         new HatchingRhythmController(minigame, {
-          difficulty: state.minigameDifficulty,
+          fitness,
+          difficulty: difficultyForFitness(fitness),
           finishedHint: `Song over! Press Enter to go ${BACK_TO_ISLAND.toLowerCase()}.`,
           onExit: (result) => {
             backToRun();
@@ -156,7 +159,8 @@ async function boot(): Promise<void> {
           done();
         };
         try {
-          startQuizSession(minigame, { onExit: finish });
+          // Required: no Back or Exit; the run ends once the player presses Done.
+          startQuizSession(minigame, { onExit: finish, required: true });
         } catch {
           finish(); // No quiz available: go straight to Game Over.
         }
