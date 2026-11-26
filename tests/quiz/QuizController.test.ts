@@ -6,7 +6,7 @@ import type {
   FeedbackViewRenderState, IntroViewHandlers, IntroViewRenderState, QuestionViewHandlers, QuestionViewRenderState,
   QuizQuestion, ResultsViewHandlers, ResultsViewRenderState,
 } from '../../src/minigames/quiz/quizTypes';
-import { mixedResult } from '../helpers/quizFixtures';
+import { FIXTURE_QUESTIONS, mixedResult } from '../helpers/quizFixtures';
 
 class FakeView<State, Handlers> {
   handlers!: Handlers;
@@ -70,14 +70,14 @@ describe('quiz controller wiring', () => {
   });
 
   it('plays real content with final feedback before emitting its actual result', () => {
-    const { views, onComplete } = setup();
+    const { views, onComplete } = setup(FIXTURE_QUESTIONS);
     views.intro.handlers.onStart();
     mixedResult.responses.forEach((response, index) => {
       views.question.handlers.onSubmit(response.selectedOptionId);
       expect(views.feedback.visible).toBe(true);
       expect(views.question.visible).toBe(false);
       expect(views.feedback.current).toEqual({
-        question: QUIZ_QUESTIONS[index], response, questionNumber: index + 1, totalQuestions: QUIZ_QUESTIONS.length,
+        question: FIXTURE_QUESTIONS[index], response, questionNumber: index + 1, totalQuestions: FIXTURE_QUESTIONS.length,
       });
       expect(onComplete).not.toHaveBeenCalled();
       expect(views.results.visible).toBe(false);
@@ -86,6 +86,25 @@ describe('quiz controller wiring', () => {
     expect(views.results.visible).toBe(true);
     expect(views.results.current.result).toEqual(mixedResult);
     expect(onComplete).toHaveBeenCalledExactlyOnceWith(mixedResult);
+  });
+
+  it('plays every question in the expanded production bank before showing results', () => {
+    const { views, onComplete } = setup();
+    views.intro.handlers.onStart();
+    QUIZ_QUESTIONS.forEach((question, index) => {
+      expect(views.question.current.question.id).toBe(question.id);
+      expect(views.question.current.questionNumber).toBe(index + 1);
+      expect(views.question.current.totalQuestions).toBe(QUIZ_QUESTIONS.length);
+      views.question.handlers.onSubmit(question.correctOptionId);
+      expect(views.feedback.current.response.isCorrect).toBe(true);
+      expect(onComplete).not.toHaveBeenCalled();
+      views.feedback.handlers.onNext();
+    });
+    expect(views.results.visible).toBe(true);
+    expect(views.results.current.result).toMatchObject({
+      correct: QUIZ_QUESTIONS.length, total: QUIZ_QUESTIONS.length,
+    });
+    expect(onComplete).toHaveBeenCalledExactlyOnceWith(views.results.current.result);
   });
 
   it('ignores invalid answers without rendering feedback', () => {
@@ -265,9 +284,9 @@ describe('quiz controller wiring', () => {
     views.intro.handlers.onStart();
     expect(views.unavailable.visible).toBe(true);
     expect(views.question.renders).toHaveLength(0);
-    const errorBack = views.unavailable.handlers;
-    errorBack.onBack();
-    errorBack.onBack();
+    const errorBack = views.unavailable.handlers.onBack;
+    errorBack();
+    errorBack();
     expect(views.intro.visible).toBe(true);
     expect(views.intro.renders).toHaveLength(2);
     expect(onComplete).not.toHaveBeenCalled();

@@ -38,7 +38,7 @@ export class ExtinctionScreenController implements Screen {
   spec(): ScreenSpec {
     switch (this.step) {
       case 'intro': return introSpec(this.species);
-      case 'condition': return conditionSpec(this.conditionIndex, this.error);
+      case 'condition': return conditionSpec(this.conditionIndex, this.error, this.species);
       case 'species': return introSpec(this.species); // reviewing the species
       case 'summary': return summarySpec(this.scenario, this.error);
       case 'result': return resultSpec(this.requireResult());

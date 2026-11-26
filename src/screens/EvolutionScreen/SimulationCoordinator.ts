@@ -13,7 +13,7 @@ export interface SimulationCoordinator {
   // Receive environment values tagged with the generation they belong to.
   readonly environment: Subscribable<EnvironmentUpdated>;
   
-  // Receive population results after each generation finishes.
+  // Receive population results after each generation finish3es.
   readonly generations: Subscribable<GenerationCompleted>;
 
   // How often the player gets to observe and choose a trait.
@@ -28,4 +28,6 @@ export interface SimulationCoordinator {
 
   // Apply the new preference to future offspring and resume after it is accepted.
   submitTraitFocus(choice: TraitFocusChoice, profile: PreferredTraits): Promise<SubmitResult>;
+  // Resume the current checkpoint without changing the saved preferences.
+  keepPreferences(generation: number): Promise<SubmitResult>;
 }

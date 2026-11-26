@@ -244,7 +244,7 @@ export class EvolutionScreenView implements View {
   private choicePage(g: Group, s: EvolutionScreenRenderState): void {
     const prefs = s.model.getPreferences();
     header(g, 'Evolution Choice', `Generation ${s.generation}  |  Observation every ${s.interval} generations`);
-    text(g, 'Choose one trait to favor in future offspring.', 105, 202, { size: 29 });
+    text(g, 'Favor a trait in future offspring, or keep your current preferences.', 105, 202, { size: 27, width: 990 });
     text(g, 'Select a trait:', 116, 260, { size: 25, fill: COLOR.muted });
     traitKeys.forEach((key: TraitKey, i) => {
       const value = `${i + 1}. ${TRAITS[key].label}: ${labelFor(key, prefs[key])}`;
@@ -300,12 +300,15 @@ export class EvolutionScreenView implements View {
       645, 566, () => this.handlers?.submit(),
       { width: 415, size: 28, disabled: s.submitting || !s.selectedTarget });
 
+    option(g, 'K. Keep current preferences', 122, 566,
+      () => this.handlers?.keepPreferences(), { width: 485, size: 26, disabled: s.submitting });
+
     line(g, 616);
     option(g, '5. View current stats', 116, 643,
       () => this.handlers?.openPage('stats'), { width: 460, size: 27 });
     option(g, '6. Review previous choices', 616, 643,
       () => this.handlers?.openPage('decisions'), { width: 454, size: 27 });
-        bottomHint(g, '1-4 SELECT TRAIT   |   LEFT/RIGHT SELECT OPTION   |   H HINT   |   S/ENTER CONFIRM');
+    bottomHint(g, '1-4 TRAIT   |   LEFT/RIGHT OPTION   |   H HINT   |   K KEEP   |   S/ENTER CONFIRM');
   }
 
   /** Draw the saved population, trait, and environment statistics. */
@@ -386,7 +389,9 @@ export class EvolutionScreenView implements View {
       const startIndex = decisions.length - visible.length;
       visible.forEach((d, i) => {
         text(g,
-          `Gen ${d.generation}: ${TRAITS[d.traitKey].label}  ${labelFor(d.traitKey, d.fromValue)} -> ${labelFor(d.traitKey, d.targetValue)}`,
+          'traitKey' in d
+            ? `Gen ${d.generation}: ${TRAITS[d.traitKey].label}  ${labelFor(d.traitKey, d.fromValue)} -> ${labelFor(d.traitKey, d.targetValue)}`
+            : `Gen ${d.generation}: Kept current preferences`,
           130, 477 + i * 42, { size: 24, width: 940 });
       });
       if (startIndex > 0) {

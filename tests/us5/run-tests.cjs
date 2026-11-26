@@ -38,6 +38,7 @@ const productionFiles = [
   'src/traits.ts',
   'src/stats.ts',
   'src/types.ts',
+  'src/simulation/traitContent.ts',
   'src/screens/ScreenController.ts',
   'src/screens/ui/theme.ts',
   'src/screens/EvolutionScreen/hints.ts',

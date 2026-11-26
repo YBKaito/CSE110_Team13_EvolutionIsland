@@ -81,6 +81,7 @@ async function boot(): Promise<void> {
   let host: ScreenHost | null = null;
   let session: { dispose(): void } | null = null;
 
+
   const renderCurrentScreen = (error: string | null = null): void => {
     if (state.screen === "creation") {
       view.show(renderCreationScreen(state), error);

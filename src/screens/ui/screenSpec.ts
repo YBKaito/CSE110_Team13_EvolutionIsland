@@ -1,5 +1,6 @@
 // A plain description of what a text-style screen shows. Views build these; the Konva renderer draws them.
 // Keeping this free of Konva lets views and controllers be unit-tested without a canvas.
+import type { BirdLook } from '../../bird-visual/birdLook';
 
 export type TextSize = 'title' | 'heading' | 'body' | 'small';
 export type TextColor = 'normal' | 'error' | 'success' | 'muted';
@@ -40,8 +41,8 @@ export interface LineChartSidePanel {
 export type Block =
   | { kind: 'text'; text: string; size?: TextSize; color?: TextColor; bold?: boolean; indent?: number; align?: TextAlign }
   | { kind: 'gap'; size?: number }
-  | { kind: 'table'; columns: string[]; rows: string[][]; columnWidths: number[]; bordered?: boolean; size?: TextSize; align?: TextAlign; headerBold?: boolean }
-  | { kind: 'bars'; label: string; segments: { option: string; count: number; total: number }[] }
+  | { kind: 'table'; columns: string[]; rows: string[][]; columnWidths: number[]; bordered?: boolean; size?: TextSize; align?: TextAlign; headerBold?: boolean; cellColors?: (TextColor | undefined)[][] }
+  | { kind: 'bars'; label: string; segments: { option: string; count: number; total: number; color?: string }[] }
   | { kind: 'statCards'; items: StatCardItem[]; width: number; height: number }
   | {
       kind: 'lineChart';
@@ -59,6 +60,15 @@ export type Block =
       sidePanel?: LineChartSidePanel;
     };
 
+/** A bird picture drawn at a fixed spot behind the text, in screen coordinates (not part of the text flow). */
+export interface BirdArt {
+  look: BirdLook;
+  x: number;
+  y: number;
+  height: number; // width follows from the cropped picture's proportions
+  caption?: string;
+}
+
 export interface PromptSpec {
   /** 'choice' shows "What is your choice? __" and accepts typed text; 'enter' just waits for Enter. */
   mode: 'choice' | 'enter';
@@ -72,6 +82,9 @@ export interface PromptSpec {
 export interface ScreenSpec {
   blocks: Block[];
   prompt: PromptSpec;
+  art?: BirdArt;
+  /** Draw the shared terminal-style frame around this screen. */
+  outerBorder?: boolean;
 }
 
 /** Anything the screen host can display. */

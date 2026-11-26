@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createSession, getResult, nextQuestion, submitAnswer } from '../../src/minigames/quiz/quizEngine';
 import { QUIZ_QUESTIONS } from '../../src/minigames/quiz/questions';
 import type { QuizQuestion, QuizSession } from '../../src/minigames/quiz/quizTypes';
-import { mixedResult } from '../helpers/quizFixtures';
+import { FIXTURE_QUESTIONS, mixedResult } from '../helpers/quizFixtures';
 
 function makeQuestions(count: number) {
   return Array.from({ length: count }, (_, index) => ({
@@ -256,10 +256,10 @@ describe('getResult and complete rounds', () => {
     expect(completed).toEqual(before);
   });
 
-  it('plays the production bank to the PR1 mixed result without changing earlier states', () => {
+  it('plays the four-question fixture to the mixed result without changing earlier states', () => {
     const states: QuizSession[] = [];
     const snapshots: QuizSession[] = [];
-    let session = createSession(deepFreeze(structuredClone(QUIZ_QUESTIONS)));
+    let session = createSession(deepFreeze(structuredClone(FIXTURE_QUESTIONS)));
     for (const response of mixedResult.responses) {
       states.push(deepFreeze(session));
       snapshots.push(structuredClone(session));
@@ -274,5 +274,21 @@ describe('getResult and complete rounds', () => {
     expect(session.phase).toBe('results');
     expect(getResult(session)).toEqual(mixedResult);
     expect(states).toEqual(snapshots);
+  });
+
+  it('grades all questions in the expanded production bank', () => {
+    const questions = deepFreeze(structuredClone(QUIZ_QUESTIONS));
+    const choices = questions.map((question, index) => index % 2 === 0
+      ? question.correctOptionId
+      : question.options.find(option => option.id !== question.correctOptionId)!.id);
+    const completed = playRound(questions, choices);
+    expect(completed.phase).toBe('results');
+    expect(getResult(completed)).toEqual({
+      correct: Math.ceil(questions.length / 2),
+      total: questions.length,
+      responses: questions.map((question, index) => ({
+        questionId: question.id, selectedOptionId: choices[index], isCorrect: index % 2 === 0,
+      })),
+    });
   });
 });

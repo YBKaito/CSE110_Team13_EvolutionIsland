@@ -38,7 +38,7 @@ export class EvolutionScreenModel {
   // The full snapshots we keep at checkpoints (including generation 0).
   private readonly observations: ObservationSnapshot[] = [];
 
-  // Every trait preference the player successfully submitted, in order.
+  // Every accepted checkpoint decision, including keeping preferences, in order.
   private readonly decisions: DecisionRecord[] = [];
 
   // The preferred option for EACH of the four traits.
@@ -209,12 +209,8 @@ export class EvolutionScreenModel {
     choice: TraitFocusChoice,
     checkpoint: number
   ): string | null {
-    // The player should only be submitting for the generation that's paused.
-    if (choice.generation !== checkpoint)
-      return "Choice must match the current checkpoint.";
-    // Each checkpoint gets one accepted change, so don't let it be saved twice.
-    if (this.decisions.some((d) => d.generation === checkpoint))
-      return "A decision has already been recorded here.";
+    const checkpointError = this.validateCheckpoint(choice.generation, checkpoint);
+    if (checkpointError) return checkpointError;
     if (!(choice.traitKey in this.preferences))
       return "Unknown trait category.";
     // The choice must start from the current preference, not an outdated one.
@@ -232,6 +228,28 @@ export class EvolutionScreenModel {
     // A trait may be selected even if no birds currently have it.
     // The generation simulation handles how this trait appears in future offspring.
     return null;
+  }
+
+  /** Validate the checkpoint for either a trait change or keeping preferences. */
+  validateCheckpoint(generation: number, checkpoint: number): string | null {
+    if (generation !== checkpoint || generation <= 0 ||
+        generation !== this.getCurrentObservation().generation)
+      return "Choice must match the current checkpoint.";
+    if (this.decisions.some((d) => d.generation === checkpoint))
+      return "A decision has already been recorded here.";
+    return null;
+  }
+
+  /** Save the decision in history without changing any preference. */
+  recordKeptPreferences(generation: number): void {
+    const error = this.validateCheckpoint(generation, this.getCurrentObservation().generation);
+    if (error) throw new Error(error);
+    this.decisions.push({
+      generation,
+      kind: 'unchanged',
+      populationAtDecision: this.getCurrentObservation().results.newPopulation,
+    });
+    this.error = null;
   }
 
   /**

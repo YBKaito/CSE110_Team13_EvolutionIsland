@@ -1,7 +1,8 @@
 // Draws a ScreenSpec with Konva: text lines, tables, trait bars, and the typed-input prompt.
 
 import Konva from 'konva';
-import type { Block, PromptSpec, ScreenSpec, TextColor, TextSize } from './screenSpec';
+import { renderBird } from '../../bird-visual/birdImage';
+import type { Block, BirdArt, PromptSpec, ScreenSpec, TextColor, TextSize } from './screenSpec';
 import {
   BAR,
   COLORS,
@@ -36,13 +37,18 @@ function makeText(value: string, x: number, y: number, size: TextSize, color: Te
 export class TerminalRenderer {
   private readonly content = new Konva.Group();
   private cursor: Konva.Text | null = null;
+  private readonly art = new Konva.Group();
+  private artKey = ''; // what is currently drawn, so typing a letter doesn't rebuild the picture
+  private artRequest = 0; // ignores a slow image load that a newer screen has replaced
 
   constructor(private readonly layer: Konva.Layer) {
+    layer.add(this.art); // added first, so text draws over it
     layer.add(this.content);
   }
 
   /** Redraws the whole screen. `typed` is what the player has typed so far at the prompt. */
   render(spec: ScreenSpec, typed: string): void {
+    this.drawArt(spec.art);
     this.content.destroyChildren();
     this.content.scale({ x: 1, y: 1 });
     let y = MARGIN_TOP;
@@ -414,7 +420,7 @@ export class TerminalRenderer {
           x,
           y + pad / 2,
           size,
-          'normal',
+          r === 0 ? 'normal' : block.cellColors?.[r - 1]?.[c] ?? 'normal',
           r === 0 && boldHeader,
           block.columnWidths[c],
           block.align === 'center' ? 'center' : 'left',
@@ -441,7 +447,7 @@ export class TerminalRenderer {
       x += BAR.optionWidth;
       const share = segment.total > 0 ? segment.count / segment.total : 0;
       this.content.add(new Konva.Rect({ x, y: barY, width: BAR.barWidth, height: BAR.barHeight, fill: COLORS.barEmpty }));
-      this.content.add(new Konva.Rect({ x, y: barY, width: BAR.barWidth * share, height: BAR.barHeight, fill: COLORS.barFilled }));
+      this.content.add(new Konva.Rect({ x, y: barY, width: BAR.barWidth * share, height: BAR.barHeight, fill: segment.color ?? COLORS.barFilled }));
       x += BAR.barWidth + 8;
       this.content.add(makeText(String(segment.count), x, textY, size));
       x += BAR.countWidth;
@@ -467,5 +473,51 @@ export class TerminalRenderer {
       this.cursor = null;
     }
     return y + label.height();
+  }
+
+  /** Draws (or clears) the bird picture. Only rebuilds when the picture actually changed. */
+  private drawArt(art: BirdArt | undefined): void {
+    const key = art ? JSON.stringify(art) : '';
+    if (key === this.artKey) return;
+    this.artKey = key;
+    const request = ++this.artRequest;
+    this.art.destroyChildren();
+    if (!art) return;
+
+    void renderBird(art.look).then((canvas) => {
+      if (!canvas || request !== this.artRequest) return;
+      const scale = art.height / canvas.height;
+      const pictureWidth = canvas.width * scale;
+
+      this.art.add(new Konva.Image({
+        image: canvas,
+        x: art.x,
+        y: art.y,
+        width: pictureWidth,
+        height: art.height,
+        imageSmoothingEnabled: false, // crisp pixel art when scaled
+      }));
+
+      if (art.caption) {
+        const width = 260;
+        const x = Math.min(
+          Math.max(art.x + pictureWidth / 2 - width / 2, 0),
+          SCREEN_WIDTH - width,
+        ); // centered under the bird, kept on screen
+        this.art.add(new Konva.Text({
+          x,
+          y: art.y + art.height + 4,
+          width,
+          align: 'center',
+          text: art.caption,
+          fontFamily: FONT_FAMILY,
+          fontSize: FONT_SIZES.small,
+          fill: COLORS.muted,
+          lineHeight: 1.15,
+        }));
+      }
+
+      this.layer.batchDraw();
+    });
   }
 }

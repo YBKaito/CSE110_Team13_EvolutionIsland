@@ -3,6 +3,8 @@ import type { GameState } from '../../models/GameState';
 import { countTraits } from '../../simulation/Population';
 import { TRAIT_NAMES, TRAIT_OPTIONS } from '../../simulation/traitContent';
 import { DEATH_CAUSES, type TraitName, type Traits } from '../../types';
+import { dominantLook} from '../../bird-visual/birdLook';
+
 import {
   amountLabel,
   capitalize,
@@ -12,18 +14,16 @@ import {
   signed,
   temperatureLabel,
 } from '../format';
+import { simulationTraitLabel } from '../../traits';
 import { CHOICE_PROMPT, gap, text, type Block, type ScreenSpec } from '../ui/screenSpec';
+import { traitOptionColor } from '../GameOverScreen/traitHistory';
 
 export const GENERATION_CHOICES = 3;
 export const QUIT_CHOICES = 2;
 export const EXTINCT_CHOICES = 1;
 
-const TRAIT_LABELS: Record<TraitName, string> = {
-  beak: 'Beak',
-  body: 'Body',
-  feathers: 'Feathers',
-  color: 'Color',
-};
+/** Top-right corner, above the island rows, so it doesn't cover the text. */
+const GAME_BIRD = { x: 1050, y: 185, height: 190 };    //{ x: 1105, y: 16, height: 175 };
 
 export interface GenerationView {
   generation: number;
@@ -130,7 +130,7 @@ export function generationScreenSpec(
     const selected = TRAIT_NAMES.map((trait) => {
       const index = view.selectedTraits![trait];
       const option = TRAIT_OPTIONS[trait][index];
-      return `${TRAIT_LABELS[trait]}: ${capitalize(option ?? 'Unknown')}`;
+      return `${simulationTraitLabel(trait, 'shortLabel')}: ${capitalize(option ?? 'Unknown')}`;
     });
 
     blocks.push(
@@ -165,6 +165,12 @@ export function generationScreenSpec(
           signed(view.stats.change),
         ]],
         columnWidths: [150, 120, 190, 140],
+        cellColors: [[
+          undefined,
+          undefined,
+          undefined,
+          view.stats.change > 0 ? 'success' : view.stats.change < 0 ? 'error' : 'normal',
+        ]],
       },
       text(`Died from: ${view.stats.diedFrom}`, {
         size: 'small',
@@ -224,11 +230,12 @@ export function generationScreenSpec(
   for (const trait of TRAIT_NAMES) {
     blocks.push({
       kind: 'bars',
-      label: TRAIT_LABELS[trait],
+      label: simulationTraitLabel(trait, 'shortLabel'),
       segments: TRAIT_OPTIONS[trait].map((option, i) => ({
         option: capitalize(option),
         count: view.traitCounts[trait][i],
         total: view.flock,
+        color: traitOptionColor(trait, option, i),
       })),
     });
   }
@@ -248,6 +255,7 @@ export function generationScreenSpec(
       label: CHOICE_PROMPT,
       error,
     },
+    art: { look: dominantLook(view.traitCounts),caption: "Current most common bird", ...GAME_BIRD },
   };
 }
 

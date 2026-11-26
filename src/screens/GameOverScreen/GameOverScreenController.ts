@@ -24,13 +24,16 @@ export class GameOverScreenController implements Screen {
   }
 
   spec(): ScreenSpec {
-    return gameOverScreenSpec(
-      this.state,
-      this.selectedTrait,
-      this.selectedGeneration,
-      this.error,
-      this.options.endReason,
-    );
+    return {
+      ...gameOverScreenSpec(
+        this.state,
+        this.selectedTrait,
+        this.selectedGeneration,
+        this.error,
+        this.options.endReason,
+      ),
+      outerBorder: true,
+    };
   }
 
   handleKey(key: string): boolean {

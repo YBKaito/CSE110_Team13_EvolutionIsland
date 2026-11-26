@@ -87,6 +87,21 @@ export class GameSimulationCoordinator implements SimulationCoordinator {
     }
   }
 
+  /** Keep the current preferences and resume only after the game accepts it. */
+  async keepPreferences(generation: number): Promise<SubmitResult> {
+    if (this.isEnded()) return { ok: false, error: 'The simulation has ended.' };
+    if (!this.paused || !this.isCheckpoint(this.getGeneration())) {
+      return { ok: false, error: 'The simulation is not waiting for an evolution choice.' };
+    }
+    try {
+      this.game.keepEvolutionPreferences(generation);
+      this.paused = false;
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : 'Could not keep preferences.' };
+    }
+  }
+
   /** Remove subscriptions when a run is permanently abandoned. */
   dispose(): void {
     this.endRun();

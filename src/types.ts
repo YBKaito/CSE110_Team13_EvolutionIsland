@@ -314,10 +314,12 @@ export interface TraitFocusChoice {
   targetValue: string;
 }
 
-/** A previously accepted choice, including the flock size at the time. */
-export interface DecisionRecord extends TraitFocusChoice {
+/** A previously accepted checkpoint decision, including the flock size at the time. */
+export type DecisionRecord = (TraitFocusChoice & { populationAtDecision: number }) | {
+  generation: number;
+  kind: 'unchanged';
   populationAtDecision: number;
-}
+};
 
 /** Result returned by the coordinator after submitting a preference. */
 export type SubmitResult = { ok: true } | { ok: false; error: string };

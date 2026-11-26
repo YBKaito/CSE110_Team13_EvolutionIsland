@@ -3,7 +3,7 @@ import { QUIZ_QUESTIONS } from '../../src/minigames/quiz/questions';
 import type { QuizQuestion, QuizResponse } from '../../src/minigames/quiz/quizTypes';
 import { validateQuizQuestions } from '../../src/minigames/quiz/validateQuizQuestions';
 import {
-  correctFeedbackSession, initialSession, lastFeedbackSession,
+  FIXTURE_QUESTIONS, correctFeedbackSession, initialSession, lastFeedbackSession,
   mixedResult, perfectResult, wrongFeedbackSession, zeroResult,
 } from '../helpers/quizFixtures';
 
@@ -22,7 +22,7 @@ describe('quiz session fixtures', () => {
     ['initial', initialSession, 'question', 0],
     ['correct feedback', correctFeedbackSession, 'feedback', 0],
     ['wrong feedback', wrongFeedbackSession, 'feedback', 0],
-    ['last feedback', lastFeedbackSession, 'feedback', QUIZ_QUESTIONS.length - 1],
+    ['last feedback', lastFeedbackSession, 'feedback', FIXTURE_QUESTIONS.length - 1],
   ] as const)('%s has a valid phase, index, and ordered responses', (_name, session, phase, index) => {
     validateQuizQuestions(session.questions);
     expect(session.phase).toBe(phase);
@@ -41,10 +41,16 @@ describe('quiz session fixtures', () => {
   it('keeps question and option records independent from production and other fixtures', () => {
     const sessions = [initialSession, correctFeedbackSession, wrongFeedbackSession, lastFeedbackSession];
     for (const session of sessions) {
-      expect(session.questions).toEqual(QUIZ_QUESTIONS);
+      expect(session.questions).toEqual(FIXTURE_QUESTIONS);
       expect(session.questions).not.toBe(QUIZ_QUESTIONS);
-      expect(session.questions[0]).not.toBe(QUIZ_QUESTIONS[0]);
-      expect(session.questions[0].options[0]).not.toBe(QUIZ_QUESTIONS[0].options[0]);
+      expect(session.questions).not.toBe(FIXTURE_QUESTIONS);
+      for (const question of session.questions) {
+        const productionQuestion = QUIZ_QUESTIONS.find(candidate => candidate.id === question.id);
+        expect(productionQuestion).toBeDefined();
+        expect(question).toEqual(productionQuestion);
+        expect(question).not.toBe(productionQuestion);
+        expect(question.options[0]).not.toBe(productionQuestion!.options[0]);
+      }
     }
     expect(correctFeedbackSession.questions[0]).not.toBe(wrongFeedbackSession.questions[0]);
     expect(lastFeedbackSession.responses[0]).not.toBe(mixedResult.responses[0]);
@@ -57,10 +63,10 @@ describe('quiz result fixtures', () => {
     ['mixed', mixedResult, 2, ['a', 'b', 'c', 'd']],
     ['perfect', perfectResult, 4, ['a', 'd', 'c', 'b']],
   ] as const)('%s has matching totals, answer keys, and score', (_name, result, correct, choices) => {
-    expect(result.total).toBe(QUIZ_QUESTIONS.length);
+    expect(result.total).toBe(FIXTURE_QUESTIONS.length);
     expect(result.responses).toHaveLength(result.total);
     expect(result.responses.map(response => response.selectedOptionId)).toEqual(choices);
-    expectConsistentResponses(QUIZ_QUESTIONS, result.responses);
+    expectConsistentResponses(FIXTURE_QUESTIONS, result.responses);
     expect(result.correct).toBe(correct);
     expect(result.correct).toBe(result.responses.filter(response => response.isCorrect).length);
   });
