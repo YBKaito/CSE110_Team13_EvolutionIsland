@@ -186,8 +186,8 @@ export const SIM = {
   EGGS_PER_PAIR: 4,
   BASE_HATCH: 0.55,
   /** Crowding scale used in the density factor (DENSITY_OFFSET - survivors / K). */
-  K: 100,
-  DENSITY_OFFSET: 2.0,
+  K: 150,
+  DENSITY_OFFSET: 1.6,
   MAX_HATCH: 0.95,
   // Reproductive fitness: clamp(REP_BASE + REP_SLOPE * feeding, REP_FIT_MIN, REP_FIT_MAX)
   REP_BASE: 0.6,
